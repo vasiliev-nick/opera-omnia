@@ -1,4 +1,4 @@
-# Opera omnia
+<p align="center"><img src="assets/banner.png" alt="Opera omnia — собрание учебников" width="100%"></p>
 
 Собрание учебников по математике, машинному обучению и робототехнике на русском языке.
 
