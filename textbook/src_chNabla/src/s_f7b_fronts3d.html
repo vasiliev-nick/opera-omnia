@@ -1,0 +1,83 @@
+<script>
+(function(){
+  /* Fig. ∇.@fronts, spatial mode: the ellipse of the flat mode turned about the x₁ axis, with a quarter cut away; its parallel surface p + d·n(p), coloured by whether it has passed a focal point, the cusp circles 1 + dκ₁ = 0, the pinch points on the axis 1 + dκ₂ = 0, and a draggable point with its normal and the two centres of principal curvature. */
+  const TB=window.TB,cv=document.getElementById('fronts');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,sl=document.getElementById('frD'),so=document.getElementById('frDOut'),fx=document.getElementById('frFx');
+  const PI=Math.PI,F0=197/180*PI,F1=F0+1.5*PI,T0=0.015;
+  /* spheroid: the ellipse (2 cos t, sin t) turned by the angle φ about the x₁ axis */
+  const S=(t,f)=>[2*Math.cos(t),Math.sin(t)*Math.cos(f),Math.sin(t)*Math.sin(f)];
+  const q=t=>Math.sqrt(Math.cos(t)**2+4*Math.sin(t)**2);
+  /* outward unit normal, and the principal curvatures: along the meridian (the curvature of the ellipse) and along the parallel (1 over the length of the normal from the point to the axis) */
+  const Nn=(t,f)=>{const Q=q(t);return [Math.cos(t)/Q,2*Math.sin(t)*Math.cos(f)/Q,2*Math.sin(t)*Math.sin(f)/Q];};
+  const kM=t=>2/q(t)**3,kP=t=>2/q(t);
+  const fix=(t,f)=>[Math.max(T0,Math.min(PI-T0,t)),Math.max(F0,Math.min(F1,f))];
+  const st={yaw:0.55,pitch:0.42};
+  let on=false,tf=[1.15,F0+0.95*PI],cam=null,base=null,shell=null;
+  function mk(nt,nf,d){const P=[],U=[],Vv=[];
+    for(let j=0;j<=nf;j++)for(let i=0;i<=nt;i++){const t=PI*i/nt,f=F0+(F1-F0)*j/nf,p=S(t,f);P.push(d?V.add(p,V.mul(Nn(t,f),d)):p);U.push(t);Vv.push(f);}
+    return {nu:nt,nv:nf,P:P,U:U,V:Vv,o:{fix:fix},S:d?(t,f)=>V.add(S(t,f),V.mul(Nn(t,f),d)):S};}
+  const NT=64,NF=36;
+  function grid(){if(base)return base;const g=mk(NT,NF,0);g.N=g.U.map((t,k)=>Nn(t,g.V[k]));g.K1=g.U.map(kM);g.K2=g.U.map(kP);return base=g;}
+  function offset(d){const g=grid();return {nu:NT,nv:NF,P:g.P.map((p,k)=>V.add(p,V.mul(g.N[k],d))),U:g.U,V:g.V,o:{fix:fix},S:(t,f)=>V.add(S(t,f),V.mul(Nn(t,f),d))};}
+  /* the cusp circles {1 + d·κ₁ = 0}: zeros along the meridian, turned about the axis */
+  function cusps(d){const out=[];if(d>=0)return out;
+    for(let i=0;i<NT;i++){const a=PI*i/NT,b=PI*(i+1)/NT,ha=1+d*kM(a),hb=1+d*kM(b);if((ha<0)!==(hb<0)){const t=a+(b-a)*ha/(ha-hb);out.push(t);}}
+    return out;}
+  /* the meridian curve of the boundary or of the parallel surface in the half-plane at angle f */
+  const meri=(f,d)=>{const r=[];for(let i=0;i<=160;i++){const t=PI*i/160,p=S(t,f);r.push(d?V.add(p,V.mul(Nn(t,f),d)):p);}return r;};
+  const is3=()=>cv.dataset.dim==='3';
+  TB.segs(cv,k=>{if(k!=='sph'){on=false;return;}on=true;V.dim(cv,true);draw();V.intro(st,draw);});
+  function draw(){
+    if(!on||!is3())return;
+    const d=+sl.value;so.textContent=TB.fmt(d,2);
+    const sm=cv.parentNode.getBoundingClientRect().width<520,f=TB.fit(cv,W=>Math.round(W*(W<520?1.0:0.6))),c=f.c,W=f.W,H=f.H,col=TB.cols(),s=sm?12:13;
+    c.fillStyle=col.paper;c.fillRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'fill',col:col.eth,a:0.5,t:[['параллельная поверхность','r']]},{k:'fill',col:col.warm,a:0.5,t:[['за фокальной точкой','r']]},
+      {k:'line',col:col.warm,t:[['ребро ','r'],['1 + ','m'],['d','i'],['κ','i'],['1','s'],[' = 0','m']]},{k:'dash',col:col.muted,t:[['нормаль','r']]}],sm?8:14,W-8,4,s);
+    cam=V.camera(st,W,H,W*0.5,yb+(H-yb)*0.5,Math.min(W*(sm?0.21:0.19),(H-yb)*0.29));
+    const g=grid(),inn=d<0,tiny=Math.abs(d)<0.015,m=offset(d);
+    /* colour per cell (the renderer takes the colour of a cell's first vertex): purple or warm outside, a darker or paler shade where the cut lets us see the inner side */
+    const dark=V.palette(col).dark,fac=g.K1.map((k,i)=>Math.min(1+d*k,1+d*g.K2[i]));
+    const cols=fac.map((x,i)=>{const b=TB.mixh(col.eth,col.warm,0.5-0.5*Math.tanh(x/0.04));return cam.rot(g.N[i])[2]*Math.sign(x||1)>0?b:TB.mixh(b,dark?col.paper:col.ink,dark?0.5:0.32);});
+    if(!shell)shell=mk(40,24,0);
+    /* the inner of the two surfaces is opaque, the outer one is glass */
+    const items=[];
+    if(tiny)items.push({t:'mesh',m:shell,col:col.eth,grid:4,gridA:0.12,amb:0.34});
+    else if(inn)items.push({t:'mesh',m:m,cols:cols,grid:4,gridA:0.1,amb:0.34},{t:'mesh',m:shell,col:col.muted,alpha:0.12,grid:3,gridA:0.22,amb:0.5});
+    else items.push({t:'mesh',m:shell,col:col.eth,grid:3,gridA:0.1,amb:0.34},{t:'mesh',m:m,cols:cols,alpha:0.28,grid:4,gridA:0.2,amb:0.5});
+    /* the cut: meridians of both surfaces in the two half-planes, and the axis with the segment of the centres z₂ */
+    for(const ff of [F0,F1]){items.push({t:'line',pts:meri(ff,0),col:col.ink,w:2.2,bias:0.02});if(!tiny)items.push({t:'line',pts:meri(ff,d),col:col.ink,w:1.2,bias:0.02});}
+    items.push({t:'line',pts:[[-2.5,0,0],[2.5,0,0]],col:TB.rgba(col.ink,0.4),w:1,bias:0.01,ghost:0.3},{t:'line',pts:[[-1.5,0,0],[1.5,0,0]],col:TB.rgba(col.muted,0.9),w:2.6,bias:0.012,ghost:0.4});
+    /* cusp circles and pinch points of the parallel surface */
+    const ct=cusps(d);for(const t of ct){const r=[];for(let j=0;j<=60;j++){const ff=F0+(F1-F0)*j/60;r.push(V.add(S(t,ff),V.mul(Nn(t,ff),d)));}items.push({t:'line',pts:r,col:col.warm,w:2.4,bias:0.03});}
+    const pin=[];if(d<0)for(let i=0;i<NT;i++){const a=PI*i/NT,b=PI*(i+1)/NT,ha=1+d*kP(a),hb=1+d*kP(b);if((ha<0)!==(hb<0)){const t=a+(b-a)*ha/(ha-hb);pin.push([2*Math.cos(t)+d*Math.cos(t)/q(t),0,0]);}}
+    for(const p of pin)items.push({t:'pt',p:p,r:4,fill:col.warm,stroke:col.paper,w:1.4,bias:0.08});
+    /* the chosen point, its normal, the point p + d·n and the centres z₁ = p − n/κ₁ (on the turned evolute) and z₂ = p − n/κ₂ (on the axis) */
+    const [t,ff]=fix(tf[0],tf[1]),p=S(t,ff),n=Nn(t,ff),k1=kM(t),k2=kP(t),f1=1+d*k1,f2=1+d*k2,pd=V.add(p,V.mul(n,d));
+    const z1=V.sub(p,V.mul(n,1/k1)),z2=V.sub(p,V.mul(n,1/k2)),deep=Math.min(3.6,Math.max(1/k1,1/k2)+0.2);
+    items.push({t:'line',pts:[V.add(p,V.mul(n,Math.max(0.45,d+0.3))),V.sub(p,V.mul(n,deep))],col:TB.rgba(col.ink,0.75),w:1.2,dash:[5,4],bias:0.03,ghost:0.45},
+      {t:'pt',p:p,r:4.6,fill:col.ink,bias:0.08,top:inn},{t:'pt',p:pd,r:4.6,fill:Math.min(f1,f2)<0?col.warm:col.eth,stroke:col.paper,bias:0.08,top:!tiny},
+      {t:'pt',p:z1,r:3.6,fill:col.paper,stroke:col.ink,w:1.6,top:true},{t:'pt',p:z2,r:3.6,fill:col.paper,stroke:col.ink,w:1.6,top:true},
+      {t:'label',p:z1,segs:[['z','i'],['1','s']],col:col.ink,dx:7,dy:4},{t:'label',p:z2,segs:[['z','i'],['2','s']],col:col.ink,dx:6,dy:-7},
+      {t:'label',p:p,segs:[['p','i']],col:col.ink,dx:-14,dy:-6},
+      {t:'label',p:[2.5,0,0],segs:[['x','i'],['1','s']],col:col.muted,dx:4,dy:4});
+    c.save();c.beginPath();c.rect(0,yb,W,H-yb);c.clip();V.render(c,cam,items,col);c.restore();
+    /* readouts */
+    const sub=i=>'<sub>'+i+'</sub>',kd=(k,fk)=>Math.abs(fk)<0.02?'бесконечна':TB.fmt(k/fk,2);
+    const st0=f1>0&&f2>0?'обе фокальные точки дальше |<i>d</i>|: вблизи <i>p</i> + <i>d</i><i>n</i> параллельная поверхность гладкая'
+      :f1<0?'нормаль прошла обе фокальные точки: 1 + <i>d</i><i>κ</i>'+sub(1)+' &lt; 0 и 1 + <i>d</i><i>κ</i>'+sub(2)+' &lt; 0'
+      :'нормаль прошла фокальную точку <i>z</i>'+sub(2)+' на оси: 1 + <i>d</i><i>κ</i>'+sub(2)+' &lt; 0';
+    const mn=Math.min(...fac);
+    fx.innerHTML=TB.rows([['в точке <i>p</i>:','<i>κ</i>'+sub(1)+' = '+TB.fmt(k1,2)+' (меридиан),','<i>κ</i>'+sub(2)+' = '+TB.fmt(k2,2)+' (параллель);'],
+      ['в точке <i>p</i> + <i>d</i><i>n</i>:','<i>κ</i>'+sub(1)+'/(1 + <i>d</i><i>κ</i>'+sub(1)+') = '+kd(k1,f1)+',','<i>κ</i>'+sub(2)+'/(1 + <i>d</i><i>κ</i>'+sub(2)+') = '+kd(k2,f2)],
+      ['наименьшее 1 + <i>d</i><i>κ</i>'+sub('<i>i</i>')+' по поверхности = '+TB.fmt(mn,2)+',',ct.length?'есть рёбра и острия на оси':pin.length?'есть острия на оси':'особенностей нет']])+'<span>'+st0+'</span>';
+  }
+  /* grabbing the point p or p + d·n; dragging moves it over the outer of the two surfaces, the one in front */
+  const grab=(x,y)=>{if(!cam)return false;const d=+sl.value,[t,ff]=fix(tf[0],tf[1]),p=S(t,ff),pd=V.add(p,V.mul(Nn(t,ff),d));
+    return [p,pd].some(P=>{const s=cam.P(P);return Math.hypot(s[0]-x,s[1]-y)<24;});};
+  const place=(x,y,r0)=>{const d=+sl.value;if(!shell)return;const mesh=d>0.015?offset(d):shell,r=V.pick(cam,mesh,x,y,r0);if(r){tf=fix(r[0],r[1]);draw();}};
+  V.interact(cv,st,{active:()=>on&&is3(),state:()=>st,grab:grab,move:(x,y)=>place(x,y,40),tap:(x,y)=>place(x,y,14),redraw:draw});
+  sl.addEventListener('input',draw);
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+})();
+</script>

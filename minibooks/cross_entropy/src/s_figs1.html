@@ -1,0 +1,230 @@
+<script>
+(function(){
+  /* Helpers for this book: a seeded random generator, pointer dragging on a canvas, segmented strips of a distribution, the triangle of distributions on three outcomes. */
+  const TB=window.TB;if(!TB)return;
+  TB.rng=function(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};};
+  TB.sci=function(lg10){if(!isFinite(lg10))return '0';if(Math.abs(lg10)<1e-12)return '1';let e=Math.floor(lg10),m=Math.pow(10,lg10-e);if(m>=9.995){m=1;e++;}
+    return TB.fmt(m,2)+'·10<sup>'+(e<0?'−'+(-e):e)+'</sup>';};
+  TB.plural=(n,a,b,c)=>{const m=n%100,k=n%10;return (m>10&&m<20)?c:k===1?a:(k>=2&&k<=4)?b:c;};
+  TB.vec=(v,d)=>'('+v.map(x=>TB.fmt(x,d===undefined?2:d)).join('; ')+')';
+  /* Dragging: o.hit(x,y,touch) returns a handle or null, o.move(handle,x,y) updates the state. A touch that starts on a handle does not scroll the page. */
+  TB.drag=function(cv,o){
+    let h=null;
+    const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+    cv.addEventListener('pointerdown',e=>{const p=pos(e);h=o.hit(p[0],p[1],e.pointerType==='touch');if(h===null)return;
+      try{cv.setPointerCapture(e.pointerId);}catch(_){}cv.style.cursor='grabbing';e.preventDefault();o.move(h,p[0],p[1]);});
+    cv.addEventListener('pointermove',e=>{const p=pos(e);
+      if(h!==null){o.move(h,p[0],p[1]);return;}
+      if(e.pointerType==='mouse')cv.style.cursor=o.hit(p[0],p[1],false)!==null?(o.cursor||'grab'):'default';});
+    const end=()=>{if(h!==null){h=null;cv.style.cursor='default';if(o.end)o.end();}};
+    cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+    cv.addEventListener('touchstart',e=>{const t=e.touches[0];if(!t)return;const r=cv.getBoundingClientRect();
+      if(o.hit(t.clientX-r.left,t.clientY-r.top,true)!==null)e.preventDefault();},{passive:false});
+  };
+  /* Redraw at most once per frame. */
+  TB.raf=fn=>{let q=false;return ()=>{if(q)return;q=true;requestAnimationFrame(()=>{q=false;fn();});};};
+  /* A segmented strip: the interval [L,R] split into parts of lengths P[i]; returns the x of every divider. */
+  TB.strip=function(c,P,L,R,y,h,col,K,s,lab){
+    let x=L;const xs=[];
+    for(let i=0;i<P.length;i++){const w=P[i]*(R-L);
+      c.fillStyle=TB.rgba(col,i%2?0.2:0.34);c.fillRect(x,y,w,h);
+      if(w>s*0.9){c.fillStyle=K.ink;c.font=(s-1)+'px '+TB.ui;c.textAlign='center';c.fillText(String(i+1),x+w/2,y+h/2+s*0.34);c.textAlign='start';}
+      x+=w;if(i<P.length-1)xs.push(x);}
+    c.strokeStyle=col;c.lineWidth=1.2;c.strokeRect(L,y,R-L,h);
+    for(const d of xs){c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.moveTo(d,y-3);c.lineTo(d,y+h+3);c.stroke();
+      c.fillStyle=K.paper;c.beginPath();c.arc(d,y+h/2,5,0,7);c.fill();c.strokeStyle=col;c.lineWidth=1.6;c.stroke();}
+    if(lab)TB.rich(c,lab,L-8,y+h/2+s*0.34,s,K.ink,'right');
+    return xs;};
+  /* Move divider j of distribution P to the cumulative position u, keeping every part at least m. */
+  TB.moveDiv=function(P,j,u,m){let a=0;for(let i=0;i<j;i++)a+=P[i];const b=a+P[j]+P[j+1];
+    u=Math.max(a+m,Math.min(b-m,u));u=Math.round(u*200)/200;u=Math.max(a+m,Math.min(b-m,u));P[j]=u-a;P[j+1]=b-u;};
+  /* The triangle of distributions on {1,2,3}: vertex 1 bottom left, 2 bottom right, 3 on top. */
+  TB.tri=function(W,H,top,bot,side){
+    const S=Math.min(W-2*side,(H-top-bot)/(Math.sqrt(3)/2)),cx=W/2,by=top+S*Math.sqrt(3)/2+((H-top-bot)-S*Math.sqrt(3)/2)/2;
+    const V=[[cx-S/2,by],[cx+S/2,by],[cx,by-S*Math.sqrt(3)/2]];
+    const P=q=>[q[0]*V[0][0]+q[1]*V[1][0]+q[2]*V[2][0],q[0]*V[0][1]+q[1]*V[1][1]+q[2]*V[2][1]];
+    const det=(V[1][1]-V[2][1])*(V[0][0]-V[2][0])+(V[2][0]-V[1][0])*(V[0][1]-V[2][1]);
+    const B=(x,y)=>{const l1=((V[1][1]-V[2][1])*(x-V[2][0])+(V[2][0]-V[1][0])*(y-V[2][1]))/det,l2=((V[2][1]-V[0][1])*(x-V[2][0])+(V[0][0]-V[2][0])*(y-V[2][1]))/det;return [l1,l2,1-l1-l2];};
+    return {V:V,P:P,B:B,S:S};};
+  TB.clampSimplex=function(q,m){const r=q.map(v=>Math.max(m,v));const t=r[0]+r[1]+r[2];return r.map(v=>v/t);};
+  TB.dot=function(c,x,y,col,K,r){c.fillStyle=K.paper;c.beginPath();c.arc(x,y,(r||6)+2.5,0,7);c.fill();c.fillStyle=col;c.beginPath();c.arc(x,y,r||6,0,7);c.fill();};
+  TB.arrow=function(c,x1,y1,x2,y2,col,w){const a=Math.atan2(y2-y1,x2-x1),L=Math.hypot(x2-x1,y2-y1),hd=Math.min(10,L*0.45);
+    c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w||2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2-hd*0.7*Math.cos(a),y2-hd*0.7*Math.sin(a));c.stroke();
+    c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-hd*Math.cos(a-0.4),y2-hd*Math.sin(a-0.4));c.lineTo(x2-hd*Math.cos(a+0.4),y2-hd*Math.sin(a+0.4));c.closePath();c.fill();};
+})();
+</script>
+<script>
+(function(){
+  /* Fig. lik: coin tosses and the likelihood curve normalised by its maximum. */
+  const cv=document.getElementById('lik');if(!cv||!window.TB||!TB.fit)return;
+  const sN=document.getElementById('likN'),oN=document.getElementById('likNOut'),sT=document.getElementById('likT'),oT=document.getElementById('likTOut'),fx=document.getElementById('likFx');
+  const g=new TB.Gauge('gLik');
+  const NS=[1,2,3,4,5,7,10,15,20,30,50,70,100,150,200,300,500];
+  let seed=16,U=null,F=null,geo=null;
+  function gen(){const r=TB.rng(seed);U=new Float64Array(2000);F=new Uint8Array(2000);for(let i=0;i<2000;i++)U[i]=r();}
+  /* A toss is heads when its random number is below θ; a click on it flips the result. */
+  const hd=(i,th)=>(U[i]<th)!==(F[i]===1);
+  gen();
+  document.getElementById('likR').addEventListener('click',()=>{seed++;gen();draw();});
+  function draw(){
+    const N=NS[+sN.value],th=+sT.value;oN.textContent=N;oT.textContent=TB.fmt(th,2);
+    let k=0;for(let i=0;i<N;i++)if(hd(i,th))k++;
+    const hat=k/N,ll=t=>(k>0?k*Math.log(t):0)+(N-k>0?(N-k)*Math.log(1-t):0),lm=ll(hat);
+    const F=TB.fit(cv,W=>Math.max(320,Math.min(410,Math.round(W*0.54)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,L=sm?34:46,R=W-(sm?10:18);
+    // the tosses
+    const bT=6,bH=sm?58:72;
+    let cs=Math.max(3,Math.min(26,Math.floor(Math.sqrt((R-L)*bH/N)))),cols=Math.floor((R-L)/cs),rows=Math.ceil(N/cols);
+    while(rows*cs>bH&&cs>3){cs--;cols=Math.floor((R-L)/cs);rows=Math.ceil(N/cols);}
+    const x0=L+((R-L)-Math.min(N,cols)*cs)/2,y0=bT+(bH-rows*cs)/2;geo={x0:x0,y0:y0,cs:cs,cols:cols,N:N};
+    for(let i=0;i<N;i++){const cx=x0+(i%cols)*cs+cs/2,cy=y0+Math.floor(i/cols)*cs+cs/2,h1=hd(i,th);
+      if(cs>=7){c.beginPath();c.arc(cx,cy,cs*0.36,0,7);if(h1){c.fillStyle=K.warm;c.fill();}else{c.strokeStyle=K.muted;c.lineWidth=1.1;c.stroke();}}
+      else{c.fillStyle=h1?K.warm:TB.rgba(K.muted,0.28);c.fillRect(cx-cs*0.42,cy-cs*0.42,cs*0.84,cs*0.84);}}
+    // the likelihood
+    const top=bT+bH+(sm?30:34),B=H-(sm?26:30),X=t=>L+t*(R-L),Y=v=>B-v/1.1*(B-top);
+    const M=600,vals=new Float64Array(M+1);let lo=1,hi=0;
+    for(let i=0;i<=M;i++){const t=i/M,v=Math.exp(ll(t)-lm);vals[i]=isFinite(v)?v:0;if(vals[i]>=0.5){lo=Math.min(lo,t);hi=Math.max(hi,t);}}
+    const wd=hi>=lo?hi-lo:0;
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(L,top);c.lineTo(L,B);c.lineTo(R,B);
+    for(const v of [0,0.25,0.5,0.75,1]){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}for(const v of [0,0.5,1]){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}c.stroke();
+    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='center';for(const v of [0,0.25,0.5,0.75,1])c.fillText(TB.tickLabel(v),X(v),B+s+5);
+    c.textAlign='right';for(const v of [0,0.5,1])c.fillText(TB.tickLabel(v),L-7,Y(v)+s*0.35);c.textAlign='start';
+    TB.rich(c,[['θ','i']],R-2,B-6,s,K.muted,'right');
+    TB.rich(c,[['L','i'],['(','m'],['θ','i'],[')','m'],[' / ','m'],['L','i'],['(','m'],['θ','h'],[')','m']],L+8,top-8,s,K.muted);
+    const gr=c.createLinearGradient(0,Y(1),0,B);gr.addColorStop(0,TB.rgba(K.eth,0.42));gr.addColorStop(1,TB.rgba(K.eth,0.03));
+    c.fillStyle=gr;c.beginPath();c.moveTo(X(0),B);for(let i=0;i<=M;i++)c.lineTo(X(i/M),Y(vals[i]));c.lineTo(X(1),B);c.closePath();c.fill();
+    c.strokeStyle=K.eth;c.lineWidth=2.2;c.beginPath();for(let i=0;i<=M;i++){const x=X(i/M),y=Y(vals[i]);i?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();
+    if(wd>0){c.strokeStyle=K.ink;c.lineWidth=1.2;c.beginPath();c.moveTo(X(lo),Y(0.5));c.lineTo(X(hi),Y(0.5));
+      c.moveTo(X(lo),Y(0.5)-4);c.lineTo(X(lo),Y(0.5)+4);c.moveTo(X(hi),Y(0.5)-4);c.lineTo(X(hi),Y(0.5)+4);c.stroke();}
+    c.setLineDash([5,4]);c.strokeStyle=K.ink;c.lineWidth=1.4;c.beginPath();c.moveTo(X(th),top-2);c.lineTo(X(th),B);c.stroke();c.setLineDash([]);
+    c.strokeStyle=K.warm;c.lineWidth=2.2;c.beginPath();c.moveTo(X(hat),top-2);c.lineTo(X(hat),B);c.stroke();
+    // labels of the two verticals, kept apart
+    const lh=[['θ','h']],lt=[['истина','r']],wh=TB.richW(c,lh,s),wt=TB.richW(c,lt,s);
+    let xh=X(hat),xt=X(th);const right=xt>=xh;
+    let ah=right?'right':'left',at=right?'left':'right';
+    const off=6;let px=ah==='right'?xh-off:xh+off,qx=at==='left'?xt+off:xt-off;
+    if(Math.abs(xh-xt)<2){ah='right';at='left';px=xh-off;qx=xt+off;}
+    px=Math.max(L+wh,Math.min(R-wh,px));qx=Math.max(L+wt,Math.min(R-wt,qx));
+    TB.rich(c,lh,px,top+s,s,K.warm,ah==='right'?'right':'start');TB.rich(c,lt,qx,top+s,s,K.ink,at==='right'?'right':'start');
+    fx.innerHTML=TB.rows([['гербов <i>k</i> = '+k+' из <i>N</i> = '+N+',','<i class="hat">θ</i> = <i>k</i>/<i>N</i> = '+TB.fmt(hat,3)],
+      ['<i>L</i>(<i class="hat">θ</i>) ≈ '+TB.sci(lm/Math.LN10)+',','ln <i>L</i>(<i class="hat">θ</i>) ≈ '+TB.fmt(lm,2)]]);
+    g.set(wd);
+  }
+  const cell=(x,y)=>{if(!geo)return -1;const i=Math.floor((x-geo.x0)/geo.cs),j=Math.floor((y-geo.y0)/geo.cs);if(i<0||i>=geo.cols||j<0)return -1;const n=j*geo.cols+i;return n<geo.N?n:-1;};
+  cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),n=cell(e.clientX-r.left,e.clientY-r.top);if(n<0)return;F[n]^=1;draw();});
+  cv.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const r=cv.getBoundingClientRect();cv.style.cursor=cell(e.clientX-r.left,e.clientY-r.top)>=0?'pointer':'default';});
+  const redraw=TB.raf(draw);sN.addEventListener('input',redraw);sT.addEventListener('input',redraw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. guess: guessing a number by halving; each row shows the candidates left after one more answer. */
+  const cv=document.getElementById('guess');if(!cv||!window.TB||!TB.fit)return;
+  const sN=document.getElementById('gsN'),oN=document.getElementById('gsNOut'),sJ=document.getElementById('gsJ'),oJ=document.getElementById('gsJOut'),fx=document.getElementById('gsFx');
+  let secret=11,geo=null,hov=0;
+  function plan(n){const rows=[{lo:1,hi:n}];let lo=1,hi=n;
+    while(hi>lo){const m=lo+Math.ceil((hi-lo+1)/2)-1,yes=secret<=m;rows[rows.length-1].q=m;rows[rows.length-1].a=yes;if(yes)hi=m;else lo=m+1;rows.push({lo:lo,hi:hi});}
+    return rows;}
+  function draw(){
+    const n=+sN.value;if(secret>n)secret=n;const need=Math.ceil(Math.log2(n)-1e-12);
+    sJ.max=need;if(+sJ.value>need)sJ.value=need;const J=+sJ.value;oN.textContent=n;oJ.textContent=J;
+    const rows=plan(n);
+    const F=TB.fit(cv,W=>{const rh=W<520?24:30;return 18+(need+2)*rh+10+8;}),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,rh=sm?24:30,L=sm?84:118,R=W-(sm?6:12),cw=(R-L)/n,T0=14,T=T0+rh+10;
+    geo={L:L,R:R,T:T0,rh:rh,cw:cw,n:n};
+    // the row where the secret number is chosen
+    c.fillStyle=K.warm;c.font='700 '+s+'px '+TB.ui;c.textAlign='right';c.fillText('загадано',L-10,T0+rh/2+s*0.35);c.textAlign='start';
+    for(let i=1;i<=n;i++){const x=L+(i-1)*cw,sec=i===secret;
+      if(sec){c.fillStyle=K.warm;c.fillRect(x+0.6,T0+3,Math.max(1,cw-1.2),rh-6);}
+      else{c.strokeStyle=TB.rgba(K.warm,i===hov?0.95:0.35);c.lineWidth=i===hov?1.6:1;c.strokeRect(x+1.1,T0+3.5,Math.max(1,cw-2.2),rh-7);}
+      if(cw>=(sm?14:17)){c.fillStyle=sec?K.paper:K.muted;c.font=(sec?'700 ':'')+(s-2)+'px '+TB.ui;c.textAlign='center';c.fillText(String(i),x+cw/2,T0+rh/2+(s-2)*0.36);c.textAlign='start';}}
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T-5);c.lineTo(R,T-5);c.stroke();
+    for(let r=0;r<=need;r++){const y=T+r*rh,shown=r<=J&&r<rows.length,row=rows[Math.min(r,rows.length-1)];
+      let lab;
+      if(r===0)lab='все числа';else if(r<rows.length){const pr=rows[r-1];lab='≤ '+pr.q+'?  '+(pr.a?'да':'нет');}else lab='';
+      if(!shown&&r>0){if(r<rows.length){c.fillStyle=TB.rgba(K.muted,0.5);c.font=s+'px '+TB.ui;c.textAlign='right';c.fillText('…',L-10,y+rh/2+s*0.35);c.textAlign='start';}continue;}
+      c.fillStyle=r===0?K.muted:K.ink;c.font=s+'px '+TB.ui;c.textAlign='right';c.fillText(lab,L-10,y+rh/2+s*0.35);c.textAlign='start';
+      for(let i=1;i<=n;i++){const x=L+(i-1)*cw,alive=i>=row.lo&&i<=row.hi,sec=i===secret;
+        c.fillStyle=alive?(sec?K.warm:TB.rgba(K.eth,0.5)):TB.rgba(K.muted,0.1);
+        c.fillRect(x+0.6,y+3,Math.max(1,cw-1.2),rh-6);
+        if(!alive&&sec){c.strokeStyle=K.warm;c.lineWidth=1.2;c.strokeRect(x+1,y+3.5,Math.max(1,cw-2),rh-7);}
+        if(cw>=(sm?14:17)){c.fillStyle=alive?(sec?K.paper:K.ink):TB.rgba(K.muted,0.7);c.font=(s-2)+'px '+TB.ui;c.textAlign='center';c.fillText(String(i),x+cw/2,y+rh/2+(s-2)*0.36);c.textAlign='start';}}
+    }
+    const used=rows.length-1;
+    fx.innerHTML=TB.rows([['<i>n</i> = '+n+':','⌈log<sub>2</sub> <i>n</i>⌉ = '+need+',','log<sub>2</sub> <i>n</i> ≈ '+TB.fmt(Math.log2(n),3)],
+      ['загадано '+secret+';','оно угадано за '+used+' '+TB.plural(used,'вопрос','вопроса','вопросов')+(J<used?',':'')].concat(J<used?['показано '+J]:[])]);
+  }
+  cv.addEventListener('click',e=>{if(!geo)return;const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    if(y<geo.T||y>geo.T+geo.rh||x<geo.L||x>geo.R)return;secret=Math.min(geo.n,Math.max(1,Math.floor((x-geo.L)/geo.cw)+1));draw();});
+  cv.addEventListener('pointermove',e=>{if(!geo||e.pointerType!=='mouse')return;const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    const on=y>=geo.T&&y<=geo.T+geo.rh&&x>=geo.L&&x<=geo.R;cv.style.cursor=on?'pointer':'default';
+    const h=on?Math.min(geo.n,Math.max(1,Math.floor((x-geo.L)/geo.cw)+1)):0;if(h!==hov){hov=h;draw();}});
+  cv.addEventListener('pointerleave',()=>{if(hov){hov=0;draw();}});
+  sN.addEventListener('input',draw);sJ.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. surp: two independent events in the unit square; their surprises add up on the curve log2(1/t). */
+  const cS=document.getElementById('surpSq'),cC=document.getElementById('surpCv');if(!cS||!cC||!window.TB||!TB.fit)return;
+  const sA=document.getElementById('suA'),oA=document.getElementById('suAOut'),sB=document.getElementById('suB'),oB=document.getElementById('suBOut'),fx=document.getElementById('suFx');
+  let geo=null;
+  const hS=W=>Math.max(260,Math.min(400,Math.round(W*0.92)));
+  function draw(){
+    const a=+sA.value,b=+sB.value,ab=a*b;oA.textContent=TB.fmt(a,2);oB.textContent=TB.fmt(b,2);
+    const K=TB.cols();
+    // the square
+    let F=TB.fit(cS,hS),c=F.c,W=F.W,H=F.H;
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<400,s=sm?12:14,S=Math.min(W-(sm?40:56),H-(sm?40:50)),X0=(W-S)/2+(sm?6:8),Y0=(H-S)/2-(sm?4:6);
+    const X=u=>X0+u*S,Y=v=>Y0+S-v*S;geo={X0:X0,Y0:Y0,S:S};
+    c.fillStyle=TB.rgba(K.eth,0.26);c.fillRect(X(0),Y(1),X(a)-X(0),S);
+    c.fillStyle=TB.rgba(K.warm,0.26);c.fillRect(X(0),Y(b),S,Y(0)-Y(b));
+    c.save();c.beginPath();c.rect(X(0),Y(b),X(a)-X(0),Y(0)-Y(b));c.clip();c.strokeStyle=TB.rgba(K.ink,0.35);c.lineWidth=1;c.beginPath();
+    for(let t=-S;t<S*2;t+=7){c.moveTo(X0+t,Y0+S);c.lineTo(X0+t+S,Y0);}c.stroke();c.restore();
+    c.strokeStyle=K.ink;c.lineWidth=1.4;c.strokeRect(X0,Y0,S,S);
+    c.strokeStyle=K.eth;c.lineWidth=2.4;c.beginPath();c.moveTo(X(a),Y(1));c.lineTo(X(a),Y(0));c.stroke();
+    c.strokeStyle=K.warm;c.beginPath();c.moveTo(X(0),Y(b));c.lineTo(X(1),Y(b));c.stroke();
+    TB.dot(c,X(a),Y(1),K.eth,K,5.5);TB.dot(c,X(1),Y(b),K.warm,K,5.5);
+    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='center';c.fillText('0',X(0),Y(0)+s+6);c.fillText('1',X(1),Y(0)+s+6);
+    if(a>0.08&&a<0.92)c.fillText(TB.fmt(a,2),X(a),Y(0)+s+6);
+    c.textAlign='right';c.fillText('1',X(0)-6,Y(1)+s*0.35);if(b>0.08&&b<0.92)c.fillText(TB.fmt(b,2),X(0)-6,Y(b)+s*0.35);c.textAlign='start';
+    if(a>0.1)TB.rich(c,[['A','i']],(X(0)+X(a))/2,Y(1)+s+8,s+2,K.eth,'center');
+    if(b>0.1&&a<0.9)TB.rich(c,[['B','i']],(X(a)+X(1))/2,(Y(b)+Y(0))/2+s*0.35,s+2,K.warm,'center');
+    const iw=X(a)-X(0),ih=Y(0)-Y(b),lab=[['A','i'],[' ∩ ','m'],['B','i']];
+    if(iw>TB.richW(c,lab,s)+12&&ih>s+10){c.fillStyle=TB.rgba(K.paper,0.85);const lw=TB.richW(c,lab,s);c.fillRect((X(0)+X(a))/2-lw/2-4,(Y(b)+Y(0))/2-s*0.8,lw+8,s*1.4);TB.rich(c,lab,(X(0)+X(a))/2,(Y(b)+Y(0))/2+s*0.35,s,K.ink,'center');}
+    // the curve
+    F=TB.fit(cC,()=>H);c=F.c;const W2=F.W;
+    c.fillStyle=K.paper;c.fillRect(0,0,W2,H);
+    const Ia=Math.log2(1/a),Ib=Math.log2(1/b),Iab=Ia+Ib,ym=7;
+    const L=sm?26:32,R=W2-(sm?40:46),T=sm?36:40,Bt=H-(sm?28:30);
+    const Xc=t=>L+t*(R-L),Yc=v=>Bt-v/ym*(Bt-T);
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T);c.lineTo(L,Bt);c.lineTo(R,Bt);
+    const st=ym>8?2:1;for(let v=0;v<=ym;v+=st){c.moveTo(L-4,Yc(v));c.lineTo(L,Yc(v));}for(const v of [0,0.5,1]){c.moveTo(Xc(v),Bt);c.lineTo(Xc(v),Bt+4);}c.stroke();
+    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(let v=0;v<=ym;v+=st)c.fillText(String(v),L-7,Yc(v)+s*0.35);
+    c.textAlign='center';for(const v of [0,0.5,1])c.fillText(TB.tickLabel(v),Xc(v),Bt+s+5);c.textAlign='start';
+    TB.rich(c,[['t','i']],R,Bt-6,s,K.muted,'right');TB.rich(c,[['log','m'],['2','s'],[' 1/','m'],['t','i'],[', бит','r']],L-6,T-18,s,K.muted);
+    c.strokeStyle=K.ink;c.lineWidth=2;c.beginPath();let first=true;
+    for(let i=0;i<=400;i++){const t=Math.max(Math.pow(2,-ym),i/400);const y=Yc(Math.log2(1/t));if(first){c.moveTo(Xc(t),y);first=false;}else c.lineTo(Xc(t),y);}c.stroke();
+    // the stacked bar
+    const bx=R+(sm?12:14),bw=sm?14:16;
+    c.fillStyle=TB.rgba(K.eth,0.75);c.fillRect(bx,Yc(Ia),bw,Yc(0)-Yc(Ia));
+    c.fillStyle=TB.rgba(K.warm,0.8);c.fillRect(bx,Yc(Iab),bw,Yc(Ia)-Yc(Iab));
+    c.setLineDash([4,4]);c.strokeStyle=K.ink;c.lineWidth=1;c.beginPath();c.moveTo(Xc(ab),Yc(Iab));c.lineTo(bx+bw,Yc(Iab));c.stroke();
+    c.strokeStyle=TB.rgba(K.eth,0.7);c.beginPath();c.moveTo(Xc(a),Yc(Ia));c.lineTo(bx,Yc(Ia));c.stroke();c.setLineDash([]);
+    TB.dot(c,Xc(a),Yc(Ia),K.eth,K,4.5);TB.dot(c,Xc(b),Yc(Ib),K.warm,K,4.5);TB.dot(c,Xc(ab),Yc(Iab),K.ink,K,4.5);
+    TB.rich(c,[['A','i']],Xc(a)+7,Yc(Ia)-7,s,K.eth);const bOv=Math.abs(Xc(a)-Xc(b))<34&&Math.abs(Yc(Ia)-Yc(Ib))<s+6;TB.rich(c,[['B','i']],Xc(b)+(bOv?-7:7),Yc(Ib)+(bOv?s+8:-7),s,K.warm,bOv?'right':undefined);
+    TB.rich(c,[['A','i'],['∩','m'],['B','i']],Xc(ab)+8,Yc(Iab)+(Iab>ym-0.6?s+4:-7),s,K.ink);
+    const f2=v=>TB.fmt(v,2),f3=v=>TB.fmt(v,3);
+    fx.innerHTML=TB.rows([['<i>I</i>(<i>A</i>) = log<sub>2</sub> '+TB.fr('1',f2(a))+' ≈ '+f3(Ia)+',','<i>I</i>(<i>B</i>) = log<sub>2</sub> '+TB.fr('1',f2(b))+' ≈ '+f3(Ib)],
+      ['<i>I</i>(<i>A</i> ∩ <i>B</i>) = log<sub>2</sub> '+TB.fr('1',TB.fmt(ab,4))+' ≈ '+f3(Iab)+' = <i>I</i>(<i>A</i>) + <i>I</i>(<i>B</i>) бит']]);
+  }
+  TB.drag(cS,{hit:(x,y,t)=>{if(!geo)return null;const tol=t?18:9,{X0,Y0,S}=geo,a=+sA.value,b=+sB.value;
+      const da=Math.abs(x-(X0+a*S)),db=Math.abs(y-(Y0+S-b*S)),inX=x>X0-tol&&x<X0+S+tol,inY=y>Y0-tol&&y<Y0+S+tol;
+      const ha=da<tol&&inY,hb=db<tol&&inX;if(ha&&hb)return da<db?'a':'b';return ha?'a':hb?'b':null;},
+    move:(h,x,y)=>{const {X0,Y0,S}=geo;if(h==='a')sA.value=Math.max(0.1,Math.min(1,(x-X0)/S));else sB.value=Math.max(0.1,Math.min(1,(Y0+S-y)/S));draw();},cursor:'grab'});
+  sA.addEventListener('input',draw);sB.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cS,draw);
+})();
+</script>

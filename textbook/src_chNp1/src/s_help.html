@@ -1,0 +1,35 @@
+<script>
+(function(){
+  /* Canvas sizing for the figures of this part: drawing in CSS pixels at the width of the column, sharp on dense screens; rich labels, theme colours, a seeded normal generator. */
+  const TB=window.TB;if(!TB)return;
+  TB.fit=function(cv,hOf){
+    const W=Math.round(cv.parentNode.getBoundingClientRect().width)||760,H=Math.round(hOf(W)),r=window.devicePixelRatio||1;
+    const bw=Math.round(W*r),bh=Math.round(H*r);if(cv.width!==bw)cv.width=bw;if(cv.height!==bh)cv.height=bh;
+    const c=cv.getContext('2d');c.setTransform(r,0,0,r,0,0);c.textAlign='start';c.textBaseline='alphabetic';c.setLineDash([]);
+    return {c:c,W:W,H:H,r:r};};
+  TB.onResize=function(cv,fn){let w=Math.round(cv.parentNode.getBoundingClientRect().width);
+    if(window.ResizeObserver)new ResizeObserver(()=>{const nw=Math.round(cv.parentNode.getBoundingClientRect().width);if(nw!==w){w=nw;fn();}}).observe(cv.parentNode);
+    else window.addEventListener('resize',fn);};
+  /* A label is a list of [text, kind]: 'i' italic letter, 's' italic subscript, 'u' upright superscript, 'r' upright sans, 'm' upright serif. */
+  function font(k,s){return k==='i'?'italic '+(s+2)+'px '+TB.serif:k==='s'?'italic '+Math.round(s*0.78)+'px '+TB.serif:k==='u'?Math.round(s*0.78)+'px '+TB.serif:k==='m'?(s+1)+'px '+TB.serif:s+'px '+TB.ui;}
+  TB.richW=function(c,segs,s){let w=0;for(const q of segs){c.font=font(q[1],s);w+=c.measureText(q[0]).width+(q[1]==='i'?1:0);}return w;};
+  TB.rich=function(c,segs,x,y,s,col,align,halo){
+    const w=TB.richW(c,segs,s);if(align==='center')x-=w/2;else if(align==='right')x-=w;
+    c.textAlign='start';
+    for(const q of segs){c.font=font(q[1],s);const yy=q[1]==='s'?y+s*0.3:q[1]==='u'?y-s*0.45:y;
+      if(halo){c.lineJoin='round';c.lineWidth=4;c.strokeStyle=halo;c.strokeText(q[0],x,yy);}
+      c.fillStyle=col;c.fillText(q[0],x,yy);x+=c.measureText(q[0]).width+(q[1]==='i'?1:0);}
+    return w;};
+  TB.cols=()=>({ink:TB.tok('--ink'),muted:TB.tok('--muted'),rule:TB.tok('--rule'),eth:TB.tok('--ether'),warm:TB.tok('--warm'),paper:TB.tok('--paper')});
+  /* Mix of two theme colours as an [r,g,b] triple, for pixel buffers. */
+  TB.mixa=(a,b,t)=>{const A=TB.hex(a),B=TB.hex(b);return [0,1,2].map(i=>Math.round(A[i]+(B[i]-A[i])*t));};
+  /* Seeded uniform generator and standard normal pairs by the Box–Muller transform. */
+  TB.lcg=function(seed){let s=seed>>>0;return ()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return (s+0.5)/4294967296;};};
+  TB.normal2=function(u){const a=u(),b=u(),r=Math.sqrt(-2*Math.log(a));return [r*Math.cos(2*Math.PI*b),r*Math.sin(2*Math.PI*b)];};
+  TB.reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+  /* Runs fn once, when the element first becomes visible. */
+  TB.whenSeen=function(el,fn){if(!window.IntersectionObserver){fn();return;}
+    const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();fn();}},{threshold:0.3});io.observe(el);};
+  TB.ln=function(c,x1,y1,x2,y2){c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();};
+})();
+</script>

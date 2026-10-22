@@ -1,0 +1,148 @@
+<script>
+(function(){
+  /* Figures added to the main text of part 2: Markov's rectangle, the series unbounded near every rational point, the parameter trick,
+     the angle between two functions and the continuous ramps converging to a step. */
+  const TB=window.TB;if(!TB||!TB.fit)return;
+  const K=()=>({ink:TB.tok('--ink'),muted:TB.tok('--muted'),rule:TB.tok('--rule'),eth:TB.tok('--ether'),warm:TB.tok('--warm'),paper:TB.tok('--paper')});
+  const mount=(id,h,draw)=>{const cv=document.getElementById(id);if(!cv)return null;
+    const run=()=>{const F=TB.fit(cv,h),c=F.c,k=K();c.fillStyle=k.paper;c.fillRect(0,0,F.W,F.H);draw(c,F.W,F.H,k,F.W<520);};
+    run();TB.onTheme(run);TB.onResize(cv,run);return run;};
+  const listen=(ids,run)=>{if(run)ids.forEach(i=>{const e=document.getElementById(i);if(e)e.addEventListener('input',run);});};
+  const val=(id,d)=>{const e=document.getElementById(id),o=document.getElementById(id+'Out'),v=+e.value;if(o)o.textContent=d?TB.fmt(v,d):String(v);return v;};
+  function axes(c,k,s,L,R,T,B,X,Y,xt,yt,y0){
+    /* Frame: left axis with y ticks, bottom line with x ticks; a zero line across the plot when y0 is given. */
+    c.strokeStyle=k.rule;c.lineWidth=1;c.setLineDash([]);c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);
+    if(y0!==undefined){c.moveTo(L,Y(y0));c.lineTo(R,Y(y0));}
+    for(const v of yt){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}for(const v of xt){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}c.stroke();
+    c.fillStyle=k.muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of yt)c.fillText(TB.fmt(v,v%1?1:0),L-7,Y(v)+s*0.35);
+    c.textAlign='center';for(const v of xt)c.fillText(TB.fmt(v,v%1?1:0),X(v),B+s+5);c.textAlign='start';}
+  const path=(c,X,Y,xs,f)=>{c.beginPath();xs.forEach((x,i)=>{const p=[X(x),Y(f(x))];i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]);});};
+  const grid=(a,b,N)=>{const xs=[];for(let i=0;i<=N;i++)xs.push(a+(b-a)*i/N);return xs;};
+
+  /* Figure 'markov': the rectangle of height t over {f ≥ t} fits under the graph of f. */
+  (function(){
+    const g=new TB.Gauge('gMk'),fx=document.getElementById('mkFx');
+    const bump=(x,c,w)=>Math.exp(-(x-c)*(x-c)/(2*w*w));
+    const f=x=>0.22+0.28*x+2.55*bump(x,0.22,0.05)+1.3*bump(x,0.66,0.12);
+    const M=4000;let I=0;for(let i=0;i<M;i++)I+=f((i+0.5)/M)/M;
+    const run=mount('markov',W=>W<520?300:330,(c,W,H,k,sm)=>{
+      const t=val('mkT',2),s=sm?12:14,L=sm?32:42,R=W-(sm?8:14),PR=R-14;
+      const T=TB.legend(c,[{k:'fill',col:k.warm,a:0.3,t:[['подграфик ','r'],['f','i']]},{k:'fill',col:k.eth,a:0.45,t:[['t','i'],['·','m'],['1','m'],['{f ≥ t}','s']]},
+        {k:'dash',col:k.ink,t:[['уровень ','r'],['t','i']]}],L,R,4,s)+8;
+      const B=H-(sm?26:30),X=x=>L+x*(PR-L),Y=y=>B-y/3.2*(B-T),N=Math.max(300,Math.round((PR-L)*2)),xs=grid(0,1,N);
+      axes(c,k,s,L,R,T,B,X,Y,[0,0.5,1],[0,1,2,3]);
+      TB.rich(c,[['x','i']],R-9,B-5,s,k.muted);
+      path(c,X,Y,xs,f);c.lineTo(X(1),B);c.lineTo(X(0),B);c.closePath();c.fillStyle=TB.rgba(k.warm,0.3);c.fill();
+      /* The level set {f ≥ t} on a fixed grid, so that the readout does not depend on the width of the screen. */
+      const iv=[],G=4000;let a=null;
+      for(let i=0;i<=G;i++){const x=i/G,on=f(x)>=t;if(on&&a===null)a=x;if((!on||i===G)&&a!==null){iv.push([a,on?x:(i-1)/G]);a=null;}}
+      let len=0;for(const [p,q] of iv){len+=q-p;c.fillStyle=TB.rgba(k.eth,0.45);c.fillRect(X(p),Y(t),X(q)-X(p),B-Y(t));
+        c.strokeStyle=k.eth;c.lineWidth=1.4;c.strokeRect(X(p)+0.5,Y(t)+0.5,X(q)-X(p)-1,B-Y(t)-1);
+        c.strokeStyle=k.eth;c.lineWidth=4;c.beginPath();c.moveTo(X(p),B+1);c.lineTo(X(q),B+1);c.stroke();}
+      path(c,X,Y,xs,f);c.strokeStyle=k.warm;c.lineWidth=2.4;c.stroke();
+      c.strokeStyle=k.ink;c.lineWidth=1.3;c.setLineDash([6,5]);c.beginPath();c.moveTo(L,Y(t));c.lineTo(PR,Y(t));c.stroke();c.setLineDash([]);
+      TB.rich(c,[['t','i']],PR+4,Y(t)+s*0.35,s,k.ink);
+      g.set(t*len);g.mark('I',I,'∫<i>f</i> <i>dλ</i><sub>1</sub>');
+      const lam='<i>λ</i><sub>1</sub>({<i>f</i> ≥ <i>t</i>})';
+      fx.innerHTML=TB.rows([[lam+' = '+TB.fmt(len,3),'≤ '+TB.fr('1','<i>t</i>')+'∫<i>f</i> <i>dλ</i><sub>1</sub> = '+TB.fmt(I/t,3)]]);});
+    listen(['mkT'],run);
+  })();
+
+  /* Figure 'spiky': partial sums of Σ 2^{-k}|x − q_k|^{-1/3}; each q_k sends the graph above the top edge. */
+  (function(){
+    const g=new TB.Gauge('gSp'),fx=document.getElementById('spFx');
+    const gcd=(a,b)=>b?gcd(b,a%b):a,Q=[[0,1],[1,1]];
+    for(let d=2;Q.length<400;d++)for(let a=1;a<d;a++)if(gcd(a,d)===1)Q.push([a,d]);
+    const q=Q.map(([a,d])=>a/d),gi=k=>Math.pow(2,-k)*1.5*(Math.pow(q[k-1],2/3)+Math.pow(1-q[k-1],2/3));
+    let Iall=0;for(let k=1;k<=400;k++)Iall+=gi(k);
+    const run=mount('spiky',W=>W<520?300:330,(c,W,H,k,sm)=>{
+      const n=val('spK',0),s=sm?12:14,L=sm?32:42,R=W-(sm?8:14),PR=R-14,ym=8;
+      const T=TB.legend(c,[{k:'fill',col:k.warm,a:0.28,t:[['подграфик ','r'],['S','i'],[String(n),'s']]}],L,R,4,s)+10;
+      const B=H-(sm?26:30),X=x=>L+x*(PR-L),Y=y=>B-Math.min(y,ym*1.05)/ym*(B-T);
+      axes(c,k,s,L,R,T,B,X,Y,[0,0.5,1],[0,2,4,6,8]);
+      TB.rich(c,[['x','i']],R-9,B-5,s,k.muted);
+      const S=x=>{let v=0;for(let j=1;j<=n;j++){const d=Math.abs(x-q[j-1]);if(d<1e-12)return Infinity;v+=Math.pow(2,-j)*Math.pow(d,-1/3);}return v;};
+      const xs=grid(0,1,Math.max(400,Math.round((PR-L)*2)));for(let j=1;j<=n;j++){const z=q[j-1];xs.push(z);if(z>1e-9)xs.push(z-1e-9);if(z<1-1e-9)xs.push(z+1e-9);}
+      xs.sort((a,b)=>a-b);
+      c.save();c.beginPath();c.rect(L+1,T-2,PR-L,B-T+2);c.clip();
+      path(c,X,Y,xs,S);c.lineTo(X(1),B);c.lineTo(X(0),B);c.closePath();c.fillStyle=TB.rgba(k.warm,0.28);c.fill();
+      path(c,X,Y,xs,S);c.strokeStyle=k.warm;c.lineWidth=1.5;c.stroke();c.restore();
+      const xq=X(q[n-1]);c.fillStyle=k.warm;c.beginPath();c.moveTo(xq,B+2);c.lineTo(xq-6,B+12);c.lineTo(xq+6,B+12);c.closePath();c.fill();
+      let I=0;for(let j=1;j<=n;j++)I+=gi(j);
+      g.set(I);g.mark('S',Iall,'∫<i>S</i> <i>dλ</i><sub>1</sub>');
+      const [a,d]=Q[n-1],qs=d===1?String(a):TB.fr(String(a),String(d));
+      fx.innerHTML=TB.rows([['<i>q</i><sub>'+n+'</sub> = '+qs+',','∫<i>g</i><sub>'+n+'</sub> <i>dλ</i><sub>1</sub> = '+TB.fmt(gi(n),4)]]);});
+    listen(['spK'],run);
+  })();
+
+  /* Figure 'feyn': the integrand (x^a − 1)/ln x and its derivative in the parameter, x^a. */
+  (function(){
+    const gF=new TB.Gauge('gFyF'),gD=new TB.Gauge('gFyD');
+    const f=(x,a)=>Math.abs(Math.log(x))<1e-9?a:(Math.pow(x,a)-1)/Math.log(x);
+    /* F(a) = ∫_0^∞ (1 − e^{−as}) e^{−s}/s ds after x = e^{−s}; Simpson's rule on [0, 400]. */
+    const Fnum=a=>{const N=8000,h=400/N;let sm=0;for(let i=0;i<=N;i++){const t=i*h,v=t===0?a:(1-Math.exp(-a*t))*Math.exp(-t)/t;sm+=(i===0||i===N?1:i%2?4:2)*v;}return sm*h/3;};
+    const run=mount('feyn',W=>W<520?300:330,(c,W,H,k,sm)=>{
+      const a=val('fyA',2),s=sm?12:14,L=sm?32:42,R=W-(sm?8:14),PR=R-14,y0=-3,y1=4.4;
+      const T=TB.legend(c,[{k:'fill',col:k.warm,a:0.3,t:[['(','m'],['x','i'],['a','p'],[' − 1) / ln ','m'],['x','i']]},{k:'dash',col:k.eth,t:[['x','i'],['a','p']]}],L,R,4,s)+8;
+      const B=H-(sm?26:30),X=x=>L+x*(PR-L),Y=y=>B-(Math.max(y0-0.3,Math.min(y1+0.3,y))-y0)/(y1-y0)*(B-T);
+      axes(c,k,s,L,R,T,B,X,Y,[0,0.5,1],[-2,0,2,4],0);
+      TB.rich(c,[['x','i']],R-9,Y(0)-5,s,k.muted);
+      const xs=grid(1e-4,1-1e-6,Math.max(400,Math.round((PR-L)*2)));xs.unshift(1e-7,1e-6,1e-5);
+      c.save();c.beginPath();c.rect(L+1,T,PR-L,B-T);c.clip();
+      path(c,X,Y,xs,x=>f(x,a));c.lineTo(X(1),Y(0));c.lineTo(X(0),Y(0));c.closePath();c.fillStyle=TB.rgba(k.warm,0.3);c.fill();
+      path(c,X,Y,xs,x=>f(x,a));c.strokeStyle=k.warm;c.lineWidth=2.4;c.stroke();
+      path(c,X,Y,xs,x=>Math.pow(x,a));c.strokeStyle=k.eth;c.lineWidth=2;c.setLineDash([7,5]);c.stroke();c.setLineDash([]);
+      c.restore();
+      gF.set(Fnum(a));gF.mark('ln',Math.log(1+a),'ln(1 + <i>a</i>)');gD.set(1/(a+1));});
+    listen(['fyA'],run);
+  })();
+
+  /* Figure 'angle': f and its periodic shift g on [0,1], the product fg, and the two functions drawn as vectors with the angle φ. */
+  (function(){
+    const g=new TB.Gauge('gAn'),fx=document.getElementById('anFx');
+    const f=x=>Math.sin(2*Math.PI*x)+0.5*Math.sin(4*Math.PI*x+0.7),nn=0.625;
+    const run=mount('angle',W=>W<520?400:320,(c,W,H,k,sm)=>{
+      const sh=val('anS',3),s=sm?12:14,gg=x=>f(x+sh),ip=0.5*Math.cos(2*Math.PI*sh)+0.125*Math.cos(4*Math.PI*sh),cs=ip/nn,ph=Math.acos(Math.max(-1,Math.min(1,cs)));
+      const L=sm?32:42,PR=sm?W-22:Math.round(W*0.64);
+      const T=TB.legend(c,[{k:'line',col:k.eth,t:[['f','i']]},{k:'line',col:k.warm,t:[['g','i']]},{k:'fill',col:k.warm,a:0.22,t:[['fg','i']]}],L,sm?W-8:PR,4,s)+8;
+      const B=sm?Math.round(H*0.52):H-30,X=x=>L+x*(PR-L),Y=y=>T+(2.2-y)/3.8*(B-T),xs=grid(0,1,Math.max(300,Math.round((PR-L)*1.5)));
+      axes(c,k,s,L,PR,T,B,X,Y,[0,0.5,1],[-1,0,1,2],0);
+      path(c,X,Y,xs,x=>f(x)*gg(x));c.lineTo(X(1),Y(0));c.lineTo(X(0),Y(0));c.closePath();c.fillStyle=TB.rgba(k.warm,0.22);c.fill();
+      path(c,X,Y,xs,f);c.strokeStyle=k.eth;c.lineWidth=2.2;c.stroke();
+      path(c,X,Y,xs,gg);c.strokeStyle=k.warm;c.lineWidth=2.2;c.stroke();
+      const Z=B+s+22,cx=sm?W/2:Math.round(PR+(W-PR)/2),cy=sm?Math.round(Z+(H-Z)/2):Math.round((T+B)/2+12),r=sm?Math.min(70,(H-Z)/2-18):Math.min(92,(W-PR)/2-30,(B-T)/2-6);
+      c.strokeStyle=TB.rgba(k.muted,0.4);c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();c.arc(cx,cy,r,0,7);c.stroke();c.setLineDash([]);
+      const arrow=(ang,col)=>{const ex=cx+r*Math.cos(ang),ey=cy-r*Math.sin(ang);c.strokeStyle=col;c.fillStyle=col;c.lineWidth=2.4;c.beginPath();c.moveTo(cx,cy);c.lineTo(ex,ey);c.stroke();
+        const u=[Math.cos(ang),-Math.sin(ang)],v=[-u[1],u[0]];c.beginPath();c.moveTo(ex,ey);c.lineTo(ex-11*u[0]+5*v[0],ey-11*u[1]+5*v[1]);c.lineTo(ex-11*u[0]-5*v[0],ey-11*u[1]-5*v[1]);c.closePath();c.fill();return [ex,ey];};
+      const a0=sm?0.15:0.35,pf=arrow(a0,k.eth),pg=arrow(a0+ph,k.warm);
+      c.strokeStyle=k.ink;c.lineWidth=1.2;c.beginPath();c.arc(cx,cy,r*0.32,-a0-ph,-a0);c.stroke();
+      const am=a0+ph/2;TB.rich(c,[['φ','i']],cx+r*0.47*Math.cos(am),cy-r*0.47*Math.sin(am)+s*0.35,s,k.ink,'center');
+      const lab=(p,ang,t,col)=>TB.rich(c,t,p[0]+14*Math.cos(ang),p[1]-14*Math.sin(ang)+s*0.35,s,col,Math.cos(ang)<-0.3?'right':Math.cos(ang)>0.3?'start':'center');
+      lab(pf,a0,[['f','i']],k.eth);lab(pg,a0+ph,[['g','i']],k.warm);
+      c.fillStyle=k.ink;c.beginPath();c.arc(cx,cy,2.5,0,7);c.fill();
+      g.set(cs);
+      fx.innerHTML=TB.rows([['⟨<i>f</i>, <i>g</i>⟩ = '+TB.fmt(ip,3)+',','‖<i>f</i>‖<sub>2</sub>‖<i>g</i>‖<sub>2</sub> = '+TB.fmt(nn,3)+',','<i>φ</i> ≈ '+Math.round(ph*180/Math.PI)+'°']]);});
+    listen(['anS'],run);
+  })();
+
+  /* Figure 'ramps': continuous ramps h_n converge in mean to the step 1_(1/2,1], which is not continuous. */
+  (function(){
+    const g=new TB.Gauge('gRp');
+    const h=(n,x)=>x<=0.5?0:x>=0.5+1/n?1:(x-0.5)*n;
+    const run=mount('ramps',W=>W<520?280:300,(c,W,H,k,sm)=>{
+      const n=val('rpN',0),s=sm?12:14,L=sm?32:42,R=W-(sm?8:14),PR=R-14;
+      const T=TB.legend(c,[{k:'line',col:k.warm,t:[['h','i'],[String(n),'s']]},{k:'line',col:k.muted,t:[['h','i'],[String(2*n),'s']]},{k:'dash',col:k.eth,t:[['1','m'],['(1/2, 1]','s']]}],L,R,4,s)+10;
+      const B=H-(sm?26:30),X=x=>L+x*(PR-L),Y=y=>B-(y+0.08)/1.2*(B-T);
+      axes(c,k,s,L,R,T,B,X,Y,[0,0.5,1],[0,1],0);
+      TB.rich(c,[['x','i']],R-9,Y(0)-5,s,k.muted);
+      c.fillStyle=TB.rgba(k.warm,0.3);c.beginPath();c.moveTo(X(0.5),Y(0));c.lineTo(X(0.5),Y(1));c.lineTo(X(0.5+1/n),Y(1));c.closePath();c.fill();
+      c.strokeStyle=k.eth;c.lineWidth=2;c.setLineDash([7,5]);c.beginPath();c.moveTo(X(0),Y(0)-1);c.lineTo(X(0.5),Y(0)-1);c.moveTo(X(0.5),Y(1));c.lineTo(X(1),Y(1));c.stroke();c.setLineDash([]);
+      const xs=[0,0.5,0.5+1/(2*n),1];path(c,X,Y,xs,x=>h(2*n,x));c.strokeStyle=k.muted;c.lineWidth=1.8;c.stroke();
+      path(c,X,Y,[0,0.5,0.5+1/n,1],x=>h(n,x));c.strokeStyle=k.warm;c.lineWidth=2.4;c.stroke();
+      c.fillStyle=k.eth;c.beginPath();c.arc(X(0.5),Y(0)-1,3.6,0,7);c.fill();
+      c.fillStyle=k.paper;c.strokeStyle=k.eth;c.lineWidth=1.6;c.beginPath();c.arc(X(0.5),Y(1),3.6,0,7);c.fill();c.stroke();
+      g.set(1/(2*n));});
+    listen(['rpN'],run);
+  })();
+})();
+</script>

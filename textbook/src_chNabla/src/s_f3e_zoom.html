@@ -1,0 +1,69 @@
+<script>
+(function(){
+  /* Fig. ∇.@zoom, plane shape: a window of half-width w around a boundary point, seen under the ordinary magnification (the curve straightens into its tangent) and under the parabolic one x/w, y/w² (the curve settles on the parabola y = κx²/2). */
+  const TB=window.TB,cv=document.getElementById('zoom');if(!TB||!cv||!TB.fit)return;
+  const fx=document.getElementById('zmFx'),sw=document.getElementById('zmW'),so=document.getElementById('zmWOut'),PI2=2*Math.PI,YB=1.4;
+  const R=p=>[1+0.15*Math.cos(p)+0.18*Math.cos(2*p)+0.06*Math.sin(3*p),-0.15*Math.sin(p)-0.36*Math.sin(2*p)+0.18*Math.cos(3*p),-0.15*Math.cos(p)-0.72*Math.cos(2*p)-0.54*Math.sin(3*p)];
+  /* position, velocity and acceleration of γ(φ) = r(φ)(cos φ, sin φ) */
+  const G=p=>{const co=Math.cos(p),si=Math.sin(p),[r,r1,r2]=R(p);return [r*co,r*si,r1*co-r*si,r1*si+r*co,(r2-r)*co-2*r1*si,(r2-r)*si+2*r1*co];};
+  const NO=720,OV=[];for(let i=0;i<=NO;i++){const q=G(i/NO*PI2);OV.push([q[0],q[1]]);}
+  let shape='zdrop',phi=5.3,geo=null,drag=false;
+  shape=TB.segs(cv,k=>{if(k!=='zdrop')return;shape=k;if(TB.V3)TB.V3.dim(cv,false);draw();});
+  const wOf=()=>0.6*Math.pow(10,-(+sw.value));
+  function draw(){
+    if(cv.dataset.dim==='3')return;
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?1.12:0.44))),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,fs=sm?12:13,w=wOf();
+    so.textContent=TB.fmt(w,w<0.1?3:2);c.clearRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'line',col:col.ink,t:[['кривая','r']]},{k:'dash',col:col.eth,t:[['парабола ','r'],['y','i'],[' = ','m'],['κx','i'],['²/2','m']]},
+      {k:'thin',col:col.muted,t:[['соприкасающаяся окружность','r']]}],sm?8:14,W-8,4,fs);
+    /* panels: overview, ordinary zoom, parabolic zoom */
+    const gap=sm?8:14,top=yb+4;let O,A,B;
+    if(sm){const ho=Math.round(W*0.5);O={x:0,y:top,w:W,h:ho};const pw=(W-gap)/2,ph=H-top-ho-gap-22;A={x:0,y:top+ho+gap,w:pw,h:ph};B={x:pw+gap,y:A.y,w:pw,h:ph};}
+    else{const pw=(W-2*gap)/3,ph=H-top-24;O={x:0,y:top,w:pw,h:ph};A={x:pw+gap,y:top,w:pw,h:ph};B={x:2*(pw+gap),y:top,w:pw,h:ph};}
+    const q=G(phi),v=Math.hypot(q[2],q[3]),t=[q[2]/v,q[3]/v],jt=[-t[1],t[0]],k=(q[2]*q[5]-q[3]*q[4])/(v*v*v);
+    /* overview */
+    const os=Math.min(O.w/2.9,O.h/2.6),ocx=O.x+O.w/2-0.08*os,ocy=O.y+O.h/2,X=x=>ocx+os*x,Y=y=>ocy-os*y;geo={X:X,Y:Y};
+    c.strokeStyle=col.ink;c.lineWidth=1.8;c.beginPath();OV.forEach((p,i)=>i?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])));c.stroke();
+    const px=X(q[0]),py=Y(q[1]),corner=(a,b)=>[X(q[0]+a*w*t[0]+b*w*jt[0]),Y(q[1]+a*w*t[1]+b*w*jt[1])];
+    c.strokeStyle=col.warm;c.lineWidth=1.5;c.beginPath();[[-1,-1],[1,-1],[1,1],[-1,1]].forEach((p,i)=>{const z=corner(p[0],p[1]);i?c.lineTo(z[0],z[1]):c.moveTo(z[0],z[1]);});c.closePath();c.stroke();
+    if(w*os<6){c.strokeStyle=TB.rgba(col.warm,0.6);c.lineWidth=1;c.beginPath();c.arc(px,py,11,0,PI2);c.stroke();}
+    c.fillStyle=col.paper;c.beginPath();c.arc(px,py,6,0,PI2);c.fill();c.fillStyle=col.ink;c.beginPath();c.arc(px,py,4,0,PI2);c.fill();
+    TB.rich(c,[['вся фигура','r']],O.x+6,O.y+O.h-4,fs-1,col.muted,'start');
+    /* local samples of the curve around the point, in the coordinates x along t, y along Jt */
+    const dph=Math.min(Math.PI,1.6*w/v),loc=[];
+    for(let i=0;i<=320;i++){const p=phi+dph*(2*i/320-1),z=G(p),dx=z[0]-q[0],dy=z[1]-q[1];loc.push([dx*t[0]+dy*t[1],dx*jt[0]+dy*jt[1]]);}
+    const panel=(P,sx,sy,yMax,lab)=>{
+      const cx=P.x+P.w/2,cy=P.y+P.h/2,Xp=x=>cx+x*sx,Yp=y=>cy-y*sy;
+      c.save();c.beginPath();c.rect(P.x,P.y,P.w,P.h);c.clip();
+      c.fillStyle=TB.rgba(col.ink,0.03);c.fillRect(P.x,P.y,P.w,P.h);
+      c.strokeStyle=TB.rgba(col.ink,0.35);c.lineWidth=1;c.setLineDash([4,4]);TB.ln(c,P.x,cy,P.x+P.w,cy);c.setLineDash([]);
+      return {Xp:Xp,Yp:Yp,end(){c.restore();c.strokeStyle=col.rule;c.lineWidth=1;c.strokeRect(P.x+0.5,P.y+0.5,P.w-1,P.h-1);
+        TB.rich(c,lab,P.x+P.w/2,P.y+P.h+16,fs-1,col.muted,'center');}};};
+    /* ordinary zoom: the same scale on both axes */
+    const a=panel(A,A.w/(2*w),A.w/(2*w),0,[['обычное увеличение','r']]);
+    const curve=(T,mx,my)=>{c.beginPath();loc.forEach((p,i)=>{const x=T.Xp(p[0]*mx),y=T.Yp(p[1]*my);i?c.lineTo(x,y):c.moveTo(x,y);});};
+    const circ=(T,mx,my)=>{if(Math.abs(k)<1e-3)return;const r=1/k;c.beginPath();for(let i=0;i<=400;i++){const s=(2*i/400-1)*Math.min(Math.PI,3*w*Math.abs(k)),x=r*Math.sin(s),y=r*(1-Math.cos(s));i?c.lineTo(T.Xp(x*mx),T.Yp(y*my)):c.moveTo(T.Xp(x*mx),T.Yp(y*my));}c.stroke();};
+    const para=(T,mx,my)=>{c.beginPath();for(let i=0;i<=120;i++){const x=w*1.2*(2*i/120-1);const X1=T.Xp(x*mx),Y1=T.Yp(k*x*x/2*my);i?c.lineTo(X1,Y1):c.moveTo(X1,Y1);}c.stroke();};
+    const layer=(T,mx,my)=>{c.strokeStyle=col.muted;c.lineWidth=1.2;circ(T,mx,my);
+      c.strokeStyle=col.ink;c.lineWidth=2.6;curve(T,mx,my);c.stroke();
+      c.strokeStyle=col.eth;c.lineWidth=1.8;c.setLineDash([6,4]);para(T,mx,my);c.stroke();c.setLineDash([]);
+      c.fillStyle=col.ink;c.beginPath();c.arc(T.Xp(0),T.Yp(0),3.5,0,PI2);c.fill();};
+    layer(a,1,1);a.end();
+    /* parabolic zoom: x/w across, y/w² up, on fixed axes */
+    const b=panel(B,B.w/2.4,(B.h/2)/YB,YB,sm?[['параболическое','r']]:[['параболическое: ','r'],['x','i'],['/','m'],['w','i'],[', ','m'],['y','i'],['/','m'],['w','i'],['²','m']]);
+    const b2={Xp:x=>b.Xp(x),Yp:y=>b.Yp(y)};layer(b2,1/w,1/(w*w));
+    for(const yy of [-1,1]){c.fillStyle=col.muted;TB.rich(c,[[TB.fmt(yy,0),'m']],B.x+4,b.Yp(yy)+4,fs-2,col.muted,'start');c.strokeStyle=TB.rgba(col.ink,0.25);TB.ln(c,B.x,b.Yp(yy),B.x+7,b.Yp(yy));}
+    b.end();
+    /* the coefficient 2y/x² read at the edges of the window */
+    const at=xx=>{let best=null,bd=1e9;for(const p of loc){const d=Math.abs(p[0]-xx);if(d<bd){bd=d;best=p;}}return 2*best[1]/(best[0]*best[0]);};
+    fx.innerHTML=TB.rows([['<i>w</i> = '+TB.fmt(w,w<0.1?3:2)+',','<i>κ</i> = '+TB.fmt(k,3)],['2<i>y</i>/<i>x</i><sup>2</sup> на краях окна:',TB.fmt(at(-w),3)+' и '+TB.fmt(at(w),3)]]);
+  }
+  function nearest(e){const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;let b=0,bd=1e18;
+    for(let i=0;i<NO;i++){const dx=geo.X(OV[i][0])-px,dy=geo.Y(OV[i][1])-py,d=dx*dx+dy*dy;if(d<bd){bd=d;b=i;}}return [b/NO*PI2,Math.sqrt(bd)];}
+  cv.addEventListener('pointerdown',e=>{if(!geo||cv.dataset.dim==='3')return;const q=nearest(e);if(q[1]>28)return;drag=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}phi=q[0];draw();});
+  cv.addEventListener('pointermove',e=>{if(!geo||cv.dataset.dim==='3')return;const q=nearest(e);if(drag){phi=q[0];draw();}else cv.style.cursor=q[1]<=28?'grab':'';});
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{drag=false;}));
+  sw.addEventListener('input',draw);
+  cv.style.touchAction='pan-y';TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>

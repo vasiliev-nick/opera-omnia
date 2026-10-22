@@ -1,0 +1,67 @@
+<script>
+(function(){
+  /* Fig. ∇.@comb, spatial shapes: a point dragged over a surface coloured by the sign of the Gaussian curvature; tangent plane, normal, principal directions, the normal section in direction ψ with its osculating circle, and Euler's formula κ(ψ) = κ₁cos²ψ + κ₂sin²ψ. */
+  const TB=window.TB,cv=document.getElementById('comb');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,fx=document.getElementById('cbFx'),g=TB.G('gCb'),ps=document.getElementById('cbPsi'),po=document.getElementById('cbPsiOut');
+  const st={elld:{yaw:0.55,pitch:0.42},torus:{yaw:0.4,pitch:0.62},saddle:{yaw:0.75,pitch:0.5}};
+  let shape=null,uv={},Kv={};
+  const is3=()=>cv.dataset.dim==='3';
+  TB.segs(cv,k=>{if(!V.SURF[k])return;shape=k;V.dim(cv,true);draw();V.intro(st[k],draw);});
+  /* Gaussian curvature at every mesh vertex, computed once per surface */
+  function Kof(k){if(Kv[k])return Kv[k];const d=V.SURF[k],m=V.meshOf(k);
+    return Kv[k]=m.U.map((u,i)=>{const q=d.fix(u,m.V[i]);return V.geom(d.S,q[0],q[1],d.o).K;});}
+  let cam=null;
+  function draw(){
+    if(!is3()||!shape)return;
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?1.08:0.58))),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,d=V.SURF[shape],m=V.meshOf(shape);
+    c.clearRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'fill',col:col.eth,a:0.5,t:[['K','i'],[' > 0','r']]},{k:'fill',col:col.warm,a:0.5,t:[['K','i'],[' < 0','r']]},
+      {k:'line',col:col.ink,t:[['нормальное сечение','r']]},{k:'dash',col:col.ink,t:[['след касательной плоскости','r']]}],sm?8:14,W-8,4,sm?12:13);
+    /* Euler's formula inset: bottom right on a wide screen, a strip along the bottom on a phone */
+    const iw=sm?W-16:170,ih=sm?64:86,ix=W-iw-(sm?8:12),iy=H-ih-(sm?6:12);
+    const s0=sm?Math.min(W*0.3,(iy-yb)*0.36):Math.min(W*0.25,(H-yb)*0.34);
+    cam=V.camera(st[shape],W,H,sm?W*0.5:W*0.42,sm?yb+(iy-yb)*0.52:yb+(H-yb)*0.53,s0);
+    const K=Kof(shape),cols=K.map(k=>TB.mixh(col.eth,col.warm,0.5-0.5*Math.tanh(k/0.12)));
+    if(!uv[shape])uv[shape]=d.p0.slice();const q=uv[shape],G=V.geom(d.S,q[0],q[1],d.o);
+    const psi=+ps.value*Math.PI/180;po.textContent=ps.value+'°';
+    const dir=V.lin(G.e1,Math.cos(psi),G.e2,Math.sin(psi)),kp=G.k1*Math.cos(psi)**2+G.k2*Math.sin(psi)**2;
+    const sec=V.section(d.S,q[0],q[1],d.o,dir,1.5,d.inside),front=cam.rot(G.n)[2]>0,h=0.38;
+    /* when the point faces the viewer, the plate and the marks lie over the scene; otherwise they are hidden by the surface like everything else */
+    const items=[{t:'mesh',m:m,cols:cols,grid:4,gridA:0.13,amb:0.34},
+      {t:'segs',s:V.tangentCut(m,G.p,G.n,0.8),col:col.ink,w:1.4,dash:[3,3],bias:0.03},
+      {t:'patch',p:G.p,e1:G.e1,e2:G.e2,h:h,fill:col.paper,alpha:front?0.42:0.3,edge:TB.rgba(col.ink,0.5),n:6,top:front},
+      {t:'line',pts:sec,col:col.ink,w:2.4,bias:0.04},
+      {t:'line',pts:[V.add(G.p,V.mul(G.e1,-h)),V.add(G.p,V.mul(G.e1,h))],col:TB.rgba(col.muted,0.9),w:1,bias:0.05,top:front},
+      {t:'line',pts:[V.add(G.p,V.mul(G.e2,-h)),V.add(G.p,V.mul(G.e2,h))],col:TB.rgba(col.muted,0.9),w:1,bias:0.05,top:front},
+      {t:'arrow',p:G.p,v:V.mul(G.n,0.55),col:col.warm,w:2,top:front},
+      {t:'pt',p:G.p,r:5,fill:col.ink,top:front}];
+    const lab=[{t:'label',p:V.add(G.p,V.mul(G.n,0.62)),segs:[['n','i']],col:col.warm,dx:4,dy:-2},
+      {t:'label',p:V.add(G.p,V.mul(G.e1,h+0.05)),segs:[['e','i'],['1','s']],col:col.muted,dx:-4,dy:4,al:'center',size:13},
+      {t:'label',p:V.add(G.p,V.mul(G.e2,h+0.05)),segs:[['e','i'],['2','s']],col:col.muted,dx:-4,dy:4,al:'center',size:13}];
+    if(front)items.push(...lab);
+    /* osculating circle of the section: only the arc near p, its hidden part dashed, and the centre on the normal */
+    if(Math.abs(kp)>0.05){const R=1/kp,z=V.sub(G.p,V.mul(G.n,R)),arc=[],RR=1.3;
+      for(let i=0;i<=160;i++){const a=i/160*2*Math.PI,P=V.add(z,V.lin(dir,Math.abs(R)*Math.cos(a),G.n,Math.abs(R)*Math.sin(a)));if(V.norm(V.sub(P,G.p))<RR)arc.push(P);else if(arc.length>1){items.push({t:'line',pts:arc.splice(0),col:TB.rgba(col.ink,0.7),w:1.2,bias:0.02,ghost:0.35});}else arc.length=0;}
+      if(arc.length>1)items.push({t:'line',pts:arc,col:TB.rgba(col.ink,0.7),w:1.2,bias:0.02,ghost:0.35});
+      if(Math.abs(R)<RR&&front)items.push({t:'line',pts:[G.p,z],col:TB.rgba(col.ink,0.55),w:1,dash:[2,3],top:true},{t:'pt',p:z,r:3.4,fill:col.paper,stroke:kp<0?col.warm:col.eth,w:1.8,top:true});}
+    c.save();c.beginPath();c.rect(0,yb,W,(sm?iy-4:H)-yb);c.clip();V.render(c,cam,items,col);c.restore();
+    const lo=-1.6,hi=2.4,Yk=k=>iy+ih-14-(k-lo)/(hi-lo)*(ih-24),Xp=a=>ix+30+a/180*(iw-36);
+    c.fillStyle=TB.rgba(col.paper,0.86);c.strokeStyle=col.rule;c.lineWidth=1;c.beginPath();c.rect(ix,iy,iw,ih);c.fill();c.stroke();
+    c.strokeStyle=TB.rgba(col.ink,0.35);TB.ln(c,Xp(0),Yk(0),Xp(180),Yk(0));
+    c.strokeStyle=col.ink;c.lineWidth=1.6;c.beginPath();for(let a=0;a<=180;a+=3){const r=a*Math.PI/180,k=G.k1*Math.cos(r)**2+G.k2*Math.sin(r)**2;if(a)c.lineTo(Xp(a),Yk(k));else c.moveTo(Xp(a),Yk(k));}c.stroke();
+    c.fillStyle=kp<0?col.warm:col.eth;c.beginPath();c.arc(Xp(+ps.value),Yk(kp),4,0,7);c.fill();
+    TB.rich(c,[['κ','i'],['(','m'],['ψ','i'],[')','m']],ix+6,iy+16,13,col.ink,'start');
+    TB.rich(c,[['0','m']],Xp(0),iy+ih-2,11,col.muted,'center');TB.rich(c,[['180°','r']],Xp(180),iy+ih-2,11,col.muted,'center');TB.rich(c,[['0','m']],ix+20,Yk(0)+4,11,col.muted,'right');
+    g.set(kp,kp<0?col.warm:col.eth);g.mark('lo',G.k1,'<i>κ</i><sub>1</sub>',true);g.mark('hi',G.k2,'<i>κ</i><sub>2</sub>',true);
+    const kind=G.K>0.004?'эллиптическая точка: поверхность по одну сторону от касательной плоскости':G.K<-0.004?'гиперболическая точка: поверхность пересекает касательную плоскость':'гауссова кривизна близка к нулю';
+    fx.innerHTML=TB.rows([['<i>κ</i><sub>1</sub> = '+TB.fmt(G.k1,2)+',','<i>κ</i><sub>2</sub> = '+TB.fmt(G.k2,2)+',','<i>K</i> = <i>κ</i><sub>1</sub><i>κ</i><sub>2</sub> = '+TB.fmt(G.K,2)],
+      ['сечение под углом <i>ψ</i> = '+ps.value+'° к <i>e</i><sub>1</sub>:','<i>κ</i>(<i>ψ</i>) = '+TB.fmt(kp,2)]])+'<span>'+kind+'</span>';
+  }
+  /* the point on screen, for grabbing it */
+  const near=(x,y)=>{if(!cam||!shape)return false;const d=V.SURF[shape],q=uv[shape]||d.p0,P=cam.P(d.S(q[0],q[1]));return Math.hypot(P[0]-x,P[1]-y)<26;};
+  const place=(x,y,r0)=>{const d=V.SURF[shape],r=V.pick(cam,V.meshOf(shape),x,y,r0);if(r){uv[shape]=d.fix(r[0],r[1]);draw();}};
+  V.interact(cv,st.elld,{active:is3,state:()=>st[shape],grab:near,move:(x,y)=>place(x,y,40),tap:(x,y)=>place(x,y,14),redraw:draw});
+  ps.addEventListener('input',draw);
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+})();
+</script>

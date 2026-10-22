@@ -1,0 +1,107 @@
+<script>
+(function(){
+  /* Shared helpers for the figures: theme tokens, number format with a decimal comma, read-only gauges. */
+  const TB=window.TB={};
+  TB.tok=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  TB.hex=c=>{const m=c.replace('#','');return [0,2,4].map(i=>parseInt(m.substr(i,2),16));};
+  TB.rgba=(c,a)=>{const h=TB.hex(c);return 'rgba('+h[0]+','+h[1]+','+h[2]+','+a+')';};
+  TB.mixh=(a,b,t)=>{const A=TB.hex(a),B=TB.hex(b);return '#'+A.map((u,i)=>Math.round(u+(B[i]-u)*t).toString(16).padStart(2,'0')).join('');};
+  TB.fmt=(v,d)=>{if(d===undefined)d=3;const s=Math.abs(v).toFixed(d);return (v<0&&+s!==0?'−':'')+s.replace('.',',');};
+  /* an amount of information given in nats, with the same amount in bits in brackets */
+  TB.nb=(v,d)=>{if(d===undefined)d=3;return TB.fmt(v,d)+' ната ('+TB.fmt(v/Math.LN2,d)+' бита)';};
+  TB.fr=(a,b)=>'<span class="fr"><span>'+a+'</span><span>'+b+'</span></span>';
+  TB.serif='Literata, Georgia, serif';TB.ui='"PT Sans Caption", "PT Sans", sans-serif';
+  TB.onTheme=fn=>{try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);}catch(e){}
+    new MutationObserver(fn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fn);};
+  const lab=v=>String(v).replace('.',',').replace('-','−');
+  function Gauge(id){
+    const el=this.el=document.getElementById(id);if(!el)return;
+    this.min=+el.dataset.min;this.max=+el.dataset.max;
+    this.zero=el.dataset.zero!==undefined?+el.dataset.zero:this.min;
+    this.d=el.dataset.d!==undefined?+el.dataset.d:3;
+    el.innerHTML='<i class="gt"></i><i class="gf"></i><i class="ge" style="left:0">'+lab(this.min)+'</i><i class="ge" style="left:100%">'+lab(this.max)+'</i><i class="gk"></i>';
+    this.f=el.querySelector('.gf');this.k=el.querySelector('.gk');this.m={};
+    this.out=el.parentNode.querySelector('.gv');
+    el.setAttribute('role','meter');el.setAttribute('aria-valuemin',this.min);el.setAttribute('aria-valuemax',this.max);
+  }
+  Gauge.prototype.p=function(v){return Math.max(0,Math.min(1,(v-this.min)/(this.max-this.min)))*100;};
+  Gauge.prototype.set=function(v,col){
+    if(!this.el)return this;const p=this.p(v),z=this.p(this.zero);
+    this.f.style.left=Math.min(p,z)+'%';this.f.style.width=Math.abs(p-z)+'%';this.k.style.left=p+'%';
+    this.f.style.background=col||'';this.k.style.background=col||'';
+    if(this.out)this.out.textContent=TB.fmt(v,this.d);
+    this.el.setAttribute('aria-valuenow',v.toFixed(this.d));return this;};
+  Gauge.prototype.mark=function(key,v,html,below){
+    if(!this.el)return this;let m=this.m[key];
+    if(!m){m=document.createElement('i');m.className='gm'+(below?' gb':'');m.appendChild(document.createElement('b'));this.el.insertBefore(m,this.k);this.m[key]=m;}
+    m.style.left=this.p(v)+'%';if(m.firstChild.innerHTML!==html)m.firstChild.innerHTML=html;return this;};
+  TB.Gauge=Gauge;
+})();
+</script>
+<script>
+(function(){
+  /* Canvas sizing for the figures of part 3: drawing in CSS pixels at the width of the column, sharp on dense screens; rich labels and a legend row. */
+  const TB=window.TB;if(!TB)return;
+  TB.fit=function(cv,hOf){
+    const W=Math.round(cv.parentNode.getBoundingClientRect().width)||760,H=Math.round(hOf(W)),r=window.devicePixelRatio||1;
+    const bw=Math.round(W*r),bh=Math.round(H*r);if(cv.width!==bw)cv.width=bw;if(cv.height!==bh)cv.height=bh;
+    const c=cv.getContext('2d');c.setTransform(r,0,0,r,0,0);c.textAlign='start';c.textBaseline='alphabetic';c.setLineDash([]);
+    return {c:c,W:W,H:H};};
+  TB.onResize=function(cv,fn){let w=Math.round(cv.parentNode.getBoundingClientRect().width);
+    if(window.ResizeObserver)new ResizeObserver(()=>{const nw=Math.round(cv.parentNode.getBoundingClientRect().width);if(nw!==w){w=nw;fn();}}).observe(cv.parentNode);
+    else window.addEventListener('resize',fn);};
+  /* A label is a list of [text, kind]: 'i' italic letter, 's' italic subscript, 'r' upright sans, 'm' upright serif. */
+  /* Kinds 'h' and 'hp' are italic letters with a hat drawn above (tall letters like θ, short ones like p). */
+  function font(k,s){if(k==='h'||k==='hp')k='i';return k==='i'?'italic '+(s+2)+'px '+TB.serif:k==='s'?'italic '+Math.round(s*0.78)+'px '+TB.serif:k==='m'?(s+1)+'px '+TB.serif:s+'px '+TB.ui;}
+  /* The italic θ of the text fonts is often the open, cursive form; draw the closed formula θ by hand so that labels match the formulas. */
+  const fsz=(k,s)=>k==='s'?Math.round(s*0.78):k==='m'?s+1:k==='r'?s:s+2;
+  TB.theta=function(c,x,y,f,col){c.save();c.translate(x,y);c.transform(1,0,-0.2,1,0,0);c.strokeStyle=col;c.setLineDash([]);
+    c.lineWidth=Math.max(1,f*0.075);c.beginPath();c.ellipse(f*0.27,-f*0.36,f*0.155,f*0.335,0,0,7);c.stroke();
+    c.lineWidth=Math.max(0.9,f*0.06);c.beginPath();c.moveTo(f*0.12,-f*0.36);c.lineTo(f*0.42,-f*0.36);c.stroke();c.restore();};
+  const segW=(c,q,s)=>{if(q[0]==='θ')return fsz(q[1],s)*0.56;c.font=font(q[1],s);return c.measureText(q[0]).width;};
+  TB.richW=function(c,segs,s){let w=0;for(const q of segs)w+=segW(c,q,s)+(q[1]==='i'||q[1][0]==='h'?1:0);return w;};
+  TB.rich=function(c,segs,x,y,s,col,align){
+    const w=TB.richW(c,segs,s);if(align==='center')x-=w/2;else if(align==='right')x-=w;
+    c.fillStyle=col;c.textAlign='start';
+    for(const q of segs){const gw=segW(c,q,s),yy=q[1]==='s'?y+s*0.3:y;
+      if(q[0]==='θ')TB.theta(c,x,yy,fsz(q[1],s),col);else{c.font=font(q[1],s);c.fillStyle=col;c.fillText(q[0],x,yy);}
+      if(q[1]==='h'||q[1]==='hp'){const hy=y-(q[1]==='h'?s*1.02:s*0.72),hx=x+gw*0.58,hw=s*0.24;c.strokeStyle=col;c.lineWidth=Math.max(1,s/13);c.setLineDash([]);
+        c.beginPath();c.moveTo(hx-hw,hy+s*0.13);c.lineTo(hx,hy);c.lineTo(hx+hw,hy+s*0.13);c.stroke();}
+      x+=gw+(q[1]==='i'||q[1][0]==='h'?1:0);}
+    return w;};
+  /* The same θ inside HTML readouts. */
+  TB.thSvg='<svg class="gth" viewBox="0 -74 58 76" aria-label="θ"><g transform="skewX(-11.3)"><ellipse cx="27" cy="-36" rx="15.5" ry="33.5"/><line x1="12" y1="-36" x2="42" y2="-36"/></g></svg>';
+  /* Legend items: {k:'line'|'thin'|'dash'|'fill', col, a (fill opacity), t: label}. Wraps to the next row when needed; returns the bottom y. */
+  TB.legend=function(c,items,L,R,y,s){
+    const sw=22,gap=18,rowH=s+9;let x=L;y+=s;
+    for(const it of items){const w=sw+6+TB.richW(c,it.t,s);
+      if(x>L&&x+w>R){x=L;y+=rowH;}
+      const ym=y-s*0.33;
+      if(it.k==='fill'){c.fillStyle=TB.rgba(it.col,it.a||0.3);c.fillRect(x,ym-6,sw,12);}
+      else{c.strokeStyle=it.col;c.lineWidth=it.k==='thin'?1.2:2.2;c.setLineDash(it.k==='dash'?[5,4]:[]);
+        c.beginPath();c.moveTo(x,ym);c.lineTo(x+sw,ym);c.stroke();c.setLineDash([]);}
+      TB.rich(c,it.t,x+sw+6,y,s,TB.tok('--ink'));x+=w+gap;}
+    return y+7;};
+  /* Readout lines for .fx: each part stays on one line, a line may break only between parts. */
+  TB.rows=rows=>rows.map(r=>'<span>'+r.map(p=>'<span class="nw">'+p+'</span>').join('&emsp;')+'</span>').join('').replace(/(<i[^>]*>)θ(<\/i>)/g,'$1'+TB.thSvg+'$2');
+  TB.segs=function(cv,fn){const b=[...cv.closest('figure').querySelectorAll('.seg button')];
+    b.forEach(e=>e.addEventListener('click',()=>{b.forEach(o=>o.setAttribute('aria-pressed',o===e?'true':'false'));fn(e.dataset.k);}));
+    const on=b.find(e=>e.getAttribute('aria-pressed')==='true');return on?on.dataset.k:b[0].dataset.k;};
+})();
+</script>
+<script>
+(function(){
+  /* Small shared pieces for the figures of part 3: theme colours, superscript digits, a heat-map pixel buffer. */
+  const TB=window.TB;if(!TB)return;
+  TB.cols=()=>({ink:TB.tok('--ink'),muted:TB.tok('--muted'),rule:TB.tok('--rule'),eth:TB.tok('--ether'),warm:TB.tok('--warm'),paper:TB.tok('--paper')});
+  const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+  TB.sup=n=>String(n).split('').map(ch=>SUP[ch]||ch).join('');
+  /* Paint an n×n off-screen image: col(i,j) returns [r,g,b] for the pixel whose centre is ((i+.5)/n,(j+.5)/n), j counted from the bottom. */
+  TB.heat=function(n,col){const o=document.createElement('canvas');o.width=n;o.height=n;const x=o.getContext('2d'),im=x.createImageData(n,n),d=im.data;
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++){const c=col(i,j),k=4*((n-1-j)*n+i);d[k]=c[0];d[k+1]=c[1];d[k+2]=c[2];d[k+3]=255;}
+    x.putImageData(im,0,0);return o;};
+  TB.mixa=(a,b,t)=>{const A=TB.hex(a),B=TB.hex(b);return [0,1,2].map(i=>Math.round(A[i]+(B[i]-A[i])*t));};
+  TB.tickLabel=v=>TB.fmt(v,Math.abs(v-Math.round(v))<1e-9?0:(Math.abs(v*10-Math.round(v*10))<1e-9?1:2));
+})();
+</script>

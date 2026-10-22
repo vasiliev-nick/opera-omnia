@@ -1,0 +1,223 @@
+<title>Кросс-энтропия</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("xent-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=PT+Sans+Caption:wght@400;700&display=swap">
+<style>
+/* Light theme is warm paper with brown ink, like an old textbook; the dark theme is unchanged. */
+/* Layout: one book column (~66ch), figures may break wider; numbered statements set like a printed textbook. */
+:root{
+  --paper:#f5eee0; --ink:#3b3027; --muted:#7a6b5a; --rule:#ddd0ba;
+  --ether:#4f42a6; --ether-soft:#e9e1e6; --warm:#a3542f; --warm-soft:#f0e0cc;
+  --font-body:"Literata", "PT Serif", Georgia, serif;
+  --font-ui:"PT Sans Caption", "PT Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#13141c; --ink:#e4e4ee; --muted:#9a9db3; --rule:#2c2e3d;
+  --ether:#a9a0ff; --ether-soft:#22213a; --warm:#e09a73; --warm-soft:#2d221d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#13141c; --ink:#e4e4ee; --muted:#9a9db3; --rule:#2c2e3d;
+  --ether:#a9a0ff; --ether-soft:#22213a; --warm:#e09a73; --warm-soft:#2d221d; color-scheme:dark}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.62}
+.book{max-width:44rem;margin:0 auto;padding-inline:20px;padding-block:3rem 5rem}
+header.ch{border-bottom:1px solid var(--rule);padding-bottom:1.6rem;margin-bottom:2rem}
+.eyebrow{font-family:var(--font-ui);text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;color:var(--muted)}
+h1{font-size:2.3rem;line-height:1.15;margin:.4rem 0 .6rem;text-wrap:balance;font-weight:700}
+h2{font-size:1.45rem;margin:3rem 0 .8rem;text-wrap:balance}
+h3{font-size:1.1rem;margin:2rem 0 .5rem}
+p{margin:0 0 1rem;hyphens:auto}
+.lead{font-size:1.1rem;color:var(--muted)}
+.stmt{margin:1.4rem 0;padding:.9rem 1.1rem;background:var(--ether-soft);border-radius:4px}
+.stmt .lbl{font-family:var(--font-ui);font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ether);display:block;margin-bottom:.3rem}
+.proof{position:relative;margin:0 0 1.2rem;padding-left:1.6rem;padding-bottom:1em;transition:padding-bottom .5s cubic-bezier(.5,0,.2,1)}
+.proof .thread{position:absolute;left:.3em;top:1.06em;bottom:.64em;width:1px;background:var(--muted);transition:opacity .4s}
+.proof .qo,.proof .qc{position:absolute;left:0;width:.64em;height:.64em;box-sizing:border-box;cursor:pointer;z-index:1}
+.proof .qo{top:.42em;border:1.4px solid var(--ink);background:var(--paper)}
+.proof .qc{bottom:0;background:var(--ink)}
+.proof .qo::before,.proof .qc::before{content:"";position:absolute;inset:-.45em}
+.proof .lbl{font-style:italic;cursor:pointer;user-select:none;border-radius:3px;outline-offset:2px}
+.proof .lbl:hover{color:var(--ether)}
+.proof .lbl::after{content:"";font-style:normal;color:var(--muted);font-family:var(--font-ui);font-size:.8rem;margin-left:.5em;opacity:0;transition:opacity .3s}
+.proof .pbody{display:grid;grid-template-rows:1fr;transition:grid-template-rows .5s cubic-bezier(.5,0,.2,1),opacity .35s}
+.proof .pin{min-height:0;overflow:hidden}
+.proof .pin>:last-child{margin-bottom:0}
+.proof.folded{padding-bottom:.08em}
+.proof.folded .pbody{grid-template-rows:0fr;opacity:0}
+.proof.folded .thread{opacity:0}
+.proof.folded .lbl::after{content:"свёрнуто";opacity:1}
+.proof.snap .qc{animation:tug .42s ease-out}
+@keyframes tug{0%{transform:translateY(0)}40%{transform:translateY(-.14em)}70%{transform:translateY(.05em)}100%{transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.proof,.proof .pbody{transition:none}.proof.snap .qc{animation:none}}
+.ex{margin:1.4rem 0;padding:.9rem 1.1rem;background:var(--warm-soft);border-radius:4px}
+.ex>p:last-child,.ex>ol:last-child{margin-bottom:0}
+.proof.sol .lbl:hover{color:var(--warm)}
+.proof.sol .step .sh{color:var(--warm)}
+.proof.sol.folded .lbl::after{content:"скрыто"}
+.ex .lbl{font-family:var(--font-ui);font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--warm);display:block;margin-bottom:.3rem}
+.d3{margin:1.4rem 0;padding:.8rem 1.1rem;border:1px dashed var(--ether);border-radius:4px;font-size:.95rem}
+.d3 .lbl{font-family:var(--font-ui);font-weight:700;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ether);display:block;margin-bottom:.25rem}
+.fig1 canvas{width:100%;height:auto;display:block;border-radius:4px;cursor:crosshair}
+.stmt ol.ax,ol.ax{margin:.5rem 0 .4rem;padding-left:1.6rem}
+.stmt ol.ax li{margin:.3rem 0}
+/* Item letters match the references in the text: (а), (б), (в) and (i), (ii). */
+ol[type="a"],ol[type="i"]{list-style:none;padding-left:2.1rem}
+ol[type="a"]>li,ol[type="i"]>li{position:relative}
+ol[type="a"]>li::before,ol[type="i"]>li::before{position:absolute;right:calc(100% + .45rem);white-space:nowrap}
+ol[type="a"]>li:nth-child(1)::before{content:"(а)"}ol[type="a"]>li:nth-child(2)::before{content:"(б)"}
+ol[type="a"]>li:nth-child(3)::before{content:"(в)"}ol[type="a"]>li:nth-child(4)::before{content:"(г)"}
+ol[type="a"]>li:nth-child(5)::before{content:"(д)"}ol[type="a"]>li:nth-child(6)::before{content:"(е)"}
+ol[type="i"]{counter-reset:ri}ol[type="i"]>li{counter-increment:ri}
+ol[type="i"]>li::before{content:"(" counter(ri,lower-roman) ")"}
+.svgwrap{overflow-x:auto}
+.boxfig{width:100%;min-width:520px;height:auto;display:block}
+.boxfig .pc{stroke:var(--paper);stroke-width:2}
+.boxfig .p1{fill:var(--ether);fill-opacity:.45}.boxfig .p2{fill:var(--ether);fill-opacity:.25}
+.boxfig .p3{fill:var(--warm);fill-opacity:.35}.boxfig .p4{fill:var(--warm);fill-opacity:.2}.boxfig .p5{fill:var(--ether);fill-opacity:.12}
+.boxfig .frame{fill:none;stroke:var(--ink);stroke-width:2}
+.boxfig .hole{fill:var(--paper);stroke:var(--ink);stroke-width:1.5;stroke-dasharray:5 4}
+.boxfig .grid{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 4;opacity:.55}
+.boxfig .dot{fill:var(--ink)}
+.boxfig .lab{fill:var(--ink);font:600 15px var(--font-body)}
+.boxfig .cap{fill:var(--muted);font-family:var(--font-ui);font-size:13px}
+.step{margin:.7rem 0}
+.step .sh{display:block;font-family:var(--font-ui);font-weight:700;font-size:.86rem;color:var(--ether);margin-bottom:.15rem}
+.step ol.ax{margin:.3rem 0}
+.proof>p{margin:.4rem 0 .6rem}
+.fig1.sq{max-width:560px;margin:0 auto}
+.hier{width:100%;min-width:560px;height:auto;display:block}
+.hier .lv{fill:var(--ether);fill-opacity:.07;stroke:var(--ether);stroke-opacity:.5;stroke-width:1.2}
+.hier .lv0{fill-opacity:.03;stroke-dasharray:6 5}
+.hier .lt{fill:var(--ink);font-family:var(--font-ui);font-size:15px;font-weight:700}
+.hier .le{fill:var(--muted);font-family:var(--font-body);font-size:14px;font-style:italic}
+.plain{margin:.5rem 0 .9rem;padding:.55rem .9rem;border-left:2px solid var(--ether);background:var(--ether-soft);border-radius:0 4px 4px 0;font-size:.97rem}
+.plain p{margin:.3rem 0}
+.plain .pl{font-family:var(--font-ui);font-weight:700;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ether);display:block;margin-bottom:.2rem}
+ul.gl{margin:.3rem 0 1rem;padding-left:1.3rem}
+ul.gl li{margin:.25rem 0}
+.aside{display:block;font-family:var(--font-ui);font-size:.84rem;line-height:1.5;color:var(--muted);margin:.4rem 0 .2rem;padding-left:.7rem;border-left:1px solid var(--rule)}
+p.aside{margin:.2rem 0 1rem}
+.gloss{position:fixed;top:12px;left:12px;z-index:50}
+.gbtn{position:relative;z-index:2;width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);background:var(--paper);color:var(--ether);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:transform .2s,box-shadow .2s}
+.gloss:hover .gbtn,.gloss.open .gbtn{transform:scale(1.06);box-shadow:0 2px 10px rgba(0,0,0,.14)}
+.gpanel{position:absolute;top:0;left:0;padding:48px 0 0;width:min(420px,calc(100vw - 24px));visibility:hidden;opacity:0;transform:translateY(-4px);transition:opacity .2s,transform .2s,visibility 0s .2s;pointer-events:none}
+.gloss:hover .gpanel,.gloss:has(:focus-visible) .gpanel,.gloss.open .gpanel{visibility:visible;opacity:1;transform:none;transition:opacity .2s,transform .2s;pointer-events:auto}
+.gloss.shut .gpanel.gpanel{visibility:hidden;opacity:0;pointer-events:none}
+.gpanel>.ghead,.gpanel>.glist{background:var(--paper);border:1px solid var(--rule)}
+.ghead{font-family:var(--font-ui);font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ether);padding:.7rem 1rem .5rem;border-radius:8px 8px 0 0;border-bottom:none!important;box-shadow:0 8px 28px rgba(0,0,0,.12)}
+.ghead span{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:.4em}
+.glist{list-style:none;margin:0;padding:.2rem 0 .6rem;max-height:min(70vh,560px);overflow-y:auto;border-radius:0 0 8px 8px;border-top:none!important;box-shadow:0 12px 28px rgba(0,0,0,.12)}
+.glist li{display:grid;grid-template-columns:7.2rem 1fr;gap:.8rem;padding:.42rem 1rem;border-top:1px solid var(--rule);font-size:.86rem;line-height:1.45}
+.glist li:first-child{border-top:none}
+.gs{text-align:right;color:var(--ink)}
+.gd{color:var(--ink)}
+.gref{font-family:var(--font-ui);font-size:.74rem;color:var(--ether);text-decoration:none;white-space:nowrap;margin-left:.3em}
+.gref:hover{text-decoration:underline}
+.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--ether)}100%{box-shadow:0 0 0 3px transparent}}
+@media (max-width:600px){.glist li{grid-template-columns:5.4rem 1fr}}
+.say{display:block;font-style:italic;color:var(--muted);margin-bottom:.15rem}
+.why{color:var(--muted);font-size:.95rem}
+ol,ul{padding-left:1.4rem;margin:0 0 1rem}
+li{margin:.25rem 0}
+.toc{font-family:var(--font-ui);font-size:.92rem;display:grid;gap:.25rem;margin:1rem 0 0;padding:0;list-style:none}
+.toc a{color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--rule)}
+.toc a:hover{color:var(--ether)}
+.math-wrap{display:block;overflow-x:auto;overflow-y:hidden}
+figure{margin:2rem 0}
+figcaption{font-family:var(--font-ui);font-size:.85rem;color:var(--muted);margin-top:.6rem}
+.fig{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:12px;align-items:stretch}
+.fig canvas{width:100%;height:auto;display:block;border-radius:4px}
+.controls{display:flex;flex-wrap:wrap;gap:1rem 1.6rem;font-family:var(--font-ui);font-size:.85rem;margin-top:.8rem}
+.controls label{display:flex;align-items:center;gap:.5rem}
+.controls select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:.15rem .3rem}
+.controls output{font-variant-numeric:tabular-nums;min-width:3.2em}
+input[type=range]{accent-color:var(--ether)}
+input:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
+/* Figure readouts: a formula on the left, a read-only gauge, and the value in small print. */
+.ro{margin:.9rem 0 0;display:grid;gap:.1rem}
+.rr{display:grid;grid-template-columns:var(--lw,8rem) minmax(0,1fr) 3.4rem;align-items:center;column-gap:1rem}
+.rr[hidden]{display:none}
+.rl{text-align:right;font-size:.95rem;line-height:1.25;font-family:var(--font-body)}
+.gauge{position:relative;display:block;height:46px;margin:0 .5rem}
+.gauge>i{position:absolute;display:block;font-style:normal}
+.gauge>.gt{left:0;right:0;top:22px;height:3px;border-radius:2px;background:var(--rule)}
+.gauge>.gf{top:22px;height:3px;border-radius:2px;background:var(--warm);transition:left .18s ease-out,width .18s ease-out}
+.gauge>.gk{top:17px;width:13px;height:13px;margin-left:-6.5px;border-radius:50%;background:var(--warm);box-shadow:0 0 0 3px var(--paper);transition:left .18s ease-out}
+.gauge>.gm{top:14px;width:0;height:19px;border-left:1.5px solid var(--ink);margin-left:-.75px;opacity:.8;transition:left .18s ease-out}
+.gauge>.gm b{position:absolute;bottom:100%;left:0;transform:translateX(-50%);font:400 .86rem/1.15 var(--font-body);color:var(--ink);white-space:nowrap}
+.gauge>.gm b i{font-style:italic}
+.gauge>.gm.gb b{bottom:auto;top:100%;font:400 .72rem/1.3 var(--font-ui);color:var(--muted)}
+.gauge>.ge{top:32px;transform:translateX(-50%);font:400 .72rem/1 var(--font-ui);color:var(--muted)}
+.rr>output.gv{font-family:var(--font-ui);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.fx{font-family:var(--font-body);font-size:1.02rem;line-height:1.6;margin:.8rem 0 0;display:flex;flex-direction:column;align-items:center;gap:.35rem;text-align:center;font-variant-numeric:tabular-nums}
+.fx i{font-style:italic}
+.nw{white-space:nowrap}
+.fx sub,.fx sup{font-size:.72em;line-height:0}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.8em;line-height:1.15;margin:0 .12em}
+.fr>span:first-child{border-bottom:1px solid currentColor;padding:0 .22em .06em}
+.fr>span:last-child{padding:.06em .22em 0}
+figure .math-wrap{margin-top:.6rem}
+figure .math-wrap mjx-container[display="true"]{margin:.3em 0!important}
+@media (max-width:560px){.rr{grid-template-columns:minmax(0,1fr) 3.2rem}.rl{grid-column:1/-1;text-align:left;margin:.5rem 0 .45rem}}
+hr{border:0;border-top:1px solid var(--rule);margin:3rem 0}
+@media (max-width:560px){body{font-size:17px}.fig{grid-template-columns:1fr}h1{font-size:1.8rem}}
+/* Part 2: example switches in figures (wrap on narrow screens) and the static diagram of convergence modes. */
+.controls [hidden]{display:none}
+.seg{display:flex;flex-wrap:wrap;gap:.4rem}
+.seg button{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:.18rem .7rem;cursor:pointer;line-height:1.4}
+.seg button:hover{border-color:var(--ether)}
+.seg button[aria-pressed="true"]{background:var(--ether-soft);border-color:var(--ether);color:var(--ether);font-weight:700}
+.seg button:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
+.modes{width:100%;min-width:560px;height:auto;display:block}
+.modes.mob{display:none;min-width:0;max-width:400px;margin:0 auto}
+@media (max-width:600px){.modes.wide{display:none}.modes.mob{display:block}}
+.modes .bx{fill:var(--ether-soft);stroke:var(--ether);stroke-width:1.3}
+.modes .bt{fill:var(--ink);font:400 17px var(--font-body)}
+.modes .ar{fill:none;stroke:var(--ink);stroke-width:1.4;opacity:.85}
+.modes .ar.dash{stroke-dasharray:6 5}
+.modes .ah{fill:var(--ink);opacity:.85}
+.modes .al{fill:var(--muted);font:13.5px var(--font-ui)}
+/* Mini-book additions: contents and glossary buttons on the left, a round theme switch on the right, action buttons in figure controls. */
+.tbtn{position:fixed;top:12px;left:12px;z-index:51;width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);background:var(--paper);color:var(--ether);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:transform .2s,box-shadow .2s}
+.tbtn:hover{transform:scale(1.06);box-shadow:0 2px 10px rgba(0,0,0,.14)}
+.tbtn:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
+.tbtn svg{transition:transform .5s cubic-bezier(.5,0,.2,1)}
+:root[data-theme="dark"] .tbtn svg{transform:rotate(180deg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tbtn svg{transform:rotate(180deg)}}
+.gloss{top:58px}
+.tbtn{top:12px;left:auto;right:12px}
+.gloss.navm{top:12px;z-index:52}
+.nlist li{display:block;padding:0;border-top:1px solid var(--rule);font-family:var(--font-ui);font-size:.88rem;line-height:1.35}
+.nlist li.sub{border-top:none;font-size:.8rem}
+.nlist a{display:block;padding:.45rem 1rem;color:var(--ink);text-decoration:none}
+.nlist li.sub a{padding:.2rem 1rem .3rem 2.2rem;color:var(--muted)}
+.nlist a:hover{color:var(--ether);background:color-mix(in srgb,var(--ether) 7%,transparent)}
+.nlist a.cur{color:var(--ether);font-weight:700}
+.nlist li.sub a.cur{font-weight:400;color:var(--ether)}
+.nlist li.pills{display:flex;flex-wrap:wrap;align-items:flex-start;gap:.28rem;padding:.15rem 1rem .5rem 2.2rem;border-top:none}
+.nlist a.npill{display:inline-block;margin:0;padding:.06rem .42rem;border-radius:3px;font-size:.72rem;line-height:1.35;color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nlist a.npill.p-st{background:var(--ether-soft)}
+.nlist a.npill.p-ex{background:var(--warm-soft)}
+.nlist a.npill.p-fg{background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)}
+.nlist a.npill:hover{outline:1px solid var(--ether);background-image:none}
+@media (max-width:600px){header.ch{padding-top:100px}}
+.lnpre:not([hidden]){display:flex;flex-wrap:wrap;gap:.5rem}
+figure.exfig{margin:1rem 0 1.2rem}
+.tbl{border-collapse:collapse;margin:.8rem auto;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:.3rem .9rem;border-bottom:1px solid var(--rule);text-align:center;font-weight:normal}
+.tbl th{color:var(--muted);border-bottom-color:var(--ink)}
+@media (max-width:600px){.tbl th,.tbl td{padding:.25rem .32rem;font-size:.86rem}.tbl{max-width:100%}}
+button.act{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:.18rem .7rem;cursor:pointer;line-height:1.4}
+button.act:hover{border-color:var(--ether);color:var(--ether)}
+button.act:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
+.seg button mjx-container{pointer-events:none}
+.gth{display:inline-block;width:.58em;height:.76em;vertical-align:-.02em;overflow:visible}.gth ellipse,.gth line{fill:none;stroke:currentColor}.gth ellipse{stroke-width:8}.gth line{stroke-width:6.5}
+.hat{position:relative;display:inline-block}
+.hat::after{content:"";position:absolute;left:52%;top:-.12em;width:.3em;height:.3em;border-left:1px solid currentColor;border-top:1px solid currentColor;transform:translateX(-50%) rotate(45deg) scale(.75,.75)}
+.hat.hs::after{top:.12em}
+.hat:has(.gth)::after{top:.1em}
+</style>
+<script>
+window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none'},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>

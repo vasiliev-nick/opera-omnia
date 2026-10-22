@@ -1,0 +1,76 @@
+<script>
+(function(){
+  /* Fig. ∇.@cassini, spatial mode: level surfaces {f = c} of f(x) = |x|⁴ − 2(x₁² − x₂² − x₃²) in R³ (Cassini ovals turned about the x₁ axis), coloured by the sign of the Gaussian curvature; a point dragged over the surface with ∇f, the tangent plane, the meridian and the parallel through it; principal curvatures from the shape matrix of the §∇.3 box. */
+  const TB=window.TB,cv=document.getElementById('cassini');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,fx=document.getElementById('csFx'),g1=TB.G('gCs1'),g2=TB.G('gCs2'),sl=document.getElementById('csC'),so=document.getElementById('csCOut');
+  const st={yaw:0.35,pitch:0.45},GMIN=1,PI=Math.PI;
+  const is3=()=>cv.dataset.dim==='3';
+  TB.segs(cv,k=>{if(k!=='space')return;V.dim(cv,true);draw();V.intro(st,draw);});
+  /* f, its gradient and Hessian: ∂ᵢf = 4xᵢ(|x|² ∓ 1), ∇²f = 4·diag(|x|²−1, |x|²+1, |x|²+1) + 8xxᵀ */
+  function d2(x){const r=x[0]*x[0]+x[1]*x[1]+x[2]*x[2],d=[r-1,r+1,r+1];
+    return {g:[4*x[0]*d[0],4*x[1]*d[1],4*x[2]*d[2]],H:[0,1,2].map(i=>[0,1,2].map(j=>(i===j?4*d[i]:0)+8*x[i]*x[j]))};}
+  const Hv=(H,v)=>[V.dot(H[0],v),V.dot(H[1],v),V.dot(H[2],v)];
+  /* shape matrix in an orthonormal basis a, b of the tangent plane; κ(v) = ⟨v, ∇²f v⟩/|∇f| */
+  function shape(x){const D=d2(x),G=V.norm(D.g),n=V.mul(D.g,1/G);
+    const ax=V.cross([1,0,0],n),a=V.unit(V.norm(ax)>0.1?ax:V.cross([0,1,0],n)),b=V.cross(n,a);
+    const s11=V.dot(a,Hv(D.H,a))/G,s12=V.dot(a,Hv(D.H,b))/G,s22=V.dot(b,Hv(D.H,b))/G,tr=(s11+s22)/2,K=s11*s22-s12*s12,ds=Math.sqrt(Math.max(0,tr*tr-K));
+    const kv=v=>V.dot(v,Hv(D.H,v))/G;
+    return {G:G,n:n,a:a,b:b,K:K,k1:tr-ds,k2:tr+ds,kv:kv};}
+  /* Profile of {f = c} in the half-plane (x₁, ρ), ρ = √(x₂² + x₃²): the plane Cassini oval. For c > 0 one curve, in polar form r² = cos2θ + √(cos²2θ + c); for c ≤ 0 two ovals around the foci (±1, 0), each a radial graph R(α) about its focus with R < 1 (R²(R² + 4R cos α + 4) = 1 + c, increasing in R on (0, 1)). */
+  function Rf(c,a){const b4=1+c,ca=Math.cos(a);let lo=0,hi=1;for(let i=0;i<46;i++){const m=(lo+hi)/2;if(m*m*(m*m+4*m*ca+4)>b4)hi=m;else lo=m;}return (lo+hi)/2;}
+  function prof(c,sg,u){if(c>0){const q=Math.cos(2*u),r=Math.sqrt(q+Math.sqrt(q*q+c));return [r*Math.cos(u),r*Math.sin(u)];}
+    const R=Rf(c,u);return [sg*(1+R*Math.cos(u)),R*Math.sin(u)];}
+  const surf=(c,sg)=>(u,v)=>{const p=prof(c,sg,u);return [p[0],p[1]*Math.cos(v),p[1]*Math.sin(v)];};
+  const fixu=(u,v)=>[Math.max(0.02,Math.min(PI-0.02,u)),v];
+  let c=+sl.value,meshes=null,mkey='',pt={sg:1,u:1.25,v:1.9},cam=null,P=null;
+  function build(){const k=c.toFixed(3);if(k===mkey)return;mkey=k;
+    meshes=(c>0?[1]:[1,-1]).map(sg=>{const S=surf(c,sg),m=V.mesh(S,{u0:0,u1:PI,v0:0,v1:2*PI,nu:40,nv:48,fix:fixu});
+      m.sg=sg;m.K=m.P.map((x,i)=>{const r=Math.hypot(x[0],x[1],x[2]);if(r<0.05)return 0;const s=shape(x);return s.K;});return m;});}
+  /* when the level changes, keep the point on the same ray of its half-plane */
+  function remap(x){const rho=Math.hypot(x[1],x[2]),ph=Math.atan2(x[2],x[1]);
+    if(c>0)pt={sg:1,u:Math.atan2(rho,x[0]),v:ph};else{const sg=x[0]>=0?1:-1;pt={sg:sg,u:Math.atan2(rho,sg*x[0]-1),v:ph};}
+    const f=fixu(pt.u,pt.v);pt.u=f[0];pt.v=f[1];}
+  function draw(){
+    if(!is3())return;build();
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?0.86:0.6))),cx=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520;cx.clearRect(0,0,W,H);
+    const yb=TB.legend(cx,[{k:'fill',col:col.eth,a:0.5,t:[['K','i'],[' > 0','r']]},{k:'fill',col:col.warm,a:0.5,t:[['K','i'],[' < 0','r']]},
+      {k:'thin',col:col.ink,t:[['меридиан и параллель','r']]}],sm?8:14,W-8,4,sm?12:13);
+    const s0=Math.min(W*(sm?0.25:0.23),(H-yb)*0.36);cam=V.camera(st,W,H,W*0.5,yb+(H-yb)*0.5,s0);
+    const S=surf(c,pt.sg),x=S(pt.u,pt.v);P=x;const sh=shape(x),ok=sh.G>=GMIN,n=sh.n;
+    const items=[];
+    for(const m of meshes)items.push({t:'mesh',m:m,cols:m.K.map(k=>TB.mixh(col.eth,col.warm,0.5-0.5*Math.tanh(k/0.4))),grid:4,gridA:0.12,amb:0.34});
+    items.push({t:'line',pts:[[-2.15,0,0],[2.15,0,0]],col:TB.rgba(col.ink,0.6),w:1,bias:0.01,ghost:0.4},
+      {t:'label',p:[2.2,0,0],segs:[['x','i'],['1','s']],col:col.ink,dx:4,dy:4});
+    for(const a of [-1,0,1])items.push({t:'pt',p:[a,0,0],r:2.6,fill:col.ink,stroke:col.paper,w:1});
+    /* meridian (the profile turned to the point's half-plane) and parallel (the circle through the point about the axis) */
+    const mer=[],par=[];for(let i=0;i<=80;i++){mer.push(S(0.02+(PI-0.04)*i/80,pt.v));par.push(S(pt.u,2*PI*i/80));}
+    items.push({t:'line',pts:mer,col:TB.rgba(col.ink,0.85),w:1.3,bias:0.03},{t:'line',pts:par,col:TB.rgba(col.ink,0.85),w:1.3,bias:0.03});
+    const front=cam.rot(n)[2]>0;
+    if(ok){const L=Math.min(0.55,0.09*sh.G);
+      items.push({t:'patch',p:x,e1:sh.a,e2:sh.b,h:0.3,fill:col.paper,alpha:front?0.42:0.3,edge:TB.rgba(col.ink,0.5),n:5,top:front},
+        {t:'arrow',p:x,v:V.mul(n,L),col:col.warm,w:2,top:front});
+      if(front)items.push({t:'label',p:V.add(x,V.mul(n,L+0.08)),segs:[['∇','m'],['f','i']],col:col.warm,dx:4,dy:4});}
+    items.push({t:'pt',p:x,r:5,fill:col.eth,stroke:col.ink,w:1.8,top:front});
+    if(front)items.push({t:'label',p:x,segs:[['x','i']],col:col.ink,dx:-16,dy:16});
+    cx.save();cx.beginPath();cx.rect(0,yb,W,H-yb);cx.clip();V.render(cx,cam,items,col);cx.restore();
+    /* readouts */
+    const head='<i>c</i> = <i>f</i>(<i>x</i>) = '+TB.fmt(c,2)+',',gt='|∇<i>f</i>(<i>x</i>)| = '+TB.fmt(sh.G,2);
+    if(ok){const tm=V.unit(V.sub(S(pt.u+1e-4,pt.v),S(pt.u-1e-4,pt.v))),km=sh.kv(tm),kp=sh.kv(V.unit(V.cross(n,tm)));
+      fx.innerHTML=TB.rows([[head,gt],['<i>κ</i><sub>1</sub> = '+TB.fmt(sh.k1,2)+',','<i>κ</i><sub>2</sub> = '+TB.fmt(sh.k2,2)+',','<i>K</i> = <i>κ</i><sub>1</sub><i>κ</i><sub>2</sub> = '+TB.fmt(sh.K,2)],
+        ['вдоль меридиана <i>κ</i> = '+TB.fmt(km,2)+',','вдоль параллели <i>κ</i> = '+TB.fmt(kp,2)]]);
+      g1.set(Math.max(-3,Math.min(5,sh.k1)),sh.k1<0?col.warm:col.eth);g2.set(Math.max(-3,Math.min(5,sh.k2)),sh.k2<0?col.warm:col.eth);}
+    else{fx.innerHTML=TB.rows([[head,gt]])+'<span>градиент мал: рядом критическая точка, и поверхность уровня здесь может не быть гладкой; кривизны не выводятся</span>';
+      g1.set(0);g2.set(0);if(g1.out)g1.out.textContent='—';if(g2.out)g2.out.textContent='—';}
+  }
+  /* pointer: the nearest visible point of the level surface (one or two pieces) */
+  function pickAt(x,y,rad){let best=null,bd=-1e9;
+    for(const m of meshes){const r=V.pick(cam,m,x,y,rad);if(!r)continue;const q=cam.P(m.S(r[0],r[1]));if(Math.hypot(q[0]-x,q[1]-y)>rad)continue;if(q[2]>bd){bd=q[2];best={sg:m.sg,u:r[0],v:r[1]};}}
+    return best;}
+  const near=(x,y)=>{if(!cam||!P)return false;const q=cam.P(P);return Math.hypot(q[0]-x,q[1]-y)<26;};
+  const place=(x,y,r)=>{const b=pickAt(x,y,r);if(b){const f=fixu(b.u,b.v);pt={sg:b.sg,u:f[0],v:f[1]};draw();}};
+  V.interact(cv,st,{active:is3,grab:near,move:(x,y)=>place(x,y,40),tap:(x,y)=>place(x,y,14),redraw:draw});
+  sl.addEventListener('input',()=>{const x=P;c=+sl.value;so.textContent=TB.fmt(c,2);if(x)remap(x);draw();});
+  so.textContent=TB.fmt(c,2);
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+})();
+</script>

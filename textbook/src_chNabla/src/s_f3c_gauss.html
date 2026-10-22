@@ -1,0 +1,82 @@
+<script>
+(function(){
+  /* Fig. ∇.@gauss, plane shapes: the outward normal n(s) of a closed curve as a point of the unit circle. Its trace, pushed outwards in proportion to the arc length so that returns stay visible, makes exactly one net turn; a short arc and its image show that the normal moves with speed |κ|. */
+  const TB=window.TB,cv=document.getElementById('gauss');if(!TB||!cv||!TB.fit)return;
+  const fx=document.getElementById('gsFx'),g=TB.G('gGs'),sl=document.getElementById('gsL'),so=document.getElementById('gsLOut');
+  const N=1440,PI2=2*Math.PI;
+  /* polar shapes r(φ), traversed counterclockwise; r and its first two derivatives */
+  const SH={
+    gdrop:{r:p=>[1+0.15*Math.cos(p)+0.18*Math.cos(2*p)+0.06*Math.sin(3*p),-0.15*Math.sin(p)-0.36*Math.sin(2*p)+0.18*Math.cos(3*p),-0.15*Math.cos(p)-0.72*Math.cos(2*p)-0.54*Math.sin(3*p)],s0:0.264},
+    gpea:{r:p=>[1+0.3*Math.cos(2*p)+0.07*Math.cos(3*p)+0.05*Math.sin(p),-0.6*Math.sin(2*p)-0.21*Math.sin(3*p)+0.05*Math.cos(p),-1.2*Math.cos(2*p)-0.63*Math.cos(3*p)-0.05*Math.sin(p)],s0:0.22}
+  };
+  const cache={};
+  function data(k){if(cache[k])return cache[k];const P=[];let L=0;
+    for(let i=0;i<=N;i++){const p=i/N*PI2,co=Math.cos(p),si=Math.sin(p),[r,r1,r2]=SH[k].r(p),
+        x=r*co,y=r*si,dx=r1*co-r*si,dy=r1*si+r*co,ddx=(r2-r)*co-2*r1*si,ddy=(r2-r)*si+2*r1*co,v=Math.hypot(dx,dy);
+      if(i)L+=0.5*(v+P[i-1].v)*PI2/N;
+      /* t = γ'/|γ'|, outward n = −Jt = (t₂, −t₁), κ = det(γ', γ'')/|γ'|³ */
+      P.push({x:x,y:y,v:v,s:L,nx:dy/v,ny:-dx/v,k:(dx*ddy-dy*ddx)/(v*v*v)});}
+    let kmin=1e9,kmax=-1e9;for(const q of P){kmin=Math.min(kmin,q.k);kmax=Math.max(kmax,q.k);}
+    return cache[k]={P:P,L:L,kmin:kmin,kmax:kmax};}
+  let shape='gdrop',sel=0,geo=null,drag=false;
+  shape=TB.segs(cv,k=>{if(!SH[k])return;shape=k;sel=Math.round(N*SH[k].s0);if(TB.V3)TB.V3.dim(cv,false);draw();});
+  if(!SH[shape])shape='gdrop';sel=Math.round(N*SH[shape].s0);
+  /* indices of the arc of length ℓ centred at sample i (cyclically) */
+  function arc(D,i,l){const P=D.P,out=[i];let a=i,b=i;const len=(j0,j1)=>{let d=P[j1].s-P[j0].s;if(d<0)d+=D.L;return d;};
+    while(len(a,i)<l/2){a=(a+N-1)%N;out.unshift(a);}while(len(i,b)<l/2){b=(b+1)%N;out.push(b);}return out;}
+  function arrow(c,x1,y1,x2,y2,colr,w){const a=Math.atan2(y2-y1,x2-x1),hl=8;c.strokeStyle=colr;c.fillStyle=colr;c.lineWidth=w;
+    TB.ln(c,x1,y1,x2-Math.cos(a)*hl*0.6,y2-Math.sin(a)*hl*0.6);c.beginPath();c.moveTo(x2,y2);
+    c.lineTo(x2-hl*Math.cos(a-0.4),y2-hl*Math.sin(a-0.4));c.lineTo(x2-hl*Math.cos(a+0.4),y2-hl*Math.sin(a+0.4));c.closePath();c.fill();}
+  function draw(){
+    if(cv.dataset.dim==='3')return;
+    const D=data(shape),P=D.P,f=TB.fit(cv,W=>Math.round(W*(W<520?1.25:0.5))),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,fs=sm?12:13;
+    c.clearRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'line',col:col.eth,t:[['κ','i'],[' > 0','r']]},{k:'line',col:col.warm,t:[['κ','i'],[' < 0','r']]},
+      {k:'thin',col:col.ink,t:[['единичная окружность','r']]}],sm?8:14,W-8,4,fs);
+    /* left (top on a phone): the curve; right (bottom): the unit circle with the trace of n */
+    const A=sm?{cx:W/2,cy:yb+(H-yb)*0.27,s:Math.min(W*0.3,(H-yb)*0.19)}:{cx:W*0.27,cy:yb+(H-yb)*0.5,s:Math.min(W*0.18,(H-yb)*0.36)};
+    const B=sm?{cx:W/2,cy:yb+(H-yb)*0.74,R:Math.min(W*0.26,(H-yb)*0.16)}:{cx:W*0.73,cy:yb+(H-yb)*0.5,R:Math.min(W*0.15,(H-yb)*0.3)};
+    const X=x=>A.cx+A.s*x,Y=y=>A.cy-A.s*y;geo={X:X,Y:Y};
+    const l=+sl.value;so.textContent=TB.fmt(l,2);
+    const ids=arc(D,sel,l),q=P[sel];
+    /* the curve coloured by the sign of κ */
+    c.lineWidth=2.2;for(let i=0;i<N;i++){const a=P[i],b=P[i+1];c.strokeStyle=a.k<0?col.warm:col.eth;TB.ln(c,X(a.x),Y(a.y),X(b.x),Y(b.y));}
+    c.strokeStyle=col.ink;c.lineWidth=5;c.globalAlpha=0.35;c.beginPath();ids.forEach((j,m)=>m?c.lineTo(X(P[j].x),Y(P[j].y)):c.moveTo(X(P[j].x),Y(P[j].y)));c.stroke();c.globalAlpha=1;
+    /* direction of traversal and the start s = 0 */
+    {const a=P[Math.round(N*0.62)],ax=X(a.x),ay=Y(a.y),ux=-a.ny,uy=-a.nx,s=8;
+      c.fillStyle=col.ink;c.beginPath();c.moveTo(ax+ux*s,ay+uy*s);c.lineTo(ax-ux*s*0.6-uy*s*0.6,ay-uy*s*0.6+ux*s*0.6);c.lineTo(ax-ux*s*0.6+uy*s*0.6,ay-uy*s*0.6-ux*s*0.6);c.closePath();c.fill();}
+    {const a=P[0];c.strokeStyle=col.ink;c.lineWidth=1.5;TB.ln(c,X(a.x)-6*a.nx,Y(a.y)+6*a.ny,X(a.x)+6*a.nx,Y(a.y)-6*a.ny);
+      TB.rich(c,[['s','i'],[' = 0','m']],X(a.x)+10,Y(a.y)+18,fs,col.muted,'start');}
+    const px=X(q.x),py=Y(q.y);arrow(c,px,py,px+34*q.nx,py-34*q.ny,col.warm,2);
+    TB.rich(c,[['n','i']],px+44*q.nx-4,py-44*q.ny+5,fs+1,col.warm,'start');
+    c.fillStyle=col.paper;c.beginPath();c.arc(px,py,7,0,PI2);c.fill();c.fillStyle=col.ink;c.beginPath();c.arc(px,py,5,0,PI2);c.fill();
+    /* the circle, the trace of n(u) for 0 ≤ u ≤ L at radius growing with u, and the image of the short arc on the circle itself */
+    c.strokeStyle=TB.rgba(col.ink,0.7);c.lineWidth=1.2;c.beginPath();c.arc(B.cx,B.cy,B.R,0,PI2);c.stroke();
+    c.strokeStyle=TB.rgba(col.ink,0.3);c.lineWidth=1;TB.ln(c,B.cx-B.R*1.5,B.cy,B.cx+B.R*1.5,B.cy);TB.ln(c,B.cx,B.cy-B.R*1.5,B.cx,B.cy+B.R*1.5);
+    const sp=u=>1.1+0.35*P[u].s/D.L,SX=u=>B.cx+B.R*sp(u)*P[u].nx,SY=u=>B.cy-B.R*sp(u)*P[u].ny;
+    c.lineWidth=1.6;for(let i=0;i<N;i++){c.strokeStyle=TB.rgba(P[i].k<0?col.warm:col.eth,i<=sel?0.95:0.3);TB.ln(c,SX(i),SY(i),SX(i+1),SY(i+1));}
+    c.lineWidth=5;c.lineCap='round';for(let m=0;m+1<ids.length;m++){const a=P[ids[m]],b=P[ids[m+1]];c.strokeStyle=TB.rgba(a.k<0?col.warm:col.eth,0.8);
+      TB.ln(c,B.cx+B.R*a.nx,B.cy-B.R*a.ny,B.cx+B.R*b.nx,B.cy-B.R*b.ny);}c.lineCap='butt';
+    arrow(c,B.cx,B.cy,B.cx+B.R*q.nx,B.cy-B.R*q.ny,col.warm,2);
+    c.strokeStyle=TB.rgba(col.ink,0.45);c.setLineDash([2,3]);c.lineWidth=1;TB.ln(c,B.cx+B.R*q.nx,B.cy-B.R*q.ny,SX(sel),SY(sel));c.setLineDash([]);
+    c.fillStyle=col.ink;c.beginPath();c.arc(SX(sel),SY(sel),3.2,0,PI2);c.fill();
+    TB.rich(c,[['n','i'],['(','m'],['s','i'],[')','m']],B.cx+B.R*q.nx*0.55+(q.ny>0?8:-8)*(q.nx<0?-1:1),B.cy-B.R*q.ny*0.55+(q.nx>0?-8:12),fs,col.warm,q.nx<0?'right':'start');
+    TB.rich(c,[['0','m']],B.cx-5,B.cy+15,fs-1,col.muted,'right');
+    /* readouts: the turn of the normal so far, and length of the image over length of the arc */
+    let turn=0;for(let i=0;i<sel;i++)turn+=0.5*(P[i].k+P[i+1].k)*(P[i+1].s-P[i].s);
+    let im=0;for(let m=0;m+1<ids.length;m++){const a=P[ids[m]],b=P[ids[m+1]];im+=Math.abs(Math.atan2(a.nx*b.ny-a.ny*b.nx,a.nx*b.nx+a.ny*b.ny));}
+    g.unmark('k').set(q.k,q.k<0?col.warm:col.eth);g.mark('lo',D.kmin,'<i>κ</i><sub>min</sub>',true);g.mark('hi',D.kmax,'<i>κ</i><sub>max</sub>',true);
+    fx.innerHTML=TB.rows([['<i>s</i> = '+TB.fmt(q.s,2)+' из <i>L</i> = '+TB.fmt(D.L,2)+',','<i>κ</i>(<i>s</i>) = '+TB.fmt(q.k,2)],
+      ['поворот нормали ∫<sub>0</sub><sup><i>s</i></sup><i>κ</i> d<i>u</i> = '+TB.fmt(turn*180/Math.PI,0)+'°'],
+      ['длина образа дуги / <i>ℓ</i> = '+TB.fmt(im/l,2)+',','|<i>κ</i>(<i>s</i>)| = '+TB.fmt(Math.abs(q.k),2)]]);
+  }
+  function nearest(e){const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,P=data(shape).P;let b=0,bd=1e18;
+    for(let i=0;i<N;i++){const dx=geo.X(P[i].x)-px,dy=geo.Y(P[i].y)-py,d=dx*dx+dy*dy;if(d<bd){bd=d;b=i;}}return [b,Math.sqrt(bd)];}
+  cv.addEventListener('pointerdown',e=>{if(!geo||cv.dataset.dim==='3')return;const q=nearest(e);if(q[1]>32)return;drag=true;cv.style.cursor='grabbing';
+    try{cv.setPointerCapture(e.pointerId);}catch(_){}sel=q[0];draw();});
+  cv.addEventListener('pointermove',e=>{if(!geo||cv.dataset.dim==='3')return;const q=nearest(e);if(drag){sel=q[0];draw();}else cv.style.cursor=q[1]<=32?'grab':'';});
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{drag=false;}));
+  sl.addEventListener('input',draw);
+  cv.style.touchAction='pan-y';TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>

@@ -1,0 +1,95 @@
+<script>
+(function(){
+  /* Fig. pivot: an ellipse with semi-axes a and 1 turns about its centre c by an angle θ; a fixed finger touches its top point p = (0, 1). A loupe shows the neighbourhood of p; the gauge is the signed distance from p to the turned boundary. */
+  const TB=window.TB,cv=document.getElementById('pivot');if(!TB||!cv)return;
+  const sa=document.getElementById('pvA'),st=document.getElementById('pvT'),ao=document.getElementById('pvAOut'),to=document.getElementById('pvTOut'),
+        rock=document.getElementById('pvRock'),fx=document.getElementById('pvFx'),gauge=new TB.Gauge('gPv');
+  const RHO=0.09,FW=0.3,FH=0.74,TH0=30;
+  let anim=0;
+  /* Nearest point of the ellipse (a cos s, sin s) to q and the signed distance (positive outside). */
+  function nearest(a,q){
+    let best=0,bd=1e9;
+    for(let i=0;i<720;i++){const s=i/720*2*Math.PI,dx=a*Math.cos(s)-q[0],dy=Math.sin(s)-q[1],d=dx*dx+dy*dy;if(d<bd){bd=d;best=s;}}
+    let s=best;
+    for(let k=0;k<8;k++){const c=Math.cos(s),n=Math.sin(s),ex=a*c-q[0],ey=n-q[1];
+      const g=-a*n*ex+c*ey,h=a*a*n*n+c*c-a*c*ex-n*ey;if(Math.abs(h)<1e-12)break;s-=g/h;}
+    const e=[a*Math.cos(s),Math.sin(s)],d=Math.hypot(e[0]-q[0],e[1]-q[1]),f=q[0]*q[0]/(a*a)+q[1]*q[1]-1;
+    return {e:e,d:f>0?d:-d};}
+  const rot=(v,t)=>[Math.cos(t)*v[0]-Math.sin(t)*v[1],Math.sin(t)*v[0]+Math.cos(t)*v[1]];
+  function ellPath(c,a,th,T){c.beginPath();for(let i=0;i<=240;i++){const s=i/240*2*Math.PI,w=rot([a*Math.cos(s),Math.sin(s)],th),P=T(w);if(i)c.lineTo(P[0],P[1]);else c.moveTo(P[0],P[1]);}c.closePath();}
+  function fingerPath(c,T){const A=T([0,1]),B=T([-FW,1+FH]),C=T([FW,1+FH]);c.beginPath();c.moveTo(A[0],A[1]);c.lineTo(B[0],B[1]);c.lineTo(C[0],C[1]);c.closePath();}
+  function arrowHead(c,x,y,ang,s,col){c.fillStyle=col;c.beginPath();c.moveTo(x,y);c.lineTo(x-s*Math.cos(ang-0.42),y-s*Math.sin(ang-0.42));c.lineTo(x-s*Math.cos(ang+0.42),y-s*Math.sin(ang+0.42));c.closePath();c.fill();}
+  /* One view of the scene: the object, its former position, the circle through p, the finger and, in the loupe, the gap or the overlap. */
+  function scene(c,T,sc,a,th,col,loupe,nd){
+    /* object */
+    ellPath(c,a,th,T);c.fillStyle=TB.rgba(col.eth,loupe?0.16:0.13);c.fill();
+    c.strokeStyle=col.eth;c.lineWidth=loupe?2.4:2;c.stroke();
+    /* former position */
+    if(Math.abs(th)>1e-4){ellPath(c,a,0,T);c.strokeStyle=TB.rgba(col.muted,0.85);c.lineWidth=1.1;c.setLineDash([5,4]);c.stroke();c.setLineDash([]);}
+    /* circle with centre c through p */
+    const O=T([0,0]);c.strokeStyle=TB.rgba(col.ink,0.45);c.lineWidth=1;c.beginPath();c.arc(O[0],O[1],sc,0,2*Math.PI);c.stroke();
+    /* finger and the part of the object it would have to enter */
+    fingerPath(c,T);c.fillStyle=TB.rgba(col.ink,0.82);c.fill();
+    if(nd.d<0){c.save();fingerPath(c,T);c.clip();ellPath(c,a,th,T);c.fillStyle=TB.rgba(col.warm,0.75);c.fill();c.restore();}
+  }
+  function draw(){
+    const a=+sa.value,deg=+st.value,th=deg*Math.PI/180,col=TB.cols();
+    ao.textContent=TB.fmt(a,2);to.textContent=TB.fmt(deg,deg%1?1:0)+'°';
+    const nd=nearest(a,rot([0,1],-th));
+    gauge.set(nd.d,nd.d<0?col.warm:col.eth);
+    const f=TB.fit(cv,W=>W<560?Math.round(W*0.8+W*0.66):Math.round(W*0.5)),c=f.c,W=f.W,H=f.H,wide=W>=560;
+    c.clearRect(0,0,W,H);
+    /* main view */
+    const Pw=wide?W*0.6:W,Ph=wide?H:Math.round(W*0.8),sc=Math.min(Pw/3.95,Ph/3.2),ox=Pw/2,oy=(Ph-3.2*sc)/2+1.8*sc;
+    const T=w=>[ox+w[0]*sc,oy-w[1]*sc];
+    scene(c,T,sc,a,th,col,false,nd);
+    /* centre, rotated axis and the angle */
+    const O=T([0,0]);c.strokeStyle=col.ink;c.lineWidth=1.6;TB.ln(c,O[0]-5,O[1]-5,O[0]+5,O[1]+5);TB.ln(c,O[0]-5,O[1]+5,O[0]+5,O[1]-5);
+    TB.rich(c,[['c','i']],O[0]-9,O[1]+17,14,col.ink,'right');
+    if(Math.abs(th)>1e-4){const ra=0.42*sc,E=T(rot([a,0],th));
+      c.strokeStyle=TB.rgba(col.ink,0.55);c.lineWidth=1;TB.ln(c,O[0],O[1],E[0],E[1]);c.setLineDash([3,3]);TB.ln(c,O[0],O[1],O[0]+a*sc,O[1]);c.setLineDash([]);
+      c.strokeStyle=col.ink;c.lineWidth=1.3;c.beginPath();c.arc(O[0],O[1],ra,0,-th,th>0);c.stroke();
+      const e=-th,ang=e+(th>0?-Math.PI/2:Math.PI/2);arrowHead(c,O[0]+ra*Math.cos(e),O[1]+ra*Math.sin(e),ang,7,col.ink);
+      const m=-th/2,lr=ra+13;TB.theta(c,O[0]+lr*Math.cos(m)-5,O[1]+lr*Math.sin(m)+6,15,col.ink);}
+    const P=T([0,1]);TB.rich(c,[['p','i']],P[0]+10,P[1]+15,14,col.ink,'start');
+    /* frame of the loupe in the main view */
+    c.strokeStyle=TB.rgba(col.ink,0.6);c.lineWidth=1;c.beginPath();c.arc(P[0],P[1],RHO*sc,0,2*Math.PI);c.stroke();
+    /* loupe */
+    const Lx=wide?Pw+(W-Pw)/2:W/2,Ly=wide?H/2:Ph+(H-Ph)/2,LR=Math.max(40,Math.min(wide?(W-Pw)/2-16:W/2-16,wide?H/2-30:(H-Ph)/2-22)),ls=LR/RHO;
+    const TL=w=>[Lx+w[0]*ls,Ly-(w[1]-1)*ls];
+    c.strokeStyle=TB.rgba(col.ink,0.35);c.lineWidth=1;c.setLineDash([2,4]);
+    const k1=[P[0]+RHO*sc*(wide?1:0),P[1]+RHO*sc*(wide?0:1)],k2=[Lx-LR*(wide?1:0),Ly-LR*(wide?0:1)];TB.ln(c,k1[0],k1[1],k2[0],k2[1]);c.setLineDash([]);
+    c.save();c.beginPath();c.arc(Lx,Ly,LR,0,2*Math.PI);c.fillStyle=col.paper;c.fill();c.clip();
+    scene(c,TL,ls,a,th,col,true,nd);
+    /* the distance from p to the boundary */
+    const E=rot(nd.e,th),Q=TL(E),Pl=TL([0,1]);
+    if(Math.abs(nd.d)>0.002){c.strokeStyle=nd.d>0?col.eth:col.paper;c.lineWidth=1.6;c.setLineDash([3,2]);TB.ln(c,Pl[0],Pl[1],Q[0],Q[1]);c.setLineDash([]);
+      c.fillStyle=nd.d>0?col.eth:col.paper;c.beginPath();c.arc(Q[0],Q[1],2.6,0,2*Math.PI);c.fill();}
+    c.fillStyle=col.paper;c.beginPath();c.arc(Pl[0],Pl[1],3.2,0,2*Math.PI);c.fill();c.strokeStyle=col.ink;c.lineWidth=1.4;c.stroke();
+    c.restore();
+    c.strokeStyle=TB.rgba(col.ink,0.6);c.lineWidth=1.2;c.beginPath();c.arc(Lx,Ly,LR,0,2*Math.PI);c.stroke();
+    const lab=nd.d>0.002?'зазор':nd.d<-0.002?'палец внутри предмета':'касание';
+    c.font='13px '+TB.ui;c.fillStyle=nd.d<-0.002?col.warm:nd.d>0.002?col.eth:col.muted;c.textAlign='center';c.fillText(lab,Lx,Ly+LR+17);
+    c.textAlign='start';TB.rich(c,[['окрестность точки ','r'],['p','i'],[', увеличение ×'+Math.round(ls/sc),'r']],Lx,Ly-LR-9,12,col.muted,'center');
+    /* readout */
+    const dir=a>1.005?['Предмет у пальца изогнут','слабее тонкой окружности:','поворот в любую сторону','вдавливает его в палец,','и палец поворот не пускает.']
+      :a<0.995?['Предмет у пальца изогнут','сильнее тонкой окружности:','при повороте в любую сторону','открывается зазор,','и палец поворот пропускает.']
+      :['Предмет — круг с центром <i>c</i>:','при повороте он скользит по пальцу,','не отходя и не вдавливаясь.'];
+    const now=Math.abs(th)<1e-4?['<i>θ</i> = 0: предмет на месте, расстояние равно нулю.']
+      :nd.d>0.0005?['При <i>θ</i> = '+to.textContent+' зазор','равен '+TB.fmt(nd.d,3)+'.']
+      :nd.d<-0.0005?['При <i>θ</i> = '+to.textContent+' палец оказался бы','внутри предмета на глубине '+TB.fmt(-nd.d,3)+'.']
+      :['При <i>θ</i> = '+to.textContent+' расстояние','меньше 0,001.'];
+    fx.innerHTML=TB.rows([dir,now]);
+  }
+  /* Rocking: two full swings of amplitude 30°, starting and ending at the current angle. */
+  rock.addEventListener('click',()=>{
+    if(anim){cancelAnimationFrame(anim);anim=0;}
+    const th0=+st.value,ph=Math.asin(Math.max(-1,Math.min(1,th0/TH0))),t0=performance.now(),D=TB.reduced()?0:5200;
+    if(!D){draw();return;}
+    const step=now=>{const u=Math.min(1,(now-t0)/D);st.value=(TH0*Math.sin(ph+4*Math.PI*u)).toFixed(1);if(u>=1)st.value=th0;draw();anim=u<1?requestAnimationFrame(step):0;};
+    anim=requestAnimationFrame(step);});
+  const stop=()=>{if(anim){cancelAnimationFrame(anim);anim=0;}};
+  sa.addEventListener('input',draw);st.addEventListener('input',()=>{stop();draw();});
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);draw();
+})();
+</script>

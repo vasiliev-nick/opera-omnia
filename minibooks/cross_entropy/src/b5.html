@@ -1,0 +1,48 @@
+
+<section id="s5">
+<h2>§5. Энтропия: среднее удивление</h2>
+<p>Пусть исход опыта $X$ имеет распределение <span class="nw">$p$,</span> и наблюдатель знает это распределение. Его удивление $I_p(X)$ — случайная величина: после редкого исхода оно велико, после частого мало. Насколько удивительным оказывается опыт в среднем?</p>
+
+<div class="stmt"><span class="lbl">{{Определение:entropy}} (энтропия)</span>
+<b>Энтропия</b> распределения $p\in\Delta(\mathcal X)$ — математическое ожидание удивления:
+<span class="math-wrap">$$H(p)=\mathbb E_pI_p(X)=\sum_{x\in\operatorname{supp}p}p_x\log\frac1{p_x}.$$</span></div>
+<p>Сумма идёт только по носителю. Исход с $p_x=0$ удивил бы бесконечно, но он не происходит и в среднее не входит. Часто то же самое записывают как сумму по всем исходам с соглашением <span class="nw">$0\cdot\log\frac10=0$;</span> следующая лемма показывает, что это соглашение согласовано с непрерывностью.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:phi}}</span>
+Функция $\varphi(t)=t\log\frac1t$ при $t\in(0,1]$ и $\varphi(0)=0$ непрерывна на <span class="nw">$[0,1]$,</span> положительна на $(0,1)$ и обращается в нуль при $t=0$ и <span class="nw">$t=1$.</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Единственное, что нужно проверить, — что $t\log\frac1t\to0$ при <span class="nw">$t\to0+$;</span> после замены $t=e^{-u}$ это утверждение о том, что экспонента растёт быстрее линейной функции.</div>
+<div class="step"><span class="sh">Шаг 1. Непрерывность в нуле.</span> При $t\in(0,1]$ положим <span class="nw">$u=\ln\frac1t\ge0$;</span> тогда <span class="nw">$\varphi(t)=\dfrac{u\,e^{-u}}{\ln b}$,</span> и $u\to+\infty$ при <span class="nw">$t\to0+$.</span> Из разложения $e^u=\sum_{k\ge0}u^k/k!$ при $u\gt0$ следует <span class="nw">$e^u\ge u^2/2$,</span> так что $0\le ue^{-u}\le2/u\to0$. Значит, $\varphi(t)\to0=\varphi(0)$.</div>
+<div class="step"><span class="sh">Шаг 2. Остальное.</span> На $(0,1]$ функция $\varphi$ непрерывна как произведение непрерывных. При $0\lt t\lt1$ оба сомножителя $t$ и $\log\frac1t$ положительны; <span class="nw">$\varphi(1)=1\cdot\log1=0$.</span></div>
+</div>
+<p>Поэтому <span class="nw">$H(p)=\sum_{x\in\mathcal X}\varphi(p_x)$,</span> и энтропия — непрерывная функция от вероятностей. Примеры:</p>
+<ol class="ax">
+<li><b>Равномерное распределение</b> на $n$ исходах: <span class="nw">$H=n\cdot\frac1n\log n=\log n$.</span> В битах для $n=2^k$ это $k$ — число вопросов из предложения {{#hartley}}. Таким образом, энтропия равномерного распределения совпадает с мерой Хартли (определение {{#hartleym}}) множества исходов. Энтропия обобщает меру Хартли на распределения, в которых исходы неравновероятны.</li>
+<li><b>Вырожденное распределение</b> $\delta_a$: единственное слагаемое равно <span class="nw">$1\cdot\log1=0$.</span> Опыт с заранее известным исходом ничем не удивляет.</li>
+<li id="binent"><b>Монета</b> с вероятностью герба $\theta$:
+<span class="math-wrap">$$h(\theta)=\theta\log\frac1\theta+(1-\theta)\log\frac1{1-\theta}.$$</span>
+У честной монеты $h(\tfrac12)=1$ бит. Монета с $\theta=0{,}9$ почти всегда даёт герб, и <span class="nw">$h(0{,}9)\approx0{,}469$</span> бита: изредка она удивляет сильно ($\log_2 10\approx3{,}32$ бита за решку), но в среднем мало.</li>
+</ol>
+
+<div class="stmt"><span class="lbl">{{Предложение:hpos}}</span>
+Для любого $p\in\Delta(\mathcal X)$ выполнено <span class="nw">$H(p)\ge0$,</span> и $H(p)=0$ тогда и только тогда, когда $p$ вырождено.</div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Энтропия — сумма неотрицательных слагаемых $\varphi(p_x)$, и каждое обращается в нуль только при $p_x\in\{0,1\}$.</div>
+<div class="step"><span class="sh">Шаг 1. Неотрицательность.</span> По лемме {{#phi}} все слагаемые $\varphi(p_x)$ неотрицательны.</div>
+<div class="step"><span class="sh">Шаг 2. Когда энтропия равна нулю.</span> Сумма неотрицательных чисел равна нулю только тогда, когда все они равны нулю. По лемме {{#phi}} это значит, что каждое $p_x$ равно $0$ или <span class="nw">$1$.</span> Так как $\sum_xp_x=1$, ровно одно $p_x$ равно <span class="nw">$1$,</span> то есть $p$ вырождено. Обратно, $H(\delta_a)=0$ — пример 2.</div>
+</div>
+<p>Что энтропия не превосходит $\log n$ и равна $\log n$ только у равномерного распределения, мы докажем в §6 (следствие {{#klcor}}): из всех распределений на $n$ исходах равномерное — самое непредсказуемое.</p>
+
+<p>У энтропии есть наглядная картинка. Для каждого исхода нарисуем прямоугольник ширины $p_x$ и высоты <span class="nw">$\log\frac1{p_x}$.</span> Ширины в сумме дают <span class="nw">$1$,</span> так что прямоугольники ровно укладываются на отрезке <span class="nw">$[0,1]$,</span> а площадь прямоугольника равна <span class="nw">$p_x\log\frac1{p_x}$.</span> Получается «силуэт удивления»: частые исходы — широкие и низкие столбики, редкие — узкие и высокие. Энтропия — его площадь, то есть средняя высота силуэта.</p>
+
+<figure>
+  <div class="fig1"><canvas id="sky1" width="760" height="400" aria-label="Силуэт удивления: площадь равна энтропии"></canvas></div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Число исходов"><button type="button" data-k="2" aria-pressed="false">2 исхода</button><button type="button" data-k="3" aria-pressed="false">3 исхода</button><button type="button" data-k="5" aria-pressed="true">5 исходов</button></div>
+  </div>
+  <div class="ro" style="--lw:9rem">
+    <div class="rr"><span class="rl">$H(p)$, бит</span><span class="gauge" id="gSky1" data-min="0" data-max="2.5" data-d="3"></span><output class="gv"></output></div>
+  </div>
+  <figcaption>{{Рис:fsky1}}. Верхняя полоса — распределение $p$: отрезок $[0,1]$ разбит на части длины <span class="nw">$p_x$;</span> границы частей перетаскиваются. Под каждой частью стоит столбик высоты $\log_2\frac1{p_x}$ бит — удивление исхода. Площадь силуэта равна энтропии $H(p)$; штриховая линия — её уровень, то есть средняя высота силуэта. Столбики выше $6$ бит обрезаны, их высота подписана. На шкале отмечен $\log_2n$ — энтропия равномерного распределения на $n$ исходах.</figcaption>
+</figure>
+</section>

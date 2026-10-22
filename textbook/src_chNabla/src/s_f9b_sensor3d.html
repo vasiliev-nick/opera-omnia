@@ -1,0 +1,116 @@
+<script>
+(function(){
+  /* Fig. ∇.@sensor, spatial shapes: a square sensor pad in the tangent plane reads noisy heights of a surface on a k×k grid; least squares fit of a quadratic, histograms of the estimates of h_uu, h_uv, h_vv, and the mean of the plug-in Gaussian curvature. */
+  const TB=window.TB,cv=document.getElementById('sensor');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,$=id=>document.getElementById(id);
+  const sA=$('snA'),sS=$('snS'),sK=$('snK'),oK=$('snKOut'),bT=$('snTouch'),bM=$('snMany'),bR=$('snReset'),fx=$('snFx'),gauge=TB.G('gSn3');
+  gauge.mark('one',1,'1');
+  /* the surfaces over the pad, in sensor coordinates: height h(u, v) above the pad, towards the inside of the object */
+  const R=1.5,SH={
+    sph:{h:(u,v)=>R-Math.sqrt(R*R-u*u-v*v),t:[1/R,0,1/R]},
+    sad:{h:(u,v)=>0.5*(0.9*u*u+0.7*u*v-0.6*v*v)+0.25*u*u*u-0.2*u*u*v*v,t:[0.9,0.35,-0.6]}};
+  const st={yaw:0.55,pitch:0.55},NB=50,CAP=2000;
+  const rnd=TB.lcg(20261021);let spare=[];const gauss=()=>{if(!spare.length)spare=TB.normal2(rnd);return spare.pop();};
+  const Phi=z=>{const t=1/(1+0.3275911*Math.abs(z)/Math.SQRT2),e=1-t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))))*Math.exp(-z*z/2);return z>=0?0.5*(1+e):0.5*(1-e);};
+  let shape=null,D=null,cam=null,raf=0,tPrev=0;const S={};
+  const is3=()=>cv.dataset.dim==='3';
+  /* inverse of a small symmetric positive definite matrix by Gauss–Jordan elimination */
+  function inv(M){const n=M.length,A=M.map((r,i)=>r.concat(r.map((_,j)=>i===j?1:0)));
+    for(let i=0;i<n;i++){let p=i;for(let r=i+1;r<n;r++)if(Math.abs(A[r][i])>Math.abs(A[p][i]))p=r;[A[i],A[p]]=[A[p],A[i]];
+      const d=A[i][i];for(let j=0;j<2*n;j++)A[i][j]/=d;
+      for(let r=0;r<n;r++)if(r!==i){const f=A[r][i];if(f)for(let j=0;j<2*n;j++)A[r][j]-=f*A[i][j];}}
+    return A.map(r=>r.slice(n));}
+  /* the design: grid, regressors 1, u, v, u²/2, uv, v²/2, the matrix (XᵀX)⁻¹, exact expectations and standard deviations of the estimates */
+  function design(){
+    const a=+sA.value,sg=+sS.value,k=+sK.value,pts=[];
+    for(let i=0;i<k;i++)for(let j=0;j<k;j++)pts.push([-a+2*a*i/(k-1),-a+2*a*j/(k-1)]);
+    const X=pts.map(([u,v])=>[1,u,v,u*u/2,u*v,v*v/2]),M=[0,1,2,3,4,5].map(i=>[0,1,2,3,4,5].map(j=>X.reduce((s,x)=>s+x[i]*x[j],0))),Mi=inv(M);
+    const L=Mi.map(r=>X.map(x=>r.reduce((s,m,j)=>s+m*x[j],0)));
+    D={a:a,sg:sg,k:k,pts:pts,L:L,sd:[3,4,5].map(i=>sg*Math.sqrt(Mi[i][i])),sh:{}};
+    for(const key in SH){const h=SH[key].h,y=pts.map(([u,v])=>h(u,v)),E=L.map(r=>r.reduce((s,l,j)=>s+l*y[j],0));
+      let hm=0;for(let i=0;i<=20;i++)for(let j=0;j<=20;j++)hm=Math.max(hm,Math.abs(h(1.15*a*(i/10-1),1.15*a*(j/10-1))));
+      const ex=Math.max(0.1,Math.round(10*0.55*a/hm)/10);
+      D.sh[key]={E:[E[3],E[4],E[5]],ex:ex,mesh:V.mesh((x,y)=>[x,y,ex*h(a*x,a*y)/a],{u0:-1.15,u1:1.15,v0:-1.15,v1:1.15,nu:22,nv:22})};}
+  }
+  const fresh=()=>({est:[],last:null,shown:0,queue:0,seen:false});
+  function reset(){for(const key in SH)S[key]=Object.assign(fresh(),{seen:S[key]?S[key].seen:false});}
+  function touch(){const h=SH[shape].h,y=D.pts.map(([u,v])=>h(u,v)+D.sg*gauss()),b=D.L.map(r=>r.reduce((s,l,j)=>s+l*y[j],0));
+    return {y:y,b:b,e:[b[3],b[4],b[5]]};}
+  function layout(W){
+    if(W>=600){const lw=Math.round(W*0.58),H=Math.round(W*0.62),hh=Math.round((H-16)/3);
+      return {H:H,sc:{x:0,y:0,w:lw,h:H},hs:[0,1,2].map(i=>({x:lw+14,y:i*(hh+8),w:W-lw-14,h:hh}))};}
+    const sh=Math.round(W*0.86),hh=Math.round(W*0.34);
+    return {H:sh+3*(hh+8),sc:{x:0,y:0,w:W,h:sh},hs:[0,1,2].map(i=>({x:0,y:sh+8+i*(hh+8),w:W,h:hh}))};}
+  function hist(c,B,vals,tr,E,sd,name,col){
+    const l=B.x+12,r=B.x+B.w-12,t=B.y+22,b=B.y+B.h-26,lo=tr-1,X=v=>l+(v-lo)/2*(r-l),bw=2/NB;
+    c.strokeStyle=col.rule;c.lineWidth=1;c.strokeRect(B.x+0.5,B.y+0.5,B.w-1,B.h-1);
+    TB.rich(c,name,B.x+8,B.y+16,13,col.muted,'start');
+    const cnt=new Array(NB).fill(0);let nl=0,nh=0;
+    for(const v of vals){const q=Math.floor((v-lo)/bw);if(q<0)nl++;else if(q>=NB)nh++;else cnt[q]++;}
+    const N=Math.max(1,vals.length),ex=[];let mx=1;
+    for(let i=0;i<NB;i++){const p=Phi((lo+bw*(i+1)-E)/sd)-Phi((lo+bw*i-E)/sd);ex.push(N*p);mx=Math.max(mx,N*p,cnt[i]);}
+    const Y=v=>b-v/(mx*1.12)*(b-t);
+    c.fillStyle=TB.rgba(col.eth,0.55);
+    for(let i=0;i<NB;i++)if(cnt[i]){const x0=X(lo+i*bw)+0.5,x1=X(lo+(i+1)*bw)-0.5;c.fillRect(x0,Y(cnt[i]),Math.max(1,x1-x0),b-Y(cnt[i]));}
+    c.strokeStyle=TB.rgba(col.ink,vals.length?0.75:0.4);c.lineWidth=1.2;c.beginPath();c.moveTo(X(lo),b);
+    for(let i=0;i<NB;i++){c.lineTo(X(lo+i*bw),Y(ex[i]));c.lineTo(X(lo+(i+1)*bw),Y(ex[i]));}c.lineTo(X(lo+2),b);c.stroke();
+    c.strokeStyle=col.ink;c.lineWidth=1;TB.ln(c,l,b+0.5,r,b+0.5);c.lineWidth=1.3;TB.ln(c,X(tr),t-2,X(tr),b);
+    for(let v=Math.ceil(lo*2)/2;v<=lo+2+1e-9;v+=0.5){c.lineWidth=1;TB.ln(c,X(v),b,X(v),b+4);TB.rich(c,[[TB.fmt(v,Math.abs(v-Math.round(v))<1e-9?0:1),'m']],X(v),b+17,11,col.ink,'center');}
+    if(E>lo-0.2&&E<lo+2.2){const xe=X(Math.max(lo,Math.min(lo+2,E)));c.fillStyle=col.warm;c.beginPath();c.moveTo(xe,b+1);c.lineTo(xe-5,b+9);c.lineTo(xe+5,b+9);c.closePath();c.fill();}
+    if(nl)TB.rich(c,[['← '+nl,'r']],l+2,t+10,12,col.muted,'start');
+    if(nh)TB.rich(c,[[nh+' →','r']],r-2,t+10,12,col.muted,'right');
+  }
+  function draw(){
+    if(!is3()||!shape)return;
+    const f=TB.fit(cv,W=>layout(W).H),c=f.c,W=f.W,col=TB.cols(),Lo=layout(W),Sc=Lo.sc,s=S[shape],ds=D.sh[shape],a=D.a,h=SH[shape].h;
+    oK.textContent=D.k;c.clearRect(0,0,W,f.H);
+    /* the scene: true surface, pad with its taxels, measurements with stalks, fitted quadratic */
+    const yb=TB.legend(c,[{k:'thin',col:col.eth,t:[['поверхность','r']]},{k:'line',col:col.warm,t:[['парабола МНК','r']]},{k:'fill',col:col.warm,a:0.25,t:[['площадка','r']]}],Sc.x+8,Sc.x+Sc.w-8,Sc.y+2,12);
+    TB.rich(c,[['по вертикали ×'+TB.fmt(ds.ex,1),'r']],Sc.x+Sc.w-8,Sc.y+Sc.h-8,12,col.muted,'right');
+    cam=V.camera(st,W,f.H,Sc.x+Sc.w*0.5,yb+(Sc.h-yb)*0.5,Math.min(Sc.w*(W<600?0.27:0.24),(Sc.h-yb)*0.3));
+    const Z=(u,v,y)=>[u/a,v/a,ds.ex*y/a];
+    const items=[{t:'mesh',m:ds.mesh,col:col.eth,grid:2,gridA:0.12,amb:0.42,alpha:0.55},
+      {t:'patch',p:[0,0,0],e1:[1,0,0],e2:[0,1,0],h:1,fill:col.warm,alpha:0.16,edge:col.warm,n:4,bias:-0.02}];
+    for(const [u,v] of D.pts)items.push({t:'pt',p:Z(u,v,0),r:1.5,fill:col.warm,stroke:col.warm,w:0.5,bias:-0.01});
+    if(s.last){const y=s.last.y,b=s.last.b;
+      for(let j=0;j<s.shown;j++){const [u,v]=D.pts[j],P=Z(u,v,y[j]);
+        items.push({t:'line',pts:[Z(u,v,h(u,v)),P],col:TB.rgba(col.eth,0.6),w:1,bias:0.02},{t:'pt',p:P,r:2.6,fill:col.eth,stroke:col.paper,w:0.8,bias:0.03});}
+      if(s.shown===D.pts.length){const q=(u,v)=>b[0]+b[1]*u+b[2]*v+b[3]*u*u/2+b[4]*u*v+b[5]*v*v/2;
+        for(let i=0;i<=8;i++){const g=-a+2*a*i/8,l1=[],l2=[];for(let j=0;j<=16;j++){const e=-a+2*a*j/16;l1.push(Z(g,e,q(g,e)));l2.push(Z(e,g,q(e,g)));}
+          items.push({t:'line',pts:l1,col:col.warm,w:1.3,bias:0.01},{t:'line',pts:l2,col:col.warm,w:1.3,bias:0.01});}}}
+    items.push({t:'label',p:[1.3,0,0],segs:[['u','i']],col:col.ink,dx:2,dy:4},{t:'label',p:[0,1.3,0],segs:[['v','i']],col:col.ink,dx:2,dy:4},
+      {t:'label',p:[1,-1,0],segs:[['(','m'],['a','i'],[', −','m'],['a','i'],[')','m']],col:col.muted,dx:4,dy:14,size:12});
+    c.save();c.beginPath();c.rect(Sc.x,yb,Sc.w,Sc.h-yb);c.clip();V.render(c,cam,items,col);c.restore();
+    /* histograms of the three estimates on fixed axes around the true values */
+    const tr=SH[shape].t,nm=[['uu','h_uu'],['uv','h_uv'],['vv','h_vv']];
+    nm.forEach(([sub],i)=>hist(c,Lo.hs[i],s.est.map(e=>e[i]),tr[i],ds.E[i],D.sd[i],[['оценки ','r'],['h','i'],[sub,'s'],[', истинное значение '+TB.fmt(tr[i],2),'r']],col));
+    /* readouts */
+    const N=s.est.length,mean=i=>s.est.reduce((t,e)=>t+e[i],0)/N;let sd=0;
+    if(N>1){const m0=mean(0);for(const e of s.est)sd+=(e[0]-m0)*(e[0]-m0);sd=Math.sqrt(sd/(N-1));}
+    const Kt=tr[0]*tr[2]-tr[1]*tr[1],Km=N?s.est.reduce((t,e)=>t+e[0]*e[2]-e[1]*e[1],0)/N:NaN,H='<i class="hat">h</i>',f2=v=>TB.fmt(v,3);
+    const done=s.last&&s.shown===D.pts.length;
+    fx.innerHTML=TB.rows([['истинные:','<i>h</i><sub><i>uu</i></sub> = '+f2(tr[0])+',','<i>h</i><sub><i>uv</i></sub> = '+f2(tr[1])+',','<i>h</i><sub><i>vv</i></sub> = '+f2(tr[2])],
+      done?['последняя оценка:',H+'<sub><i>uu</i></sub> = '+f2(s.last.e[0])+',',H+'<sub><i>uv</i></sub> = '+f2(s.last.e[1])+',',H+'<sub><i>vv</i></sub> = '+f2(s.last.e[2])]:['последняя оценка: —'],
+      ['касаний: '+N+',','разброс '+H+'<sub><i>uu</i></sub> по касаниям: '+(N>1?f2(sd):'—')+',','по формуле: '+f2(D.sd[0])],
+      ['<i>K</i> = '+f2(Kt)+',','среднее '+H+'<sub><i>uu</i></sub>'+H+'<sub><i>vv</i></sub> − '+H+'<sub><i>uv</i></sub><sup>2</sup> по касаниям: '+(N?f2(Km):'—')]]);
+    if(N>1)gauge.set(sd/D.sd[0]);else{gauge.set(0);if(gauge.out)gauge.out.textContent='—';}
+  }
+  function commit(s){s.est.push(s.last.e);if(s.est.length>CAP)s.est.shift();}
+  const busy=s=>(s.last&&s.shown<D.pts.length)||s.queue>0;
+  function run(){if(!raf)raf=requestAnimationFrame(step);}
+  function step(ts){raf=0;if(!is3()||!shape)return;const s=S[shape],n=D.pts.length;
+    if(s.last&&s.shown<n){if(ts-tPrev>=18){s.shown=Math.min(n,s.shown+Math.max(1,Math.round(n/40)));tPrev=ts;if(s.shown===n)commit(s);draw();}run();return;}
+    if(s.queue>0){if(ts-tPrev>=30){s.queue--;s.last=touch();s.shown=n;commit(s);tPrev=ts;draw();}run();return;}}
+  function one(){const s=S[shape];if(busy(s))return;s.last=touch();
+    if(TB.reduced()){s.shown=D.pts.length;commit(s);draw();return;}s.shown=0;tPrev=performance.now();draw();run();}
+  function many(n){const s=S[shape];if(TB.reduced()){for(let i=0;i<n;i++){s.last=touch();s.shown=D.pts.length;commit(s);}draw();return;}s.queue+=n;run();}
+  TB.segs(cv,k=>{if(!SH[k])return;shape=k;V.dim(cv,true);const s=S[k];draw();
+    if(!s.seen){s.seen=true;one();if(TB.reduced())many(19);else s.queue+=19;}else if(busy(s))run();});
+  bT.addEventListener('click',()=>{if(is3())one();});bM.addEventListener('click',()=>{if(is3())many(50);});
+  bR.addEventListener('click',()=>{if(!is3())return;S[shape]=Object.assign(fresh(),{seen:true});draw();});
+  for(const sl of [sA,sS,sK])sl.addEventListener('input',()=>{design();reset();draw();});
+  V.interact(cv,st,{active:is3,grab:()=>false,move:()=>{},redraw:draw});
+  design();reset();
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+})();
+</script>

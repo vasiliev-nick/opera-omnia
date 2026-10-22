@@ -1,0 +1,54 @@
+<script>
+(function(){
+  /* Fig. ∇.exgear (exercise): a curve in polar coordinates, the angle φ and the radius r(φ), and the graph of r; no curvature is shown. */
+  const TB=window.TB,cv=document.getElementById('exgear');if(!TB||!cv||!TB.fit)return;
+  const K=6,E=0.12,PI2=2*Math.PI,rf=p=>1+E*Math.cos(K*p);
+  let phi=0.72,geo=null,drag=0;
+  function draw(){
+    const f=TB.fit(cv,W=>Math.round(W<520?W*1.18:W*0.4)),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,fs=sm?12:13;
+    c.clearRect(0,0,W,H);
+    /* left (or upper) panel: the curve; right (or lower) panel: the graph of r */
+    const A=sm?{x:0,y:0,w:W,h:W*0.74}:{x:0,y:0,w:H*1.05,h:H},B=sm?{x:0,y:A.h+6,w:W,h:H-A.h-6}:{x:A.w+12,y:0,w:W-A.w-12,h:H};
+    const R0=1.32,sc=Math.min(A.w,A.h)/(2*R0)*0.94,cx=A.x+A.w/2,cy=A.y+A.h/2,X=x=>cx+sc*x,Y=y=>cy-sc*y;
+    c.strokeStyle=TB.rgba(col.ink,0.3);c.lineWidth=1;TB.ln(c,X(-R0),cy,X(R0),cy);TB.ln(c,cx,Y(R0),cx,Y(-R0));
+    TB.rich(c,[['x','i'],['1','s']],X(R0)-2,cy-7,fs+1,col.ink,'right');TB.rich(c,[['x','i'],['2','s']],cx+7,Y(R0)+12,fs+1,col.ink,'start');
+    c.strokeStyle=TB.rgba(col.ink,0.45);c.setLineDash([5,4]);c.beginPath();c.arc(cx,cy,sc,0,PI2);c.stroke();c.setLineDash([]);
+    c.beginPath();for(let i=0;i<=720;i++){const p=i/720*PI2,r=rf(p),xx=X(r*Math.cos(p)),yy=Y(r*Math.sin(p));if(i)c.lineTo(xx,yy);else c.moveTo(xx,yy);}c.closePath();
+    c.fillStyle=TB.rgba(col.eth,0.1);c.fill();c.strokeStyle=col.ink;c.lineWidth=2.2;c.stroke();
+    /* the angle φ and the radius r(φ) */
+    const r=rf(phi),px=X(r*Math.cos(phi)),py=Y(r*Math.sin(phi)),ar=sc*0.3;
+    c.strokeStyle=col.eth;c.lineWidth=1.6;c.beginPath();c.arc(cx,cy,ar,0,-phi,true);c.stroke();
+    const am=phi/2;TB.rich(c,[['φ','i']],cx+(ar+12)*Math.cos(am),cy-(ar+12)*Math.sin(am)+5,fs+2,col.eth,'center');
+    c.strokeStyle=col.warm;c.lineWidth=2.2;TB.ln(c,cx,cy,px,py);
+    const nx=-Math.sin(phi),ny=Math.cos(phi),mx=(cx+px)/2,my=(cy+py)/2,lo=16;
+    TB.rich(c,[['r','i'],['(','m'],['φ','i'],[')','m']],mx+nx*lo,my-ny*lo+5,fs+1,col.warm,'center');
+    c.fillStyle=col.paper;c.beginPath();c.arc(px,py,7,0,PI2);c.fill();c.fillStyle=col.ink;c.beginPath();c.arc(px,py,4.5,0,PI2);c.fill();
+    /* graph of r on [0, 2π] with a fixed scale */
+    const gl=B.x+(sm?36:40),gr=B.x+B.w-(sm?14:18),gt=B.y+16,gb=B.y+B.h-26,RL=0.8,RH=1.2,GX=p=>gl+(gr-gl)*p/PI2,GY=v=>gb-(gb-gt)*(v-RL)/(RH-RL);
+    c.strokeStyle=TB.rgba(col.ink,0.45);c.lineWidth=1;TB.ln(c,gl,gb,gr,gb);TB.ln(c,gl,gb,gl,gt);
+    c.strokeStyle=TB.rgba(col.ink,0.45);c.setLineDash([5,4]);TB.ln(c,gl,GY(1),gr,GY(1));c.setLineDash([]);
+    c.fillStyle=col.muted;c.font=fs+'px '+TB.ui;c.textAlign='right';
+    for(const v of [0.88,1,1.12]){c.fillRect(gl-4,GY(v)-0.5,8,1);c.fillText(TB.fmt(v,v===1?0:2),gl-7,GY(v)+4);}
+    c.textAlign='center';
+    for(const [p,t] of [[0,'0'],[Math.PI,'π'],[PI2,'2π']]){c.fillRect(GX(p)-0.5,gb-3,1,6);c.font=(t==='0'?fs+'px '+TB.ui:'italic '+(fs+1)+'px '+TB.serif);c.fillText(t,GX(p),gb+17);}
+    c.textAlign='start';
+    TB.rich(c,[['φ','i']],gr,gb-8,fs+2,col.ink,'right');TB.rich(c,[['r','i']],gl+8,gt+4,fs+2,col.ink,'start');
+    c.strokeStyle=col.eth;c.lineWidth=2;c.beginPath();for(let i=0;i<=600;i++){const p=i/600*PI2,xx=GX(p),yy=GY(rf(p));if(i)c.lineTo(xx,yy);else c.moveTo(xx,yy);}c.stroke();
+    const qx=GX(phi),qy=GY(r);c.strokeStyle=col.warm;c.lineWidth=2.2;TB.ln(c,qx,gb,qx,qy);
+    c.fillStyle=col.paper;c.beginPath();c.arc(qx,qy,7,0,PI2);c.fill();c.fillStyle=col.ink;c.beginPath();c.arc(qx,qy,4.5,0,PI2);c.fill();
+    geo={A:A,B:B,cx:cx,cy:cy,sc:sc,gl:gl,gr:gr,gt:gt,gb:gb};
+  }
+  /* drag the point: around the curve in the left panel, along the axis φ in the graph */
+  function pick(e,start){if(!geo)return false;const b=cv.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top,g=geo;
+    const inA=x>=g.A.x&&x<=g.A.x+g.A.w&&y>=g.A.y&&y<=g.A.y+g.A.h,inB=x>=g.gl-10&&x<=g.gr+10&&y>=g.gt-10&&y<=g.gb+10;
+    const where=start?(inA?1:inB?2:0):drag;if(!where)return false;
+    if(where===1){if(start&&Math.hypot(x-g.cx,y-g.cy)<g.sc*0.15)return false;let p=Math.atan2(g.cy-y,x-g.cx);if(p<0)p+=PI2;phi=p;}
+    else phi=Math.max(0,Math.min(PI2,(x-g.gl)/(g.gr-g.gl)*PI2));
+    if(start)drag=where;draw();return true;}
+  cv.style.touchAction='pan-y';
+  cv.addEventListener('pointerdown',e=>{if(pick(e,true)){try{cv.setPointerCapture(e.pointerId);}catch(_){}}});
+  cv.addEventListener('pointermove',e=>{if(drag)pick(e,false);});
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{drag=0;}));
+  TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>

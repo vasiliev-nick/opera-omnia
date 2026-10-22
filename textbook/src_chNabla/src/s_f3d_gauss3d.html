@@ -1,0 +1,68 @@
+<script>
+(function(){
+  /* Fig. ∇.@gauss, spatial shapes: a small piece of a surface around a draggable point and its image under the Gauss map q ↦ n(q) on the unit sphere; the signed area of the image over the area of the piece tends to K(p). Both scenes turn together, since n lives in the same space as the surface. */
+  const TB=window.TB,cv=document.getElementById('gauss');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,fx=document.getElementById('gsFx'),g=TB.G('gGs'),se=document.getElementById('gsE'),so=document.getElementById('gsEOut');
+  const st={elld:{yaw:0.55,pitch:0.42},torus:{yaw:0.4,pitch:0.62},saddle:{yaw:0.75,pitch:0.5}};
+  let shape=null,uv={},Kv={},camA=null,camB=null;
+  const is3=()=>cv.dataset.dim==='3';
+  TB.segs(cv,k=>{if(!V.SURF[k])return;shape=k;V.dim(cv,true);draw();V.intro(st[k],draw);});
+  const sphere=V.mesh((u,v)=>[Math.cos(u)*Math.cos(v),Math.sin(u)*Math.cos(v),Math.sin(v)],{u0:0,u1:2*Math.PI,v0:-Math.PI/2,v1:Math.PI/2,nu:48,nv:24});
+  function Kof(k){if(Kv[k])return Kv[k];const d=V.SURF[k],m=V.meshOf(k);
+    return Kv[k]=m.U.map((u,i)=>{const q=d.fix(u,m.V[i]);return V.geom(d.S,q[0],q[1],d.o).K;});}
+  /* the piece: parameters (u, v) in a box of half-sides ε/√E, ε/√G around the point, so its sides are about 2ε long */
+  function piece(d,q,G,eps,n){const du=Math.min(eps/Math.sqrt(G.E),0.9),dv=Math.min(eps/Math.sqrt(G.G),0.9),P=[],Nn=[],U=[],Vv=[];
+    for(let j=0;j<=n;j++)for(let i=0;i<=n;i++){const r=d.fix(q[0]+du*(2*i/n-1),q[1]+dv*(2*j/n-1)),gg=V.geom(d.S,r[0],r[1],d.o);P.push(gg.p);Nn.push(gg.n);U.push(r[0]);Vv.push(r[1]);}
+    return {P:P,N:Nn,U:U,V:Vv,nu:n,nv:n,du:du,dv:dv};}
+  /* area of the piece and signed area of its image, by the midpoint rule: |S_u × S_v| and ⟨n, n_u × n_v⟩ */
+  function areas(d,q,du,dv){const m=14,h=1e-3;let A=0,An=0;
+    for(let j=0;j<m;j++)for(let i=0;i<m;i++){const u=q[0]+du*(2*(i+0.5)/m-1),v=q[1]+dv*(2*(j+0.5)/m-1),G0=V.geom(d.S,u,v,d.o),
+        nu=V.mul(V.sub(V.geom(d.S,u+h,v,d.o).n,V.geom(d.S,u-h,v,d.o).n),1/(2*h)),nv=V.mul(V.sub(V.geom(d.S,u,v+h,d.o).n,V.geom(d.S,u,v-h,d.o).n),1/(2*h)),w=4*du*dv/(m*m);
+      A+=V.norm(V.cross(G0.Su,G0.Sv))*w;An+=V.dot(G0.n,V.cross(nu,nv))*w;}
+    return [A,An];}
+  const loop=pc=>{const n=pc.nu,id=[];for(let i=0;i<=n;i++)id.push(i);for(let j=1;j<=n;j++)id.push(j*(n+1)+n);for(let i=n-1;i>=0;i--)id.push(n*(n+1)+i);for(let j=n-1;j>=0;j--)id.push(j*(n+1));return id;};
+  function draw(){
+    if(!is3()||!shape)return;
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?1.3:0.5))),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,d=V.SURF[shape],m=V.meshOf(shape),fs=sm?12:13;
+    c.clearRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'fill',col:col.eth,a:0.5,t:[['K','i'],[' > 0','r']]},{k:'fill',col:col.warm,a:0.5,t:[['K','i'],[' < 0','r']]},
+      {k:'line',col:col.ink,t:[['кусочек и его образ','r']]}],sm?8:14,W-8,4,fs);
+    const s0=sm?Math.min(W*0.24,(H-yb)*0.15):Math.min(W*0.15,(H-yb)*0.3);
+    camA=V.camera(st[shape],W,H,sm?W/2:W*0.27,sm?yb+(H-yb)*0.27:yb+(H-yb)*0.52,s0);
+    camB=V.camera(st[shape],W,H,sm?W/2:W*0.74,sm?yb+(H-yb)*0.76:yb+(H-yb)*0.52,s0*(sm?1:1.05));
+    const K=Kof(shape),cols=K.map(k=>TB.mixh(col.eth,col.warm,0.5-0.5*Math.tanh(k/0.12)));
+    if(!uv[shape])uv[shape]=d.p0.slice();const q=uv[shape],G=V.geom(d.S,q[0],q[1],d.o),eps=+se.value;so.textContent=TB.fmt(eps,2);
+    const pc=piece(d,q,G,eps,10),L=loop(pc),sg=G.K<0?col.warm:col.eth,front=camA.rot(G.n)[2]>0,frontB=front;
+    const lift=(P,N,a)=>P.map((p,i)=>V.add(p,V.mul(N[i],a)));
+    const onS={P:lift(pc.P,pc.N,0.006),U:pc.U,V:pc.V,nu:pc.nu,nv:pc.nv,o:{}},onB={P:pc.N.map(n=>V.mul(n,1.006)),U:pc.U,V:pc.V,nu:pc.nu,nv:pc.nv,o:{}};
+    /* where the traversal of the boundary starts, and which way it goes */
+    const mark=P=>{const a=P[L[2]],b=P[L[4]];return {t:'arrow',p:a,v:V.mul(V.unit(V.sub(b,a)),0.16),col:col.ink,w:1.6};};
+    const left=[{t:'mesh',m:m,cols:cols,grid:4,gridA:0.12,amb:0.34},
+      {t:'mesh',m:onS,col:col.paper,amb:0.9,alpha:0.75,top:front},
+      {t:'line',pts:L.map(i=>onS.P[i]),col:col.ink,w:2,bias:0.02,top:front},
+      Object.assign(mark(onS.P),{top:front}),{t:'pt',p:onS.P[L[0]],r:3.2,fill:col.ink,bias:0.05,top:front},
+      {t:'arrow',p:G.p,v:V.mul(G.n,0.5),col:col.warm,w:2,top:front},{t:'pt',p:G.p,r:4.5,fill:col.ink,top:front},
+      {t:'label',p:V.add(G.p,V.mul(G.n,0.57)),segs:[['n','i']],col:col.warm,dx:4,dy:-2}];
+    const right=[{t:'mesh',m:sphere,col:TB.mixh(col.paper,col.ink,0.22),grid:4,gridA:0.14,amb:0.4},
+      {t:'mesh',m:onB,col:sg,amb:0.6,alpha:0.85,top:frontB},
+      {t:'line',pts:L.map(i=>onB.P[i]),col:col.ink,w:2,bias:0.02,top:frontB},
+      Object.assign(mark(onB.P),{top:frontB}),{t:'pt',p:onB.P[L[0]],r:3.2,fill:col.ink,bias:0.05,top:frontB},
+      {t:'pt',p:V.mul(G.n,1.006),r:4.5,fill:col.ink,bias:0.05,top:frontB},
+      {t:'label',p:V.mul(G.n,1.12),segs:[['n','i'],['(','m'],['p','i'],[')','m']],col:col.warm,dx:4,dy:-2}];
+    c.save();c.beginPath();if(sm)c.rect(0,yb,W,(H-yb)*0.52);else c.rect(0,yb,W*0.52,H-yb);c.clip();V.render(c,camA,left,col);c.restore();
+    c.save();c.beginPath();if(sm)c.rect(0,yb+(H-yb)*0.52,W,(H-yb)*0.48);else c.rect(W*0.52,yb,W*0.48,H-yb);c.clip();V.render(c,camB,right,col);c.restore();
+    c.strokeStyle=col.rule;c.lineWidth=1;if(sm)TB.ln(c,16,yb+(H-yb)*0.52,W-16,yb+(H-yb)*0.52);else TB.ln(c,W*0.52,yb+10,W*0.52,H-10);
+    TB.rich(c,[['поверхность','r']],sm?10:14,sm?yb+16:H-12,fs,col.muted,'start');
+    TB.rich(c,[['единичная сфера','r']],sm?10:W*0.52+14,sm?yb+(H-yb)*0.52+18:H-12,fs,col.muted,'start');
+    const [A,An]=areas(d,q,pc.du,pc.dv),r=An/A;
+    g.unmark('lo','hi').set(Math.max(-3.5,Math.min(3.5,r)),r<0?col.warm:col.eth);g.mark('k',G.K,'<i>K</i>(<i>p</i>)',true);
+    fx.innerHTML=TB.rows([['<i>K</i>(<i>p</i>) = '+TB.fmt(G.K,3)+',','площадь кусочка '+TB.fmt(A,4)+','],
+      ['площадь образа с учётом обхода '+TB.fmt(An,4)+',','отношение '+TB.fmt(r,3)]])+'<span>'+(An<0?'образ обходится в обратную сторону: в точке поверхность седлообразна':'образ обходится в ту же сторону, что и кусочек')+'</span>';
+  }
+  const near=(x,y)=>{if(!camA||!shape)return false;const d=V.SURF[shape],q=uv[shape]||d.p0,P=camA.P(d.S(q[0],q[1]));return Math.hypot(P[0]-x,P[1]-y)<26;};
+  const place=(x,y,r0)=>{const d=V.SURF[shape],r=V.pick(camA,V.meshOf(shape),x,y,r0);if(r){uv[shape]=d.fix(r[0],r[1]);draw();}};
+  V.interact(cv,st.elld,{active:is3,state:()=>st[shape],grab:near,move:(x,y)=>place(x,y,40),tap:(x,y)=>place(x,y,14),redraw:draw});
+  se.addEventListener('input',draw);
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+})();
+</script>

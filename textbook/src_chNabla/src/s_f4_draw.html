@@ -1,0 +1,70 @@
+<script>
+(function(){
+  /* Fig. ∇.draw: a curve grown from its curvature κ(s) = k₀ + k₁ cos ωs by the formulas of the theorem on a curve from its curvature, and the graph of κ. */
+  const TB=window.TB,cv=document.getElementById('draw');if(!TB||!cv||!TB.fit)return;
+  const k0e=document.getElementById('drK0'),k1e=document.getElementById('drK1'),we=document.getElementById('drW'),go=document.getElementById('drGo'),fx=document.getElementById('drFx');
+  const outs={drK0:document.getElementById('drK0Out'),drK1:document.getElementById('drK1Out'),drW:document.getElementById('drWOut')};
+  const S=40,M=2000,KLO=-3.2,KHI=3.8,PI2=2*Math.PI;
+  let cur=null,key='',sNow=0,anim=0;
+  /* θ(s) = k₀s + (k₁/ω) sin ωs exactly; γ by the trapezoid rule on a fine grid */
+  function curve(){const k0=+k0e.value,k1=+k1e.value,w=+we.value,kk=[k0,k1,w].join('|');if(kk===key)return cur;key=kk;
+    const th=new Float64Array(M+1),x=new Float64Array(M+1),y=new Float64Array(M+1),ka=new Float64Array(M+1),h=S/M;
+    for(let i=0;i<=M;i++){const s=i*h;th[i]=k0*s+k1/w*Math.sin(w*s);ka[i]=k0+k1*Math.cos(w*s);}
+    for(let i=1;i<=M;i++){x[i]=x[i-1]+h*(Math.cos(th[i-1])+Math.cos(th[i]))/2;y[i]=y[i-1]+h*(Math.sin(th[i-1])+Math.sin(th[i]))/2;}
+    return cur={k0:k0,k1:k1,w:w,th:th,x:x,y:y,ka:ka};}
+  /* polyline split into pieces of constant sign of κ */
+  function signed(c,n,P,col){let i=0;while(i<n){const neg=P.ka[i]<0;let j=i;while(j<n&&(P.ka[j+1]<0)===neg)j++;
+      c.strokeStyle=neg?col.warm:col.eth;c.beginPath();for(let q=i;q<=Math.min(j+1,n);q++){const p=P.pt(q);if(q===i)c.moveTo(p[0],p[1]);else c.lineTo(p[0],p[1]);}c.stroke();i=j+1;}}
+  function draw(){
+    const P=curve(),f=TB.fit(cv,W=>Math.round(W<520?W*1.22:W*0.66)),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,fs=sm?12:13;
+    c.clearRect(0,0,W,H);
+    const Hb=sm?128:138,Ht=H-Hb-10,u=Ht/12,ox=W/2,oy=Ht*0.66,X=x=>ox+u*x,Y=y=>oy-u*y;
+    const n=Math.max(0,Math.min(M,Math.round(sNow/S*M)));
+    /* upper part: abscissa axis through the start, the start, the curve so far */
+    c.save();c.beginPath();c.rect(0,0,W,Ht);c.clip();
+    c.strokeStyle=TB.rgba(col.ink,0.18);c.lineWidth=1;TB.ln(c,0,oy,W,oy);
+    c.lineWidth=2.4;c.lineJoin='round';c.lineCap='round';
+    if(n>0)signed(c,n,{ka:P.ka,pt:q=>[X(P.x[q]),Y(P.y[q])]},col);
+    c.lineCap='butt';
+    c.fillStyle=col.paper;c.strokeStyle=col.ink;c.lineWidth=1.6;c.beginPath();c.arc(ox,oy,5,0,PI2);c.fill();c.stroke();
+    TB.rich(c,[['p','i'],['0','s']],ox-8,oy+18,fs+1,col.ink,'right');
+    /* current point with its unit tangent */
+    const xs=X(P.x[n]),ys=Y(P.y[n]),tx=Math.cos(P.th[n]),ty=Math.sin(P.th[n]),al=u*1.1;
+    c.strokeStyle=col.ink;c.fillStyle=col.ink;c.lineWidth=1.6;TB.ln(c,xs,ys,xs+tx*al,ys-ty*al);
+    {const hx=xs+tx*al,hy=ys-ty*al,a=7;c.beginPath();c.moveTo(hx,hy);c.lineTo(hx-a*tx+a*0.5*ty,hy+a*ty+a*0.5*tx);c.lineTo(hx-a*tx-a*0.5*ty,hy+a*ty-a*0.5*tx);c.closePath();c.fill();}
+    c.fillStyle=col.paper;c.beginPath();c.arc(xs,ys,7,0,PI2);c.fill();c.fillStyle=col.ink;c.beginPath();c.arc(xs,ys,4.5,0,PI2);c.fill();
+    c.restore();
+    /* unit of length */
+    {const x0=12,y0=Ht-12;c.strokeStyle=col.ink;c.lineWidth=1.5;TB.ln(c,x0,y0,x0+u,y0);TB.ln(c,x0,y0-4,x0,y0+4);TB.ln(c,x0+u,y0-4,x0+u,y0+4);
+      TB.rich(c,[['1','m']],x0+u/2,y0-7,fs,col.ink,'center');}
+    c.strokeStyle=TB.rgba(col.ink,0.15);c.lineWidth=1;TB.ln(c,0,Ht+4,W,Ht+4);
+    /* lower part: the graph of κ(s) on [0, 40] with a fixed vertical scale */
+    const gl=sm?34:40,gr=sm?14:22,gt=Ht+18,gb=H-24,GX=s=>gl+(W-gl-gr)*s/S,GY=k=>gb-(gb-gt)*(k-KLO)/(KHI-KLO);
+    c.strokeStyle=TB.rgba(col.ink,0.45);c.lineWidth=1;TB.ln(c,gl,GY(0),W-gr,GY(0));TB.ln(c,gl,gt,gl,gb);
+    c.fillStyle=col.muted;c.font=fs+'px '+TB.ui;c.textAlign='center';
+    for(const s of [0,10,20,30,40]){c.fillRect(GX(s)-0.5,GY(0)-3,1,6);if(s)c.fillText(String(s),GX(s),gb+16);}
+    c.textAlign='right';for(const k of [-2,2]){c.fillRect(gl-4,GY(k)-0.5,8,1);c.fillText(k<0?'−2':'2',gl-7,GY(k)+4);}
+    c.fillText('0',gl-7,GY(0)+4);
+    TB.rich(c,[['s','i']],W-gr,GY(0)-7,fs+1,col.ink,'right');
+    TB.rich(c,[['κ','i'],['(','m'],['s','i'],[')','m']],gl+8,gt+4,fs+1,col.ink,'start');
+    /* area between the graph and the zero line, one polygon per piece of constant sign; the part already drawn is brighter */
+    const y0=GY(0),fillRuns=(a,b,al)=>{let i=a;while(i<b){const neg=P.ka[i]<0;let j=i;while(j<b&&(P.ka[j+1]<0)===neg)j++;const e=Math.min(j+1,b);
+        c.fillStyle=TB.rgba(neg?col.warm:col.eth,al);c.beginPath();c.moveTo(GX(i/M*S),y0);for(let q=i;q<=e;q++)c.lineTo(GX(q/M*S),GY(P.ka[q]));c.lineTo(GX(e/M*S),y0);c.closePath();c.fill();i=j+1;}};
+    fillRuns(0,n,0.34);fillRuns(n,M,0.1);
+    c.strokeStyle=TB.rgba(col.ink,0.75);c.lineWidth=1.5;c.beginPath();for(let i=0;i<=M;i+=2){const X1=GX(i/M*S),Y1=GY(P.ka[i]);if(i)c.lineTo(X1,Y1);else c.moveTo(X1,Y1);}c.stroke();
+    const sx=GX(n/M*S);c.strokeStyle=col.ink;c.lineWidth=1.2;c.setLineDash([4,3]);TB.ln(c,sx,gt,sx,gb);c.setLineDash([]);
+    c.fillStyle=col.paper;c.beginPath();c.arc(sx,GY(P.ka[n]),6,0,PI2);c.fill();c.fillStyle=col.ink;c.beginPath();c.arc(sx,GY(P.ka[n]),4,0,PI2);c.fill();
+    c.textAlign='start';
+    const sv=n/M*S,turn=P.th[n]/PI2;
+    fx.innerHTML=TB.rows([['<i>s</i> = '+TB.fmt(sv,1)+',','поворот касательной: '+TB.fmt(turn,2)+' оборота']]);
+  }
+  function stop(){if(anim)cancelAnimationFrame(anim);anim=0;}
+  function play(){stop();if(TB.reduced()){sNow=S;draw();return;}
+    const t0=performance.now(),dur=3600;
+    const tick=t=>{sNow=Math.min(S,S*(t-t0)/dur);draw();anim=sNow<S?requestAnimationFrame(tick):0;};anim=requestAnimationFrame(tick);}
+  [k0e,k1e,we].forEach(e=>e.addEventListener('input',()=>{outs[e.id].textContent=TB.fmt(+e.value,2);stop();sNow=S;draw();}));
+  go.addEventListener('click',play);
+  TB.onTheme(draw);TB.onResize(cv,draw);
+  sNow=0;draw();TB.whenSeen(cv,play);
+})();
+</script>

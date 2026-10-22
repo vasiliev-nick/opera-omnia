@@ -1,0 +1,480 @@
+<script>
+(function(){
+  /* Canvas sizing for the figures of part 2: drawing in CSS pixels at the width of the column, sharp on dense screens; rich labels and a legend row. */
+  const TB=window.TB;if(!TB)return;
+  TB.fit=function(cv,hOf){
+    const W=Math.round(cv.parentNode.getBoundingClientRect().width)||760,H=Math.round(hOf(W)),r=window.devicePixelRatio||1;
+    const bw=Math.round(W*r),bh=Math.round(H*r);if(cv.width!==bw)cv.width=bw;if(cv.height!==bh)cv.height=bh;
+    const c=cv.getContext('2d');c.setTransform(r,0,0,r,0,0);c.textAlign='start';c.textBaseline='alphabetic';c.setLineDash([]);
+    return {c:c,W:W,H:H};};
+  TB.onResize=function(cv,fn){let w=Math.round(cv.parentNode.getBoundingClientRect().width);
+    if(window.ResizeObserver)new ResizeObserver(()=>{const nw=Math.round(cv.parentNode.getBoundingClientRect().width);if(nw!==w){w=nw;fn();}}).observe(cv.parentNode);
+    else window.addEventListener('resize',fn);};
+  /* A label is a list of [text, kind]: 'i' italic letter, 's' italic subscript, 'p' italic superscript, 'r' upright sans, 'm' upright serif. */
+  function font(k,s){return k==='i'?'italic '+(s+2)+'px '+TB.serif:(k==='s'||k==='p')?'italic '+Math.round(s*0.78)+'px '+TB.serif:k==='m'?(s+1)+'px '+TB.serif:s+'px '+TB.ui;}
+  /* The italic θ of the text fonts is often the open, cursive form; the closed formula θ is drawn by hand, so that labels match the formulas. */
+  const fsz=(k,s)=>(k==='s'||k==='p')?Math.round(s*0.78):k==='m'?s+1:k==='r'?s:s+2,dy=(k,s)=>k==='s'?s*0.3:k==='p'?-s*0.45:0;
+  TB.theta=function(c,x,y,f,col){c.save();c.translate(x,y);c.transform(1,0,-0.2,1,0,0);c.strokeStyle=col;c.setLineDash([]);
+    c.lineWidth=Math.max(1,f*0.075);c.beginPath();c.ellipse(f*0.27,-f*0.36,f*0.155,f*0.335,0,0,7);c.stroke();
+    c.lineWidth=Math.max(0.9,f*0.06);c.beginPath();c.moveTo(f*0.12,-f*0.36);c.lineTo(f*0.42,-f*0.36);c.stroke();c.restore();};
+  const segW=(c,q,s)=>{if(q[0]==='θ')return fsz(q[1],s)*0.56;c.font=font(q[1],s);return c.measureText(q[0]).width;};
+  TB.richW=function(c,segs,s){let w=0;for(const q of segs)w+=segW(c,q,s)+(q[1]==='i'?1:0);return w;};
+  TB.rich=function(c,segs,x,y,s,col,align){
+    const w=TB.richW(c,segs,s);if(align==='center')x-=w/2;else if(align==='right')x-=w;
+    c.fillStyle=col;c.textAlign='start';
+    for(const q of segs){const yy=y+dy(q[1],s);
+      if(q[0]==='θ')TB.theta(c,x,yy,fsz(q[1],s),col);else{c.font=font(q[1],s);c.fillStyle=col;c.fillText(q[0],x,yy);}
+      x+=segW(c,q,s)+(q[1]==='i'?1:0);}
+    return w;};
+  /* The same closed θ inside HTML readouts. */
+  TB.thSvg='<svg class="gth" viewBox="0 -74 58 76" aria-label="θ"><g transform="skewX(-11.3)"><ellipse cx="27" cy="-36" rx="15.5" ry="33.5"/><line x1="12" y1="-36" x2="42" y2="-36"/></g></svg>';
+  /* Legend items: {k:'line'|'thin'|'dash'|'fill', col, a (fill opacity), t: label}. Wraps to the next row when needed; returns the bottom y. */
+  TB.legend=function(c,items,L,R,y,s){
+    const sw=22,gap=18,rowH=s+9;let x=L;y+=s;
+    for(const it of items){const w=sw+6+TB.richW(c,it.t,s);
+      if(x>L&&x+w>R){x=L;y+=rowH;}
+      const ym=y-s*0.33;
+      if(it.k==='fill'){c.fillStyle=TB.rgba(it.col,it.a||0.3);c.fillRect(x,ym-6,sw,12);}
+      else{c.strokeStyle=it.col;c.lineWidth=it.k==='thin'?1.2:2.2;c.setLineDash(it.k==='dash'?[5,4]:[]);
+        c.beginPath();c.moveTo(x,ym);c.lineTo(x+sw,ym);c.stroke();c.setLineDash([]);}
+      TB.rich(c,it.t,x+sw+6,y,s,TB.tok('--ink'));x+=w+gap;}
+    return y+7;};
+  /* Readout lines for .fx: each part stays on one line, a line may break only between parts (at an ordinary space; the gap is padding of the parts). */
+  TB.rows=rows=>rows.map(r=>'<span>'+r.map(p=>'<span class="nw">'+p+'</span>').join(' ')+'</span>').join('').replace(/(<i[^>]*>)θ(<\/i>)/g,'$1'+TB.thSvg+'$2');
+  TB.segs=function(cv,fn){const b=[...cv.closest('figure').querySelectorAll('.seg button')];
+    b.forEach(e=>e.addEventListener('click',()=>{b.forEach(o=>o.setAttribute('aria-pressed',o===e?'true':'false'));fn(e.dataset.k);}));
+    const on=b.find(e=>e.getAttribute('aria-pressed')==='true');return on?on.dataset.k:b[0].dataset.k;};
+})();
+</script>
+<script>
+(function(){
+  /* Fig. ∅.14: the needle, mass escaping to infinity, the growing peak; the integral on a scale with +∞ at its right end. */
+  const cv=document.getElementById('needle');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('ndN'),so=document.getElementById('ndNOut'),fx=document.getElementById('ndFx');
+  const g=new TB.Gauge('gNd'),cmp=v=>v===Infinity?1:v/(1+v);
+  let md=TB.segs(cv,k=>{md=k;draw();});
+  if(g.el){const ge=g.el.querySelectorAll('.ge');ge[1].textContent='+∞';
+    for(const v of [1,2,4,9]){const t=document.createElement('i');t.className='ge';t.style.left=cmp(v)*100+'%';t.textContent=String(v);g.el.insertBefore(t,g.f);
+      const k=document.createElement('i');k.style.cssText='left:'+cmp(v)*100+'%;top:18px;height:11px;width:0;border-left:1px solid var(--muted);opacity:.7';g.el.insertBefore(k,g.f);}}
+  const sub=(a,b)=>a+'<sub>'+b+'</sub>',one='<b>1</b>',fi=sub('<i>f</i>','<i>n</i>'),dl=' <i>dλ</i><sub>1</sub>';
+  function draw(){
+    const n=+sl.value;so.textContent=n;
+    const F=TB.fit(cv,W=>Math.max(250,Math.min(350,Math.round(W*0.46)))),c=F.c,W=F.W,H=F.H;
+    const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm');
+    c.fillStyle=TB.tok('--paper');c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,L=sm?30:40,R=W-(sm?8:14);
+    const fN=[['f','i'],[String(n),'s']];
+    const T=TB.legend(c,[{k:'fill',col:warm,a:0.32,t:fN},{k:'dash',col:eth,t:md==='P'?[['lim ','r'],['f','i'],['n','s'],[' = ','r'],['u','i']]:[['lim ','r'],['f','i'],['n','s'],[' = 0','r']]}],L,R,4,s)+6;
+    const B=H-(sm?26:30),PR=R-18,x1=md==='E'?22:1,y1=md==='E'?1.6:21,X=x=>L+x/x1*(PR-L),Y=y=>B-y/y1*(B-T);
+    c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);
+    const yt=md==='E'?[0,1]:[0,5,10,15,20],xt=md==='E'?[0,5,10,15,20]:[0,0.5,1];
+    for(const v of yt){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}for(const v of xt){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}c.stroke();
+    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of yt)c.fillText(String(v),L-7,Y(v)+s*0.35);
+    c.textAlign='center';for(const v of xt)c.fillText(TB.fmt(v,v%1?1:0),X(v),B+s+5);c.textAlign='start';
+    TB.rich(c,[['x','i']],R-9,B-5,s,muted);
+    c.save();c.beginPath();c.rect(L,T,PR-L+1,B-T+1);c.clip();
+    c.beginPath();
+    if(md==='N'){c.moveTo(X(0),B);c.lineTo(X(0),Y(n));c.lineTo(X(1/n),Y(n));c.lineTo(X(1/n),B);}
+    else if(md==='E'){c.moveTo(X(n),B);c.lineTo(X(n),Y(1));c.lineTo(X(n+1),Y(1));c.lineTo(X(n+1),B);}
+    else{c.moveTo(X(0),B);c.lineTo(X(0),Y(n));c.lineTo(X(1/n),Y(n));for(let i=1;i<=240;i++){const x=1/n+(1-1/n)*i/240;c.lineTo(X(x),Y(1/x));}c.lineTo(X(1),B);}
+    c.fillStyle=TB.rgba(warm,0.32);c.fill();c.strokeStyle=warm;c.lineWidth=2.2;c.stroke();
+    c.strokeStyle=eth;c.lineWidth=2.4;c.setLineDash([7,5]);c.beginPath();
+    if(md==='P'){const x0=1/(y1+0.5);c.moveTo(X(x0),Y(1/x0));for(let i=1;i<=300;i++){const x=x0+(1-x0)*i/300;c.lineTo(X(x),Y(1/x));}}
+    else{c.moveTo(X(0),B-1);c.lineTo(X(x1),B-1);}
+    c.stroke();c.setLineDash([]);c.restore();
+    if(md==='P'){const xa=X(1/y1);c.fillStyle=eth;c.beginPath();c.moveTo(xa-5,T+9);c.lineTo(xa+1,T-1);c.lineTo(xa+5,T+10);c.closePath();c.fill();}
+    let v,html;
+    const fH=sub('<i>f</i>',n);
+    if(md==='N'){v=1;html=TB.rows([[fH+' = '+n+'·'+sub(one,'(0, '+TB.fr(1,n)+')')+',','∫'+fH+dl+' = '+n+'·'+TB.fr(1,n)+' = 1'],
+      ['lim '+fi+'(<i>x</i>) = 0 при каждом <i>x</i>,','∫ lim '+fi+dl+' = 0']]);}
+    else if(md==='E'){v=1;html=TB.rows([[fH+' = '+sub(one,'['+n+', '+(n+1)+')')+',','∫'+fH+dl+' = '+sub('<i>λ</i>',1)+'(['+n+', '+(n+1)+')) = 1'],
+      [fi+'(<i>x</i>) = 0 при <i>n</i> &gt; <i>x</i>,','∫ lim '+fi+dl+' = 0']]);}
+    else{v=1+Math.log(n);html=TB.rows([[fH+' = min('+n+', <i>u</i>),','∫'+fH+dl+' = '+n+'·'+TB.fr(1,n)+' + ln '+n+' ≈ '+TB.fmt(v,3)],
+      ['lim '+fi+' = <i>u</i>,','∫<i>u</i>'+dl+' = +∞']]);}
+    fx.innerHTML=html;
+    g.set(cmp(v));if(g.out)g.out.textContent=TB.fmt(v,3);if(g.el)g.el.setAttribute('aria-valuetext',TB.fmt(v,3));
+    const lim=md==='P'?Infinity:0;g.mark('lim',cmp(lim),'∫ lim '+fi+' = '+(md==='P'?'+∞':'0'));
+    if(g.m.lim)g.m.lim.firstChild.style.transform=md==='P'?'translateX(-100%)':'none';
+  }
+  sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. ∅.15: Fatou's lemma; f_n, the next two terms, the lower envelope g_n and the lower limit. */
+  const cv=document.getElementById('fatou');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('ftN'),so=document.getElementById('ftNOut'),gG=new TB.Gauge('gFg'),gI=new TB.Gauge('gFi');
+  const bump=(x,c,wl,wr)=>{const w=x<c?wl:wr;return Math.exp(-(x-c)*(x-c)/(2*w*w));},base=x=>0.16+0.12*x;
+  const P=[x=>base(x)+0.85*bump(x,0.20,0.06,0.15),x=>base(x)+0.62*bump(x,0.52,0.14,0.07),x=>base(x)+0.92*bump(x,0.80,0.05,0.11)],PC=[0.20,0.52,0.80];
+  const f=(n,x)=>(1-0.75*Math.pow(0.8,n-1)*(1+x)/2)*P[n%3](x);
+  const M=2000,I=h=>{let s=0;for(let i=0;i<M;i++)s+=h((i+0.5)/M);return s/M;};
+  const IP=P.map(p=>I(p)),Imin=I(x=>Math.min(P[0](x),P[1](x),P[2](x))),liI=Math.min(...IP);
+  const li='lim inf ',fn='<i>f<sub>n</sub></i>';
+  gG.mark('a',Imin,'∫\u2009'+li+fn,true);gI.mark('a',Imin,'∫\u2009'+li+fn,true);gI.mark('b',liI,li+'∫\u2009'+fn);
+  function draw(){
+    const n=+sl.value;so.textContent=n;
+    const F=TB.fit(cv,W=>Math.max(250,Math.min(340,Math.round(W*0.45)))),c=F.c,W=F.W,H=F.H;
+    const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm');
+    c.fillStyle=TB.tok('--paper');c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,L=sm?30:40,R=W-(sm?8:14);
+    const T=TB.legend(c,[{k:'line',col:warm,t:[['f','i'],['n','s']]},{k:'thin',col:muted,t:[['f','i'],['n+1','s'],[', ','r'],['f','i'],['n+2','s']]},
+      {k:'fill',col:eth,a:0.26,t:[['g','i'],['n','s'],[' = inf','r'],['k≥n','s'],[' f','i'],['k','s']]},{k:'dash',col:eth,t:[[li,'r'],['f','i'],['n','s']]}],L,R,4,s)+8;
+    const B=H-(sm?26:30),PR=R-18,X=x=>L+x*(PR-L),Y=y=>B-y/1.12*(B-T);
+    c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);
+    for(const v of [0.5,1]){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}for(const v of [0,0.5,1]){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}c.stroke();
+    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';c.fillText('0,5',L-7,Y(0.5)+s*0.35);c.fillText('1',L-7,Y(1)+s*0.35);c.fillText('0',L-7,B+s*0.35);
+    c.textAlign='center';c.fillText('0,5',X(0.5),B+s+5);c.fillText('1',X(1),B+s+5);c.textAlign='start';
+    TB.rich(c,[['x','i']],R-9,B-5,s,muted);
+    const N=Math.max(200,Math.round(PR-L)),xs=[];for(let i=0;i<=N;i++)xs.push(i/N);
+    c.beginPath();c.moveTo(X(0),B);for(const x of xs)c.lineTo(X(x),Y(Math.min(f(n,x),f(n+1,x),f(n+2,x))));c.lineTo(X(1),B);c.closePath();
+    c.fillStyle=TB.rgba(eth,0.26);c.fill();
+    const line=(h,col,w,dash)=>{c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.beginPath();xs.forEach((x,i)=>{i?c.lineTo(X(x),Y(h(x))):c.moveTo(X(x),Y(h(x)));});c.stroke();c.setLineDash([]);};
+    line(x=>Math.min(P[0](x),P[1](x),P[2](x)),eth,1.8,[6,5]);
+    line(x=>f(n+2,x),TB.rgba(muted,0.8),1.2);line(x=>f(n+1,x),TB.rgba(muted,0.8),1.2);
+    line(x=>f(n,x),warm,2.6);
+    const r=n%3;TB.rich(c,[['f','i'],[String(n),'s']],X(PC[r]),Y(f(n,PC[r]))-8,s,warm,'center');
+    gG.set(I(x=>Math.min(f(n,x),f(n+1,x),f(n+2,x))));gI.set(Math.min(I(x=>f(n,x)),I(x=>f(n+1,x)),I(x=>f(n+2,x))));
+  }
+  sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. ∅.16: dominated convergence that is not uniform; the needle and its envelope without a finite integral. */
+  const cv=document.getElementById('dct');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('dcN'),so=document.getElementById('dcNOut'),se=document.getElementById('dcE'),seo=document.getElementById('dcEOut'),seL=document.getElementById('dcEL');
+  const r1=document.getElementById('rowDc1'),r2=document.getElementById('rowDc2'),r3=document.getElementById('rowDc3');
+  const g1=new TB.Gauge('gDc1'),g2=new TB.Gauge('gDc2'),g3=new TB.Gauge('gDc3');
+  let md=TB.segs(cv,k=>{md=k;draw();});
+  const bump=(x,c,wl,wr)=>{const w=x<c?wl:wr;return Math.exp(-(x-c)*(x-c)/(2*w*w));};
+  const g=x=>0.5+0.55*bump(x,0.30,0.16,0.26)+0.28*bump(x,0.84,0.05,0.07),f=x=>0.6*g(x)*Math.sin(2.3*Math.PI*(x-0.08));
+  const phi=t=>t*Math.exp(1-t)*Math.sin(5*Math.PI*t/4),fn=(n,x)=>f(x)+(g(x)-Math.abs(f(x)))*phi(n*x);
+  const epsOf=()=>0.5*Math.pow(10,-(+se.value)),efmt=e=>e.toPrecision(2).replace('.',',');
+  function axes(c,L,R,T,B,X,Y,yt,s,muted,rule){
+    c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);
+    for(const v of yt){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}c.stroke();
+    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of yt)c.fillText(TB.fmt(v,v%1?1:0),L-7,Y(v)+s*0.35);c.textAlign='start';}
+  function draw(){
+    const n=+sl.value;so.textContent=n;const e=epsOf();seo.textContent=efmt(e);
+    seL.hidden=md!=='S';r1.hidden=md==='S';r2.hidden=md==='S';r3.hidden=md!=='S';
+    const F=TB.fit(cv,W=>Math.max(270,Math.min(360,Math.round(W*0.47)))),c=F.c,W=F.W,H=F.H;
+    const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm');
+    c.fillStyle=TB.tok('--paper');c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,L=sm?30:40,R=W-(sm?8:14),PR=R-18,B=H-(sm?26:30),fN=[['f','i'],[String(n),'s']];
+    const xaxis=(X,ticks)=>{c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,B);c.lineTo(R,B);for(const v of ticks){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}c.stroke();
+      c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='center';for(const v of ticks)c.fillText(TB.fmt(v,v%1?1:0),X(v),B+s+5);c.textAlign='start';TB.rich(c,[['x','i']],R-9,B-5,s,muted);};
+    if(md==='M'){
+      const T=TB.legend(c,[{k:'fill',col:eth,a:0.16,t:[['|','m'],['y','i'],['| ≤ ','m'],['g','i'],['(','m'],['x','i'],[')','m']]},{k:'dash',col:ink,t:[['f','i']]},
+        {k:'line',col:warm,t:fN},{k:'fill',col:warm,a:0.34,t:[['|','m'],['f','i'],[String(n),'s'],[' − ','m'],['f','i'],['|','m']]}],L,R,4,s)+6;
+      const X=x=>L+x*(PR-L),Y=y=>(T+B)/2-y/1.2*(B-T)/2;
+      axes(c,L,R,T,B,X,Y,[-1,0,1],s,muted,rule);
+      const N=Math.max(300,Math.round((R-L)*1.5)),xs=[];for(let i=0;i<=N;i++)xs.push(i/N);
+      c.beginPath();xs.forEach((x,i)=>{i?c.lineTo(X(x),Y(g(x))):c.moveTo(X(x),Y(g(x)));});for(let i=N;i>=0;i--)c.lineTo(X(xs[i]),Y(-g(xs[i])));c.closePath();
+      c.fillStyle=TB.rgba(eth,0.16);c.fill();c.strokeStyle=TB.rgba(eth,0.75);c.lineWidth=1.2;c.stroke();
+      c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,Y(0));c.lineTo(PR,Y(0));c.stroke();xaxis(X,[0,0.5,1]);
+      c.beginPath();xs.forEach((x,i)=>{i?c.lineTo(X(x),Y(fn(n,x))):c.moveTo(X(x),Y(fn(n,x)));});for(let i=N;i>=0;i--)c.lineTo(X(xs[i]),Y(f(xs[i])));c.closePath();
+      c.fillStyle=TB.rgba(warm,0.34);c.fill();
+      c.strokeStyle=ink;c.lineWidth=1.6;c.setLineDash([6,5]);c.beginPath();xs.forEach((x,i)=>{i?c.lineTo(X(x),Y(f(x))):c.moveTo(X(x),Y(f(x)));});c.stroke();c.setLineDash([]);
+      c.strokeStyle=warm;c.lineWidth=2.4;c.beginPath();xs.forEach((x,i)=>{i?c.lineTo(X(x),Y(fn(n,x))):c.moveTo(X(x),Y(fn(n,x)));});c.stroke();
+      let a=0,m=0;const K=4000;for(let i=0;i<K;i++){const d=Math.abs(fn(n,(i+0.5)/K)-f((i+0.5)/K));a+=d/K;if(d>m)m=d;}
+      g1.set(a);g2.set(m);
+    }else{
+      const T=TB.legend(c,[{k:'fill',col:eth,a:0.12,t:[['S','i'],[' = sup','r'],['k','s'],[' f','i'],['k','s']]},{k:'fill',col:eth,a:0.4,t:[['S','i'],[' на [','r'],['ε','i'],[', 1]','r']]},
+        {k:'line',col:warm,t:fN}],L,R,4,s)+6;
+      const y1=21,X=x=>L+x*(PR-L),Y=y=>B-y/y1*(B-T);
+      axes(c,L,R,T,B,X,Y,[0,5,10,15,20],s,muted,rule);
+      c.save();c.beginPath();c.rect(L,T,PR-L,B-T);c.clip();
+      const xe=X(e);
+      const top=y1+1,Sv=x=>x<=0?top:Math.min(top,Math.floor(1/x));
+      const stair=(a,b)=>{c.beginPath();c.moveTo(X(a),B);c.lineTo(X(a),Y(Sv(a)));
+        for(let k=a>0?Math.min(top+1,Math.floor(1/a)):top+1;k>=2;k--){const xb=1/k;if(xb<=a)continue;if(xb>=b)break;c.lineTo(X(xb),Y(Math.min(k,top)));c.lineTo(X(xb),Y(Math.min(k-1,top)));}
+        c.lineTo(X(b),Y(Sv(b-1e-9)));c.lineTo(X(b),B);c.closePath();};
+      stair(0,e);c.fillStyle=TB.rgba(eth,0.12);c.fill();stair(e,1);c.fillStyle=TB.rgba(eth,0.4);c.fill();
+      c.strokeStyle=TB.rgba(eth,0.85);c.lineWidth=1.2;c.beginPath();c.moveTo(X(1),B);
+      for(let k=1;k<=20;k++){c.lineTo(X(1/k),Y(k));c.lineTo(X(1/(k+1)),Y(k));c.lineTo(X(1/(k+1)),Y(k+1));}c.stroke();
+      c.fillStyle=TB.rgba(warm,0.34);c.fillRect(X(0),Y(n),X(1/n)-X(0),B-Y(n));
+      c.strokeStyle=warm;c.lineWidth=2.2;c.beginPath();c.moveTo(X(0),B);c.lineTo(X(0),Y(n));c.lineTo(X(1/n),Y(n));c.lineTo(X(1/n),B);c.stroke();
+      c.restore();
+      xaxis(X,xe-L>22?[0,0.5,1]:[0.5,1]);
+      c.strokeStyle=ink;c.lineWidth=1.5;c.beginPath();c.moveTo(xe,B-6);c.lineTo(xe,B+6);c.stroke();
+      TB.rich(c,[['ε','i']],Math.max(L+4,xe),B+s+6,s,ink,'center');
+      const K=Math.floor(1/e);let h=0;for(let k=1;k<=K;k++)h+=1/k;
+      g3.mark('ln',Math.log(1/e),'ln(1/<i>ε</i>)').set(h-K*e);
+    }
+  }
+  [sl,se].forEach(x=>x.addEventListener('input',draw));draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. ∅.17: the typewriter sequence; the graph of f_n and, row by row, the values f_k(x) for k ≤ n. */
+  const cv=document.getElementById('typewriter');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('twN'),so=document.getElementById('twNOut'),fx=document.getElementById('twFx'),g=new TB.Gauge('gTw');
+  let px=0.71,geo=null;
+  const mj=n=>{let m=0;while((2<<m)<=n)m++;return [m,n-(1<<m)];};
+  function draw(){
+    const n=+sl.value;so.textContent=n;const [m0,j0]=mj(n);
+    const F=TB.fit(cv,W=>W<520?318:372),c=F.c,W=F.W,H=F.H;
+    const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm'),paper=TB.tok('--paper');
+    c.fillStyle=paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,L=sm?42:56,R=W-(sm?10:16),X=x=>L+x*(R-L);
+    const sT=s+14,sB=sT+(sm?44:56),rh=sm?30:36,r0=sB+(sm?16:20),bot=r0+6*rh;
+    geo={L:L,R:R};
+    c.strokeStyle=rule;c.lineWidth=1;c.setLineDash([2,4]);c.beginPath();c.moveTo(L,sT);c.lineTo(R,sT);c.stroke();c.setLineDash([]);
+    c.beginPath();c.moveTo(L,sB);c.lineTo(R,sB);c.stroke();
+    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';c.fillText('1',L-8,sT+s*0.35);c.fillText('0',L-8,sB+s*0.35);
+    const a=j0/(1<<m0),b=(j0+1)/(1<<m0);
+    c.fillStyle=TB.rgba(warm,0.32);c.fillRect(X(a),sT,X(b)-X(a),sB-sT);
+    c.strokeStyle=warm;c.lineWidth=2.2;c.beginPath();c.moveTo(X(a),sB);c.lineTo(X(a),sT);c.lineTo(X(b),sT);c.lineTo(X(b),sB);c.stroke();
+    const lw=TB.richW(c,[['f','i'],[String(n),'s']],s);
+    TB.rich(c,[['f','i'],[String(n),'s']],Math.min(R-lw/2,Math.max(L+lw/2,(X(a)+X(b))/2)),sT-7,s,warm,'center');
+    for(let m=0;m<6;m++){const y=r0+(m+0.5)*rh,q=1<<m,dx=(R-L)/q,rd=Math.max(2.6,Math.min(5,dx*0.34));
+      c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,y);c.lineTo(R,y);for(let j=0;j<=q;j++){c.moveTo(X(j/q),y-5);c.lineTo(X(j/q),y+5);}c.stroke();
+      c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';TB.rich(c,[['m','i'],[' = '+m,'r']],L-8,y+s*0.35,s,muted,'right');
+      for(let j=0;j<q;j++){const k=q+j;if(k>n)break;const cx=X((j+0.5)/q),on=px>=j/q&&px<(j+1)/q;
+        if(j===0){c.fillStyle=TB.rgba(eth,0.3);c.beginPath();c.arc(cx,y,rd+4.5,0,7);c.fill();}
+        c.beginPath();c.arc(cx,y,on?rd+0.65:rd,0,7);if(on){c.fillStyle=ink;c.fill();}else{c.fillStyle=paper;c.fill();c.strokeStyle=ink;c.lineWidth=1.3;c.stroke();}
+        if(k===n){c.strokeStyle=warm;c.lineWidth=2.2;c.beginPath();c.arc(cx,y,rd+4,0,7);c.stroke();}}}
+    c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,bot+4);c.lineTo(R,bot+4);
+    for(const v of [0,0.25,0.5,0.75,1]){c.moveTo(X(v),bot+4);c.lineTo(X(v),bot+8);}c.stroke();
+    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='center';
+    ['0','1/4','1/2','3/4','1'].forEach((t,i)=>c.fillText(t,X(i/4),bot+s+10));c.textAlign='start';
+    const xp=X(px);c.strokeStyle=TB.rgba(ink,0.85);c.lineWidth=1.4;c.beginPath();c.moveTo(xp,sT);c.lineTo(xp,bot+4);c.stroke();
+    c.fillStyle=ink;c.beginPath();c.moveTo(xp,bot+4);c.lineTo(xp-6,bot+13);c.lineTo(xp+6,bot+13);c.closePath();c.fill();
+    const xl=TB.richW(c,[['x','i']],s);TB.rich(c,[['x','i']],xp+(xp+14+xl<R?6:-6-xl),(sB+r0)/2+s*0.35,s,ink);
+    const ks=[];for(let k=1;k<=n;k++){const [m,j]=mj(k);if(px>=j/(1<<m)&&px<(j+1)/(1<<m))ks.push(k);}
+    const p2='2<sup>'+m0+'</sup>';
+    fx.innerHTML=TB.rows([['<i>n</i> = '+n+' = '+p2+' + '+j0+',','<i>I</i><sub>'+n+'</sub> = ['+TB.fr(j0,p2)+', '+TB.fr(j0+1,p2)+'),','‖<i>f</i><sub>'+n+'</sub>‖<sub>1</sub> = '+TB.fr(1,p2)],
+      ['<i>x</i> = '+TB.fmt(px,3)+':','<i>f<sub>k</sub></i>(<i>x</i>) = 1 при <i>k</i> = '+ks.join(', ')]]);
+    g.set(1/(1<<m0));
+  }
+  function setFrom(e){if(!geo)return;const b=cv.getBoundingClientRect();
+    const x=(e.clientX-b.left-geo.L)/(geo.R-geo.L);px=Math.min(0.999,Math.max(0.001,Math.round(x*1000)/1000));draw();}
+  let down=false;
+  cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}setFrom(e);});
+  cv.addEventListener('pointermove',e=>{if(down)setFrom(e);});
+  cv.addEventListener('pointerup',()=>{down=false;});cv.addEventListener('pointercancel',()=>{down=false;});
+  cv.style.touchAction='pan-y';cv.style.cursor='ew-resize';
+  sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. ∅.19: a double series as functions on ℕ; rows, partial sums S_K and column sums. */
+  const cv=document.getElementById('dseries');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('dsK'),so=document.getElementById('dsKOut'),fx=document.getElementById('dsFx'),g=new TB.Gauge('gDs');
+  let md=TB.segs(cv,k=>{md=k;draw();});
+  const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  const pow2=e=>'2'+String(e).split('').map(ch=>SUP[ch]).join('');
+  const a=(k,n)=>md==='A'?(n===k?1:n===k+1?-1:0):(n<=k?Math.pow(2,-k):0);
+  const SK=(K,n)=>{let s=0;for(let k=1;k<=K;k++)s+=a(k,n);return s;};
+  const col=n=>md==='A'?(n===1?1:0):Math.pow(2,1-n);
+  const sub=(x,y)=>x+'<sub>'+y+'</sub>';
+  function draw(){
+    const K=+sl.value;so.textContent=K;
+    const F=TB.fit(cv,W=>{const q=W<520,ss=q?11:13,hh=q?21:22;return 24+10*hh+hh+ss+14+2*hh+8+6;}),c=F.c,W=F.W,H=F.H;
+    const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm');
+    c.fillStyle=TB.tok('--paper');c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?11:13,Lw=sm?50:64,Rw=sm?48:66,Nc=sm?6:10,R=10;
+    const cw=(W-Lw-Rw-(sm?16:22))/Nc,ch=sm?21:22,top=24,x0=Lw,xr=x0+Nc*cw+(sm?16:22);
+    const X=n=>x0+(n-0.5)*cw,Yr=k=>top+(k-1)*ch;
+    /* header */
+    c.font=s+'px '+TB.ui;c.fillStyle=muted;c.textAlign='center';
+    for(let n=1;n<=Nc;n++)TB.rich(c,[['n','i'],[' = '+n,'r']],X(n),top-8,s-1,muted,'center');
+    TB.rich(c,[['…','r']],x0+Nc*cw+(sm?8:11),top-8,s,muted,'center');
+    TB.rich(c,[['Σ','r'],['n','s']],xr+Rw/2,top-8,s,muted,'center');
+    /* highlighted rows */
+    c.fillStyle=TB.rgba(eth,0.10);c.fillRect(2,Yr(1),xr+Rw-4,K*ch);
+    c.strokeStyle=TB.rgba(eth,0.55);c.lineWidth=1;c.strokeRect(2.5,Yr(1)+0.5,xr+Rw-5,K*ch-1);
+    const cell=(v,x,y,txt)=>{if(v!==0){c.fillStyle=TB.rgba(v>0?warm:eth,v>0?0.16+0.3*Math.min(1,Math.abs(v)):0.30);c.fillRect(x-cw/2+2,y+2,cw-4,ch-4);}
+      c.fillStyle=v===0?TB.rgba(muted,0.6):ink;c.font=(v===0?s:s+1)+'px '+(v===0?TB.ui:TB.serif);c.textAlign='center';c.fillText(txt,x,y+ch/2+s*0.36);};
+    for(let k=1;k<=R;k++){
+      TB.rich(c,[['k','i'],[' = '+k,'r']],Lw-8,Yr(k)+ch/2+s*0.36,s-1,k<=K?ink:muted,'right');
+      for(let n=1;n<=Nc;n++){const v=a(k,n);cell(v,X(n),Yr(k),v===0?'·':md==='A'?(v>0?'1':'−1'):pow2(-k));}
+      c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='center';c.fillText('…',x0+Nc*cw+(sm?8:11),Yr(k)+ch/2+s*0.36);
+      const rs=md==='A'?0:k*Math.pow(2,-k);c.fillStyle=ink;c.font=s+'px '+TB.ui;c.fillText(TB.fmt(rs,md==='A'?0:3),xr+Rw/2,Yr(k)+ch/2+s*0.36);}
+    c.fillStyle=muted;c.textAlign='center';c.fillText('⋮',X(1),Yr(R)+ch+s);c.fillText('⋮',xr+Rw/2,Yr(R)+ch+s);
+    /* partial sums and column sums */
+    const y1=Yr(R)+ch+s+14,y2=y1+ch+8,dg=sm?2:3;
+    c.strokeStyle=rule;c.beginPath();c.moveTo(4,y1-4);c.lineTo(W-4,y1-4);c.stroke();
+    TB.rich(c,[['S','i'],['K','s'],['(','r'],['n','i'],[')','r']],Lw-8,y1+ch/2+s*0.36,s,ink,'right');
+    TB.rich(c,[['Σ','r'],['k','s'],[' a','i'],['kn','s']],Lw-8,y2+ch/2+s*0.36,s,ink,'right');
+    for(let n=1;n<=Nc;n++){const v=SK(K,n),w=col(n);
+      cell(Math.abs(v)<1e-12?0:v,X(n),y1,Math.abs(v)<1e-12?'0':md==='A'?(v>0?'1':'−1'):TB.fmt(v,dg));
+      cell(w,X(n),y2,md==='A'?String(w):TB.fmt(w,dg));}
+    const out=md==='A'&&K+1>Nc;
+    c.font=s+'px '+TB.ui;c.textAlign='center';c.fillStyle=out?eth:muted;c.fillText(out?'−1 →':'…',x0+Nc*cw+(sm?8:11)+(out?(sm?6:4):0),y1+ch/2+s*0.36);
+    c.fillStyle=muted;c.fillText('…',x0+Nc*cw+(sm?8:11),y2+ch/2+s*0.36);
+    /* readout */
+    const I=md==='A'?0:2-(K+2)*Math.pow(2,-K),Il=md==='A'?1:2;
+    g.mark('l',Il,'Σ<sub><i>n</i></sub> Σ<sub><i>k</i></sub> <i>a<sub>kn</sub></i>');g.set(I);
+    const SKh=sub('<i>S</i>','<i>K</i>'),dh=' <i>d</i>#';
+    fx.innerHTML=md==='A'
+      ?TB.rows([[SKh+' = '+sub('<b>1</b>','{1}')+' − '+sub('<b>1</b>','{'+(K+1)+'}')+',','∫'+SKh+dh+' = 1 − 1 = 0'],['lim '+SKh+' = '+sub('<b>1</b>','{1}')+',','∫ lim '+SKh+dh+' = 1']])
+      :TB.rows([['∫'+SKh+dh+' = Σ<sub><i>k</i> ≤ '+K+'</sub> <i>k</i>·2<sup>−<i>k</i></sup> = 2 − '+TB.fr(K+2,'2<sup>'+K+'</sup>')+' ≈ '+TB.fmt(I,3)],['∫ lim '+SKh+dh+' = Σ<sub><i>n</i></sub> 2<sup>1−<i>n</i></sup> = 2']]);
+  }
+  sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Figures inside the exercises of §∅.11 and §∅.12: drawn on the exercise background; each shows the setting of a problem, not its solution. */
+  const TB=window.TB;if(!TB||!TB.fit)return;
+  const K=()=>({ink:TB.tok('--ink'),muted:TB.tok('--muted'),eth:TB.tok('--ether'),warm:TB.tok('--warm'),bg:TB.tok('--warm-soft')});
+  const mount=(id,h,draw)=>{const cv=document.getElementById(id);if(!cv)return null;
+    const run=()=>{const F=TB.fit(cv,h),c=F.c;c.clearRect(0,0,F.W,F.H);draw(c,F.W,F.H,K(),F.W<520);};
+    run();TB.onTheme(run);TB.onResize(cv,run);return run;};
+  const listen=(ids,run)=>{if(run)ids.forEach(i=>{const e=document.getElementById(i);if(e)e.addEventListener('input',run);});};
+  /* slider value; its output shows the value with d decimals */
+  const val=(id,d)=>{const e=document.getElementById(id),o=document.getElementById(id+'Out'),v=+e.value;if(o)o.textContent=d?TB.fmt(v,d):String(v);return v;};
+  function axes(c,k,s,L,R,T,B,X,Y,xt,yt){
+    c.strokeStyle=TB.rgba(k.muted,0.6);c.lineWidth=1;c.setLineDash([]);c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);
+    for(const v of yt){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}for(const v of xt){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}c.stroke();
+    c.fillStyle=k.muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of yt)c.fillText(TB.fmt(v,v%1?1:0),L-7,Y(v)+s*0.35);
+    c.textAlign='center';for(const v of xt)c.fillText(TB.fmt(v,v%1?1:0),X(v),B+s+5);c.textAlign='start';}
+  const curve=(c,X,Y,a,b,f,N)=>{c.beginPath();for(let i=0;i<=N;i++){const x=a+(b-a)*i/N;i?c.lineTo(X(x),Y(f(x))):c.moveTo(X(x),Y(f(x)));}};
+
+  /* Exercise ∅.5(b): f_n = 2d_n and, row by row, the sets {d_k = 1}; a draggable point x. */
+  (function(){
+    const cv=document.getElementById('exDig'),fx=document.getElementById('exDigFx');if(!cv)return;
+    let px=0.71,geo=null;
+    const d=(k,x)=>Math.floor(Math.pow(2,k)*x)-2*Math.floor(Math.pow(2,k-1)*x);
+    const run=mount('exDig',W=>W<520?306:332,(c,W,H,k,sm)=>{
+      const n=val('exDigN',0),s=sm?12:14,L=sm?40:52,R=W-(sm?10:16),X=x=>L+x*(R-L);
+      const T0=s+20,B0=T0+(sm?64:76),Y=y=>B0-y/2*(B0-T0),rh=sm?25:28,r0=B0+(sm?24:28),bot=r0+6*rh-4,q=1<<n;
+      geo={L:L,R:R};
+      c.strokeStyle=TB.rgba(k.muted,0.6);c.lineWidth=1;c.beginPath();c.moveTo(L,T0-6);c.lineTo(L,B0);c.lineTo(R,B0);for(const v of [1,2]){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}c.stroke();
+      c.fillStyle=k.muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of [0,1,2])c.fillText(String(v),L-7,Y(v)+s*0.35);c.textAlign='start';
+      c.fillStyle=TB.rgba(k.warm,0.3);for(let a=1;a<q;a+=2)c.fillRect(X(a/q),Y(2),X((a+1)/q)-X(a/q),B0-Y(2));
+      c.strokeStyle=k.warm;c.lineWidth=Math.max(1,Math.min(2,(R-L)/q/4));c.beginPath();
+      for(let a=0;a<q;a++){if(a%2){c.moveTo(X(a/q),B0);c.lineTo(X(a/q),Y(2));c.lineTo(X((a+1)/q),Y(2));c.lineTo(X((a+1)/q),B0);}else{c.moveTo(X(a/q),B0-1);c.lineTo(X((a+1)/q),B0-1);}}
+      c.stroke();
+      TB.rich(c,[['f','i'],[String(n),'s'],[' = 2','m'],['d','i'],[String(n),'s']],R,T0-9,s,k.warm,'right');
+      for(let r=1;r<=6;r++){const y=r0+(r-1)*rh,h=rh-10,cur=r===n,qq=1<<r;
+        c.fillStyle=cur?TB.rgba(k.warm,0.6):TB.rgba(k.eth,0.38);for(let a=1;a<qq;a+=2)c.fillRect(X(a/qq),y,X((a+1)/qq)-X(a/qq),h);
+        c.strokeStyle=cur?k.warm:TB.rgba(k.muted,0.55);c.lineWidth=cur?1.6:1;c.strokeRect(L+0.5,y+0.5,R-L-1,h-1);
+        TB.rich(c,[['d','i'],[String(r),'s']],L-9,y+h/2+s*0.3,s,cur?k.warm:k.ink,'right');}
+      c.strokeStyle=TB.rgba(k.muted,0.6);c.lineWidth=1;c.beginPath();c.moveTo(L,bot);c.lineTo(R,bot);for(const v of [0,0.25,0.5,0.75,1]){c.moveTo(X(v),bot);c.lineTo(X(v),bot+4);}c.stroke();
+      c.fillStyle=k.muted;c.font=s+'px '+TB.ui;c.textAlign='center';['0','1/4','1/2','3/4','1'].forEach((t,i)=>c.fillText(t,X(i/4),bot+s+12));c.textAlign='start';
+      const xp=X(px);c.strokeStyle=TB.rgba(k.ink,0.85);c.lineWidth=1.4;c.beginPath();c.moveTo(xp,T0-6);c.lineTo(xp,bot);c.stroke();
+      c.fillStyle=k.ink;c.beginPath();c.moveTo(xp,bot);c.lineTo(xp-6,bot+9);c.lineTo(xp+6,bot+9);c.closePath();c.fill();
+      const xl=TB.richW(c,[['x','i']],s);TB.rich(c,[['x','i']],xp+(xp+14+xl<R?6:-6-xl),(B0+r0)/2+s*0.35,s,k.ink);
+      const ds=[];for(let r=1;r<=6;r++){const v=d(r,px);ds.push(r===n?'<b>'+v+'</b>':String(v));}
+      fx.innerHTML=TB.rows([['<i>x</i> = '+TB.fmt(px,3)+':','<i>d</i><sub>1</sub>(<i>x</i>), …, <i>d</i><sub>6</sub>(<i>x</i>) = '+ds.join(', ')],
+        ['<i>f</i><sub>'+n+'</sub>(<i>x</i>) = 2<i>d</i><sub>'+n+'</sub>(<i>x</i>) = '+2*d(n,px)]]);});
+    function setFrom(e){if(!geo)return;const b=cv.getBoundingClientRect();
+      px=Math.min(0.999,Math.max(0,Math.round((e.clientX-b.left-geo.L)/(geo.R-geo.L)*1000)/1000));run();}
+    let down=false;
+    cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}setFrom(e);});
+    cv.addEventListener('pointermove',e=>{if(down)setFrom(e);});
+    cv.addEventListener('pointerup',()=>{down=false;});cv.addEventListener('pointercancel',()=>{down=false;});
+    cv.style.touchAction='pan-y';cv.style.cursor='ew-resize';listen(['exDigN'],run);
+  })();
+
+  /* Exercise ∅.6: |∂θ f(x,θ)| for the Gaussian, the bound at θ0 and the upper envelope x²/2 over all θ > 0. */
+  (function(){
+    const fx=document.getElementById('exGauFx');
+    const run=mount('exGau',W=>W<520?270:290,(c,W,H,k,sm)=>{
+      const t0=val('exGauT0',2),t=val('exGauT',2),s=sm?12:14,L=sm?32:42,R=W-(sm?8:14),PR=R-14;
+      const T=TB.legend(c,[{k:'line',col:k.warm,t:[['|∂','m'],['θ','s'],[' f','i'],['(','m'],['x','i'],[', ','m'],['θ','i'],[')|','m']]},
+        {k:'fill',col:k.eth,a:0.3,t:[['g','i'],['(','m'],['x','i'],[')','m']]},{k:'dash',col:k.muted,t:[['x','i'],['²/2','m']]}],L,R,4,s)+8;
+      const B=H-(sm?26:30),X=x=>L+(x+6)/12*(PR-L),Y=y=>B-y/1.6*(B-T),N=Math.max(240,Math.round(PR-L));
+      const g=x=>x*x/2*Math.exp(-t0*x*x/2),h=x=>x*x/2*Math.exp(-t*x*x/2);
+      axes(c,k,s,L,R,T,B,X,Y,sm?[-6,-3,0,3,6]:[-6,-4,-2,0,2,4,6],[0,0.5,1,1.5]);
+      TB.rich(c,[['x','i']],R-9,B-5,s,k.muted);
+      c.save();c.beginPath();c.rect(L+1,T,PR-L,B-T);c.clip();
+      curve(c,X,Y,-6,6,g,N);c.lineTo(X(6),B);c.lineTo(X(-6),B);c.closePath();c.fillStyle=TB.rgba(k.eth,0.3);c.fill();
+      if(t<t0-1e-9){curve(c,X,Y,-6,6,h,N);for(let i=N;i>=0;i--){const x=-6+12*i/N;c.lineTo(X(x),Y(g(x)));}c.closePath();c.fillStyle=TB.rgba(k.warm,0.32);c.fill();}
+      curve(c,X,Y,-6,6,g,N);c.strokeStyle=k.eth;c.lineWidth=1.6;c.stroke();
+      curve(c,X,Y,-6,6,x=>x*x/2,N);c.strokeStyle=k.muted;c.lineWidth=1.4;c.setLineDash([6,5]);c.stroke();c.setLineDash([]);
+      curve(c,X,Y,-6,6,h,N);c.strokeStyle=k.warm;c.lineWidth=2.4;c.stroke();
+      c.restore();
+      const th='<i>θ</i>',t0h='<i>θ</i><sub>0</sub>',df='|∂<sub><i>θ</i></sub><i>f</i>(<i>x</i>, <i>θ</i>)|';
+      fx.innerHTML=TB.rows(t>=t0-1e-9?[[th+' = '+TB.fmt(t,2)+' ≥ '+t0h+' = '+TB.fmt(t0,2)+':',df+' ≤ <i>g</i>(<i>x</i>) при всех <i>x</i>']]
+        :[[th+' = '+TB.fmt(t,2)+' &lt; '+t0h+' = '+TB.fmt(t0,2)+':',df+' &gt; <i>g</i>(<i>x</i>) при всех <i>x</i> ≠ 0']]);});
+    listen(['exGauT0','exGauT'],run);
+  })();
+
+  /* Exercise ∅.7: the integrand θe^{−θx} on (0,12]; the part over (0,R] is shaded darker. */
+  (function(){
+    const run=mount('exExp',W=>W<520?236:256,(c,W,H,k,sm)=>{
+      const t=val('exExpT',2),s=sm?12:14,L=sm?32:42,R=W-(sm?8:14),PR=R-14,Rr=4,x1=12;
+      const T=TB.legend(c,[{k:'line',col:k.warm,t:[['θ','i'],['e','i'],['−θx','p']]},{k:'fill',col:k.eth,a:0.36,t:[['над (0, ','r'],['R','i'],[']','r']]},
+        {k:'fill',col:k.eth,a:0.13,t:[['над (','r'],['R','i'],[', 12]','r']]}],L,R,4,s)+8;
+      const B=H-(sm?26:30),X=x=>L+x/x1*(PR-L),Y=y=>B-y/2.1*(B-T),N=Math.max(240,Math.round(PR-L)),f=x=>t*Math.exp(-t*x);
+      axes(c,k,s,L,R,T,B,X,Y,sm?[0,4,8,12]:[0,2,4,6,8,10,12],[0,1,2]);
+      TB.rich(c,[['x','i']],R-9,B-5,s,k.muted);
+      const area=(a,b,al)=>{const n=Math.max(40,Math.round(N*(b-a)/x1));curve(c,X,Y,a,b,f,n);c.lineTo(X(b),B);c.lineTo(X(a),B);c.closePath();c.fillStyle=TB.rgba(k.eth,al);c.fill();};
+      area(0,Rr,0.36);area(Rr,x1,0.13);
+      c.strokeStyle=TB.rgba(k.ink,0.7);c.lineWidth=1.2;c.setLineDash([4,4]);c.beginPath();c.moveTo(X(Rr),B);c.lineTo(X(Rr),T+4);c.stroke();c.setLineDash([]);
+      TB.rich(c,[['R','i'],[' = 4','m']],X(Rr)+6,T+s+2,s,k.ink);
+      curve(c,X,Y,0,x1,f,N);c.strokeStyle=k.warm;c.lineWidth=2.4;c.stroke();});
+    listen(['exExpT'],run);
+  })();
+
+  /* Exercise ∅.9: the definition of convergence in measure; f_n − f, the band |y| ≤ ε and the set where the band is left. */
+  (function(){
+    const g=new TB.Gauge('gExMeas');
+    const h=(n,x)=>{const w=0.3/n,tri=Math.max(0,1-Math.abs(x-0.62)/w);return 2*tri+Math.sin(5*Math.PI*x+0.4)/(1+0.3*(n-1));};
+    const run=mount('exMeas',W=>W<520?300:310,(c,W,H,k,sm)=>{
+      const n=val('exMeasN',0),e=val('exMeasE',2),s=sm?12:14,L=sm?32:42,R=W-(sm?8:14),PR=R-14;
+      const T=TB.legend(c,[{k:'line',col:k.warm,t:[['f','i'],['n','s'],[' − ','m'],['f','i']]},{k:'fill',col:k.eth,a:0.24,t:[['|','m'],['y','i'],['| ≤ ','m'],['ε','i']]},
+        {k:'fill',col:k.warm,a:0.85,t:[['{|','m'],['f','i'],['n','s'],[' − ','m'],['f','i'],['| > ','m'],['ε','i'],['}','m']]}],L,R,4,s)+8;
+      const B=H-(sm?54:58),yS=B+12,X=x=>L+x*(PR-L),Y=y=>T+(2.5-y)/3.8*(B-T),N=Math.max(400,Math.round((PR-L)*2));
+      c.strokeStyle=TB.rgba(k.muted,0.6);c.lineWidth=1;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);for(const v of [-1,0,1,2]){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}c.stroke();
+      c.fillStyle=k.muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of [-1,0,1,2])c.fillText(TB.fmt(v,0),L-7,Y(v)+s*0.35);c.textAlign='start';
+      c.fillStyle=TB.rgba(k.eth,0.24);c.fillRect(L+1,Y(e),PR-L,Y(-e)-Y(e));
+      c.strokeStyle=TB.rgba(k.eth,0.7);c.lineWidth=1;c.beginPath();c.moveTo(L,Y(e));c.lineTo(PR,Y(e));c.moveTo(L,Y(-e));c.lineTo(PR,Y(-e));c.stroke();
+      c.strokeStyle=TB.rgba(k.muted,0.6);c.beginPath();c.moveTo(L,Y(0));c.lineTo(R,Y(0));c.stroke();
+      c.save();c.beginPath();c.rect(L+1,T,PR-L,B-T);c.clip();
+      curve(c,X,Y,0,1,x=>h(n,x),N);c.strokeStyle=k.warm;c.lineWidth=2.4;c.stroke();c.restore();
+      c.strokeStyle=TB.rgba(k.muted,0.6);c.lineWidth=1;c.beginPath();c.moveTo(L,yS);c.lineTo(PR,yS);for(const v of [0,0.5,1]){c.moveTo(X(v),yS);c.lineTo(X(v),yS+4);}c.stroke();
+      const M=4000;let cnt=0,run0=-1;c.fillStyle=TB.rgba(k.warm,0.85);
+      for(let i=0;i<=M;i++){const x=(i+0.5)/M,out=i<M&&Math.abs(h(n,x))>e;if(out)cnt++;
+        if(out&&run0<0)run0=i;if(!out&&run0>=0){c.fillRect(X(run0/M),yS-6,Math.max(1.5,X(i/M)-X(run0/M)),6);run0=-1;}}
+      c.fillStyle=k.muted;c.font=s+'px '+TB.ui;c.textAlign='center';for(const v of [0,0.5,1])c.fillText(TB.fmt(v,v%1?1:0),X(v),yS+s+7);c.textAlign='start';
+      TB.rich(c,[['x','i']],R-9,yS-4,s,k.muted);
+      g.set(cnt/M);});
+    listen(['exMeasN','exMeasE'],run);
+  })();
+
+  /* Exercise ∅.10: the table a_sm = m^{−s}; cells shaded by size, row sums ζ(s) − 1 on the right. */
+  (function(){
+    const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'},sup=e=>String(e).split('').map(ch=>SUP[ch]).join('');
+    const zm1=s=>{const M=2000;let v=0;for(let m=2;m<=M;m++)v+=Math.pow(m,-s);return v+1/((s-1)*Math.pow(M,s-1))-0.5*Math.pow(M,-s);};
+    const ZS=[2,3,4,5,6,7,8].map(zm1);
+    mount('exZeta',W=>{const q=W<520,ch=q?23:25;return 30+8*ch+4;},(c,W,H,k,sm)=>{
+      const s=sm?11:13,ch=sm?23:25,Nc=sm?5:8,Lw=sm?42:56,Rw=sm?58:74,gap=sm?16:22,top=30;
+      const cw=(W-Lw-Rw-gap)/Nc,x0=Lw,xr=x0+Nc*cw+gap,X=m=>x0+(m-1.5)*cw,Yr=r=>top+(r-2)*ch;
+      for(let m=2;m<=Nc+1;m++)TB.rich(c,[['m','i'],[' = '+m,'r']],X(m),top-9,s-1,k.muted,'center');
+      TB.rich(c,[['…','r']],x0+Nc*cw+gap/2,top-9,s,k.muted,'center');
+      TB.rich(c,[['ζ','i'],['(','m'],['s','i'],[') − 1','m']],xr+Rw/2,top-9,s,k.muted,'center');
+      for(let r=2;r<=8;r++){const y=Yr(r);
+        TB.rich(c,[['s','i'],[' = '+r,'r']],Lw-8,y+ch/2+s*0.36,s-1,k.ink,'right');
+        for(let m=2;m<=Nc+1;m++){const v=Math.pow(m,-r),a=0.06+0.6*Math.pow(v/0.25,0.45);
+          c.fillStyle=TB.rgba(k.eth,a);c.fillRect(X(m)-cw/2+2,y+2,cw-4,ch-4);
+          c.fillStyle=k.ink;c.font=(s+1)+'px '+TB.serif;c.textAlign='center';c.fillText(m+sup('-'+r),X(m),y+ch/2+s*0.38);}
+        c.fillStyle=k.muted;c.font=s+'px '+TB.ui;c.textAlign='center';c.fillText('…',x0+Nc*cw+gap/2,y+ch/2+s*0.36);
+        c.fillStyle=k.ink;c.fillText(TB.fmt(ZS[r-2],3),xr+Rw/2,y+ch/2+s*0.36);}
+      c.fillStyle=k.muted;c.textAlign='center';c.fillText('⋮',X(2),Yr(8)+ch+s);c.fillText('⋮',xr+Rw/2,Yr(8)+ch+s);c.textAlign='start';});
+  })();
+
+  /* Exercise ∅.11: the terms a_n^{(j)} of the binomial expansion of (1 + 1/j)^j; the scale shows their sum. */
+  (function(){
+    const g=new TB.Gauge('gExBin');
+    let F=[1];for(let n=1;n<=10;n++)F.push(F[n-1]*n);
+    const a=(j,n)=>{if(n>j)return 0;let p=1;for(let i=0;i<n;i++)p*=1-i/j;return p/F[n];};
+    if(g.el)g.mark('e',Math.E,'Σ<sub><i>n</i></sub> 1/<i>n</i>!');
+    const run=mount('exBin',W=>W<520?220:236,(c,W,H,k,sm)=>{
+      const j=val('exBinJ',0),s=sm?12:14,L=sm?32:42,R=W-(sm?8:14),T=s+10,B=H-(sm?28:32),Nn=11,bw=(R-L)/Nn;
+      const X=n=>L+(n+0.5)*bw,Y=y=>B-y/1.05*(B-T);
+      c.strokeStyle=TB.rgba(k.muted,0.6);c.lineWidth=1;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);for(const v of [0.5,1]){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}c.stroke();
+      c.fillStyle=k.muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of [0,0.5,1])c.fillText(TB.fmt(v,v%1?1:0),L-7,Y(v)+s*0.35);
+      c.textAlign='center';for(let n=0;n<Nn;n++)c.fillText(String(n),X(n),B+s+6);c.textAlign='start';
+      for(let n=0;n<Nn;n++){const v=a(j,n);if(v<=0)continue;const x=X(n)-bw*0.32,w=bw*0.64,y=Y(v);
+        c.fillStyle=TB.rgba(k.eth,0.42);c.fillRect(x,y,w,B-y);c.strokeStyle=k.eth;c.lineWidth=1.4;c.strokeRect(x+0.5,y+0.5,w-1,B-y-1);}
+      g.set(Math.pow(1+1/j,j));});
+    listen(['exBinJ'],run);
+  })();
+})();
+</script>

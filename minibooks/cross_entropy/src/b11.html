@@ -1,0 +1,199 @@
+
+<section id="s11">
+<h2>§11. Упражнения и вопросы</h2>
+<h3>Упражнения</h3>
+<div class="ex"><span class="lbl">{{Упражнение:exvar}}</span>
+<p><b>Контекст.</b> В доказательстве закона больших чисел (теорема {{#lln}}) независимость повторений использовалась в одном месте — при вычислении дисперсии выборочного среднего. Посмотрим, что она даёт на монете и что происходит без неё. Пусть $\mathcal X=\{0,1\}$, $1$ — герб, $p_1=\theta$, $p_0=1-\theta$ с <span class="nw">$0\lt\theta\lt1$,</span> и <span class="nw">$f(x)=x$,</span> так что $S_N=\frac1N\sum_kX_k$ — доля гербов в серии.</p>
+<figure class="exfig">
+  <div class="fig1"><canvas id="exVar" width="760" height="170" aria-label="Две серии бросков: независимая и копирующая"></canvas></div>
+  <div class="controls"><label for="exVarTh">$\theta$ <input id="exVarTh" type="range" min="0.1" max="0.9" step="0.05" value="0.5"><output id="exVarThOut">0,50</output></label><button type="button" class="act" id="exVarNew">новая серия</button></div>
+  <div id="exVarFx" class="fx" aria-live="polite"></div>
+  <figcaption>{{Рис:fexvar}}. Серии из $N=20$ бросков: заполненный кружок — герб, пустой — решка. Верхняя серия — независимые броски монеты с вероятностью герба <span class="nw">$\theta$,</span> нижняя — копирующая монета из пункта (б). Кнопка «новая серия» разыгрывает обе заново.</figcaption>
+</figure>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Найдите $\mathbb E_pf$ и <span class="nw">$\operatorname{Var}_pf$.</span> Какую оценку даёт теорема {{#lln}} для вероятности того, что в $100$ бросках честной монеты доля гербов отличается от $\tfrac12$ хотя бы на <span class="nw">$0{,}1$?</span></li>
+<li>«Копирующая монета»: первый бросок честный в смысле вероятности <span class="nw">$\theta$,</span> а все следующие повторяют первый. Это распределение $r$ на <span class="nw">$\{0,1\}^N$:</span> <span class="nw">$r(1,\dots,1)=\theta$,</span> <span class="nw">$r(0,\dots,0)=1-\theta$,</span> остальные последовательности имеют вероятность <span class="nw">$0$.</span> Проверьте, что каждый $X_k$ по-прежнему выпадает гербом с вероятностью <span class="nw">$\theta$,</span> но <span class="nw">$\operatorname{Var}_rS_N=\theta(1-\theta)$</span> при любом <span class="nw">$N$,</span> и $r\bigl(|S_N-\theta|\ge\varepsilon\bigr)=1$ при <span class="nw">$\varepsilon\le\min(\theta,1-\theta)$.</span> Какое равенство из доказательства теоремы нарушается?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $\mathbb E_pf=0\cdot(1-\theta)+1\cdot\theta=\theta$. Так как <span class="nw">$f^2=f$,</span> имеем $\operatorname{Var}_pf=\mathbb E_p(f-\theta)^2=\mathbb E_pf^2-\theta^2=\theta-\theta^2=\theta(1-\theta)$. При <span class="nw">$\theta=\tfrac12$,</span> $N=100$, $\varepsilon=0{,}1$ оценка равна <span class="nw">$\frac{1/4}{100\cdot0{,}01}=\frac14$:</span> не меньше трёх четвертей серий из $100$ бросков дают долю гербов строго между $0{,}4$ и <span class="nw">$0{,}6$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Событие «$k$-й бросок — герб» содержит из последовательностей положительной вероятности только <span class="nw">$(1,\dots,1)$,</span> поэтому его вероятность равна <span class="nw">$\theta$.</span> На $(1,\dots,1)$ доля гербов $S_N=1$, на $(0,\dots,0)$ она равна <span class="nw">$0$;</span> значит, <span class="nw">$\mathbb E_rS_N=\theta$</span> и <span class="nw">$\operatorname{Var}_rS_N=\theta(1-\theta)^2+(1-\theta)\theta^2=\theta(1-\theta)$.</span> Отклонение $|S_N-\theta|$ равно $1-\theta$ или <span class="nw">$\theta$,</span> оба числа не меньше <span class="nw">$\varepsilon$,</span> так что вероятность отклонения равна <span class="nw">$1$.</span> Нарушается пункт 2 леммы {{#coord}}: при $j\ne k$
+<span class="math-wrap">$$\mathbb E_r(X_j-\theta)(X_k-\theta)=\theta(1-\theta)^2+(1-\theta)\theta^2=\theta(1-\theta)\ne0,$$</span>
+поэтому перекрёстные слагаемые в шаге 2 не исчезают, и дисперсия среднего остаётся равной дисперсии одного броска.</div>
+</div>
+
+
+<div class="ex"><span class="lbl">{{Упражнение:exsurp}}</span>
+<p><b>Контекст.</b> Требование сложения удивлений в §4 сформулировано только для независимых событий. Посмотрим, что происходит для зависимых, и почему простые убывающие функции, кроме логарифма, не годятся.</p>
+<figure class="exfig">
+  <div class="fig1"><canvas id="exDie" width="760" height="140" aria-label="Грани кубика: события A и B"></canvas></div>
+  <figcaption>{{Рис:fexsurp}}. Шесть равновероятных граней кубика. Событие $A$ выделено холодной подложкой, событие $B$ — тёплой чертой снизу.</figcaption>
+</figure>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Сколько бит удивления в событиях «из колоды в $52$ карты вытянута дама пик» и «вытянута дама»?</li>
+<li>Бросают честный кубик; $A$ — «выпало чётное», $B$ — «выпало не меньше <span class="nw">$4$».</span> Найдите <span class="nw">$P(A)$,</span> <span class="nw">$P(B)$,</span> <span class="nw">$P(A\cap B)$,</span> выясните, независимы ли события, и сравните $I(A\cap B)$ с $I(A)+I(B)$ в битах. Объясните разницу.</li>
+<li>Функция $I(t)=\frac1t-1$ не возрастает и равна нулю при <span class="nw">$t=1$.</span> Покажите, что она не удовлетворяет требованию сложения.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Дама пик: вероятность <span class="nw">$\frac1{52}$,</span> удивление <span class="nw">$\log_252\approx5{,}700$</span> бита. Дама: вероятность <span class="nw">$\frac4{52}=\frac1{13}$,</span> удивление <span class="nw">$\log_213\approx3{,}700$</span> бита. Разница — ровно $2$ бита: узнать масть из четырёх равновероятных — два вопроса.</div>
+<div class="step"><span class="sh">Пункт (б).</span> $A=\{2,4,6\}$, <span class="nw">$B=\{4,5,6\}$,</span> <span class="nw">$A\cap B=\{4,6\}$;</span> вероятности <span class="nw">$\frac12$,</span> $\frac12$, <span class="nw">$\frac13$.</span> Так как <span class="nw">$\frac13\ne\frac14$,</span> события зависимы. <span class="nw">$I(A)+I(B)=2$</span> бита, а <span class="nw">$I(A\cap B)=\log_23\approx1{,}585$</span> бита. Узнав, что выпало чётное, мы уже ждём <span class="nw">$B$:</span> среди $\{2,4,6\}$ два числа из трёх не меньше <span class="nw">$4$.</span> Поэтому второе сообщение удивляет только на <span class="nw">$\log_2\frac32\approx0{,}585$</span> бита, и <span class="nw">$1+0{,}585=\log_23$.</span></div>
+<div class="step"><span class="sh">Пункт (в).</span> При $s=t=\frac12$: <span class="nw">$I(\tfrac14)=3$,</span> а <span class="nw">$I(\tfrac12)+I(\tfrac12)=1+1=2$.</span></div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exlik}}</span>
+<p><b>Контекст.</b> Правдоподобие сравнивает значения параметра, и по теореме {{#empx}} логарифм отношения правдоподобий выражается через расхождения.</p>
+<figure class="exfig">
+  <div class="fig1"><canvas id="exSeq" width="760" height="120" aria-label="Две последовательности из десяти бросков"></canvas></div>
+  <figcaption>{{Рис:fexlik}}. Две последовательности из пункта (б): заполненный кружок — герб, пустой — решка. В обеих по семь гербов.</figcaption>
+</figure>
+<p><b>Задача.</b> Монету бросили $10$ раз, герб выпал $7$ раз.</p>
+<ol class="ax" type="a">
+<li>Найдите отношение <span class="nw">$L(0{,}7)/L(0{,}5)$.</span></li>
+<li>Покажите, что последовательности ГГГГГГГРРР и ГРГГРГГРГГ имеют одинаковое правдоподобие при каждом <span class="nw">$\theta$.</span></li>
+<li>Пусть $\hat p$ — эмпирическое распределение бросков. Докажите, что $\ln\frac{L(0{,}7)}{L(0{,}5)}=10\,D_{\mathrm{KL}}(\hat p\,\|\,q_{0{,}5})$ в натах, и проверьте это численно.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $L(0{,}7)=0{,}7^7\cdot0{,}3^3\approx0{,}0823543\cdot0{,}027\approx0{,}0022236$ и <span class="nw">$L(0{,}5)=2^{-10}\approx0{,}0009766$;</span> отношение <span class="nw">$\approx2{,}277$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> В обеих последовательностях $7$ гербов и $3$ решки, и правдоподобие каждой равно <span class="nw">$\theta^7(1-\theta)^3$.</span></div>
+<div class="step"><span class="sh">Пункт (в).</span> По теореме {{#empx}} $\ln L(\theta)=-10\,H(\hat p,q_\theta)=-10\bigl(H(\hat p)+D_{\mathrm{KL}}(\hat p\,\|\,q_\theta)\bigr)$. Так как <span class="nw">$\hat p=q_{0{,}7}$,</span> имеем <span class="nw">$D_{\mathrm{KL}}(\hat p\,\|\,q_{0{,}7})=0$,</span> и разность логарифмов равна <span class="nw">$10\,D_{\mathrm{KL}}(\hat p\,\|\,q_{0{,}5})$.</span> Численно $D_{\mathrm{KL}}(\hat p\,\|\,q_{0{,}5})=0{,}7\ln1{,}4+0{,}3\ln0{,}6\approx0{,}23553-0{,}15325=0{,}08228$ ната <span class="nw">($\approx0{,}1187$</span> бита), а <span class="nw">$\ln2{,}277\approx0{,}8228$</span> ната <span class="nw">($\approx1{,}187$</span> бита).</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exgroup}}</span>
+<p><b>Контекст.</b> Угадывать исход можно в два этапа: сначала узнать, попал ли он в группу $\{1,2\}$, а если попал — какой из двух. Энтропия согласована с таким подсчётом.</p>
+<figure class="exfig">
+  <div class="fig1"><canvas id="exTree" width="760" height="210" aria-label="Угадывание исхода в два этапа"></canvas></div>
+  <figcaption>{{Рис:fexgroup}}. Угадывание в два этапа. Сначала выясняем, попал ли исход в группу $\{1,2\}$ или какой из остальных исходов выпал; на ветвях — вероятности. Если исход в группе, на втором этапе выясняем, какой из двух; на ветвях — условные вероятности.</figcaption>
+</figure>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Пусть $p=(p_1,\dots,p_n)$ и <span class="nw">$s=p_1+p_2\gt0$.</span> Докажите правило группировки
+<span class="math-wrap">$$H(p_1,\dots,p_n)=H(s,p_3,\dots,p_n)+s\,h\Bigl(\frac{p_1}s\Bigr),$$</span>
+где $h$ — энтропия монеты (§5).</li>
+<li>Найдите $H(\tfrac12,\tfrac14,\tfrac18,\tfrac18)$ в битах напрямую и с помощью правила группировки.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Запишем энтропии через функцию $\varphi$ из леммы {{#phi}}: разность левой части и первого слагаемого справа равна <span class="nw">$\varphi(p_1)+\varphi(p_2)-\varphi(s)$.</span> Пусть <span class="nw">$a=p_1/s$,</span> так что <span class="nw">$1-a=p_2/s$.</span> Если $p_1,p_2\gt0$, то
+<span class="math-wrap">$$\begin{aligned}s\,h(a)&=p_1\log\frac s{p_1}+p_2\log\frac s{p_2}\\&=p_1\log\frac1{p_1}+p_2\log\frac1{p_2}-(p_1+p_2)\log\frac1s\\&=\varphi(p_1)+\varphi(p_2)-\varphi(s).\end{aligned}$$</span>
+Если, скажем, <span class="nw">$p_1=0$,</span> то <span class="nw">$a=0$,</span> <span class="nw">$h(0)=0$,</span> $s=p_2$ и правая часть тоже равна нулю.</div>
+<div class="step"><span class="sh">Пункт (б).</span> Напрямую: $\tfrac12\cdot1+\tfrac14\cdot2+\tfrac18\cdot3+\tfrac18\cdot3=1{,}75$ бита. Группировкой последней пары: $H(\tfrac12,\tfrac14,\tfrac14)+\tfrac14\,h(\tfrac12)=1{,}5+0{,}25=1{,}75$.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exhand}}</span>
+<p><b>Контекст.</b> Вычисления руками помогают почувствовать несимметричность расхождения.</p>
+<figure class="exfig">
+  <div class="fig1"><canvas id="exHand" width="760" height="160" aria-label="Три распределения на трёх исходах"></canvas></div>
+  <figcaption>{{Рис:fexhand}}. Распределения $p$, $q$ и $r$ из условия; над столбиками — вероятности исходов $1$, $2$, <span class="nw">$3$.</span></figcaption>
+</figure>
+<p><b>Задача.</b> Пусть <span class="nw">$p=(\tfrac12,\tfrac14,\tfrac14)$,</span> <span class="nw">$q=(\tfrac14,\tfrac12,\tfrac14)$,</span> <span class="nw">$r=(\tfrac18,\tfrac18,\tfrac34)$.</span> Все величины — в битах.</p>
+<ol class="ax" type="a">
+<li>Найдите $H(p)$, $H(p,q)$ и $D_{\mathrm{KL}}(p\,\|\,q)$.</li>
+<li>Найдите $D_{\mathrm{KL}}(p\,\|\,r)$ и $D_{\mathrm{KL}}(r\,\|\,p)$.</li>
+<li>Приведите распределение $q'$ на тех же трёх исходах, для которого $D_{\mathrm{KL}}(p\,\|\,q')=+\infty$, а $D_{\mathrm{KL}}(q'\,\|\,p)$ конечно.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $H(p)=\tfrac12\cdot1+\tfrac14\cdot2+\tfrac14\cdot2=1{,}5$; $H(p,q)=\tfrac12\cdot2+\tfrac14\cdot1+\tfrac14\cdot2=1{,}75$; <span class="nw">$D_{\mathrm{KL}}(p\,\|\,q)=0{,}25$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> $D_{\mathrm{KL}}(p\,\|\,r)=\tfrac12\log_24+\tfrac14\log_22+\tfrac14\log_2\tfrac13\approx1+0{,}25-0{,}396=0{,}854$; $D_{\mathrm{KL}}(r\,\|\,p)=\tfrac18\log_2\tfrac14+\tfrac18\log_2\tfrac12+\tfrac34\log_23\approx-0{,}25-0{,}125+1{,}189=0{,}814$.</div>
+<div class="step"><span class="sh">Пункт (в).</span> Например, <span class="nw">$q'=(1,0,0)$:</span> исходы $2$ и $3$ происходят, но $q'$ считает их невозможными, так что <span class="nw">$D_{\mathrm{KL}}(p\,\|\,q')=+\infty$;</span> <span class="nw">$D_{\mathrm{KL}}(q'\,\|\,p)=1\cdot\log_2\frac1{1/2}=1$.</span></div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:extri}}</span>
+<p><b>Контекст.</b> В §7 сказано, что расхождение не удовлетворяет неравенству треугольника.</p>
+<figure class="exfig">
+  <div class="fig1"><canvas id="exTri" width="760" height="150" aria-label="Три распределения на отрезке и три точки на прямой"></canvas></div>
+  <figcaption>{{Рис:fextri}}. Сверху — отрезок распределений на двух исходах, от $(1,0)$ до <span class="nw">$(0,1)$;</span> положение точки — вероятность второго исхода. Снизу — числа $0$, $1$, $2$ из пункта (б).</figcaption>
+</figure>
+<p><b>Задача.</b> Пусть на двух исходах <span class="nw">$p=(1,0)$,</span> <span class="nw">$q=(\tfrac12,\tfrac12)$,</span> <span class="nw">$r=(\tfrac14,\tfrac34)$.</span></p>
+<ol class="ax" type="a">
+<li>Вычислите в натах $D_{\mathrm{KL}}(p\,\|\,r)$, $D_{\mathrm{KL}}(p\,\|\,q)$ и <span class="nw">$D_{\mathrm{KL}}(q\,\|\,r)$</span> и убедитесь, что <span class="nw">$D_{\mathrm{KL}}(p\,\|\,r)\gt D_{\mathrm{KL}}(p\,\|\,q)+D_{\mathrm{KL}}(q\,\|\,r)$.</span></li>
+<li>Числа $0$, $1$, $2$ на прямой показывают, что и квадрат обычного расстояния не удовлетворяет неравенству треугольника. Проверьте это. (Расхождение близких распределений действительно ведёт себя как квадрат расстояния, так что нарушение неравенства треугольника не удивительно.)</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $D_{\mathrm{KL}}(p\,\|\,r)=\ln4\approx1{,}386$ ната ($2$ бита); <span class="nw">$D_{\mathrm{KL}}(p\,\|\,q)=\ln2\approx0{,}693$</span> ната ($1$ бит); $D_{\mathrm{KL}}(q\,\|\,r)=\tfrac12\ln2+\tfrac12\ln\tfrac23\approx0{,}347-0{,}203=0{,}144$ ната <span class="nw">($\approx0{,}208$</span> бита). Сумма двух последних <span class="nw">$\approx0{,}837$</span> ната <span class="nw">($\approx1{,}208$</span> бита), меньше чем <span class="nw">$1{,}386$</span> ната ($2$ бита).</div>
+<div class="step"><span class="sh">Пункт (б).</span> $(2-0)^2=4\gt(1-0)^2+(2-1)^2=2$.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exsmooth}}</span>
+<p><b>Контекст.</b> При обучении классификаторов вместо one-hot-метки часто берут сглаженную: $p^\varepsilon=(1-\varepsilon)\,\delta_y+\frac\varepsilon K\,\mathbf 1$ с небольшим <span class="nw">$\varepsilon\in(0,1)$.</span></p>
+<figure class="exfig">
+  <div class="fig1"><canvas id="exSm" width="760" height="200" aria-label="One-hot-метка и сглаженная метка для десяти классов"></canvas></div>
+  <div class="controls"><label for="exSmE">$\varepsilon$ <input id="exSmE" type="range" min="0" max="0.5" step="0.01" value="0.1"><output id="exSmEOut">0,10</output></label></div>
+  <div id="exSmFx" class="fx" aria-live="polite"></div>
+  <figcaption>{{Рис:fexsmooth}}. Метка при $K=10$ классах и правильном классе <span class="nw">$y=3$.</span> Штриховая рамка — one-hot-вектор <span class="nw">$\delta_y$,</span> столбики — сглаженная метка <span class="nw">$p^\varepsilon$.</span></figcaption>
+</figure>
+<p><b>Задача.</b> Пусть $\ell_\varepsilon(z)=H\bigl(p^\varepsilon,\sigma(z)\bigr)$.</p>
+<ol class="ax" type="a">
+<li>Докажите, что $\ell_\varepsilon$ достигает минимума ровно в точках $z$ с <span class="nw">$\sigma(z)=p^\varepsilon$,</span> что минимум равен <span class="nw">$H(p^\varepsilon)$,</span> и что в этих точках разность логитов правильного класса и любого другого равна $\ln\bigl(1+K(1-\varepsilon)/\varepsilon\bigr)$.</li>
+<li>Вычислите эту разность при $K=10$, <span class="nw">$\varepsilon=0{,}1$.</span></li>
+<li>Покажите, что при $\varepsilon=0$ минимум не достигается, хотя нижняя грань $\ell_0$ равна нулю.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Все координаты $p^\varepsilon$ положительны. По теореме {{#gibbs}} <span class="nw">$\ell_\varepsilon(z)\ge H(p^\varepsilon)$</span> с равенством только при <span class="nw">$\sigma(z)=p^\varepsilon$,</span> а по лемме {{#smprop}}(в) такие $z$ существуют, например <span class="nw">$z=\ln p^\varepsilon$</span> покоординатно. Если <span class="nw">$\sigma(z)=p^\varepsilon$,</span> то $e^{z_y-z_j}=\sigma(z)_y/\sigma(z)_j=\dfrac{1-\varepsilon+\varepsilon/K}{\varepsilon/K}=1+\dfrac{K(1-\varepsilon)}\varepsilon$ для $j\ne y$.</div>
+<div class="step"><span class="sh">Пункт (б).</span> $\ln(1+90)=\ln91\approx4{,}51$.</div>
+<div class="step"><span class="sh">Пункт (в).</span> $\ell_0(z)=\ln\frac1{\sigma(z)_y}\gt0$, так как <span class="nw">$\sigma(z)_y\lt1$</span> по лемме {{#smprop}}(а). При $z_y=c$ и остальных логитах нулевых <span class="nw">$\sigma(z)_y=\frac{e^c}{e^c+K-1}\to1$</span> при <span class="nw">$c\to+\infty$,</span> и $\ell_0\to0$. Значит, при one-hot-метке логиты растут без ограничения, а сглаживание это останавливает.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exbce}}</span>
+<p><b>Контекст.</b> Для двух классов в библиотеках есть отдельная функция — бинарная кросс-энтропия. Это частный случай общей формулы.</p>
+<p><b>Задача.</b> Пусть $K=2$, метка $y\in\{0,1\}$ означает «первый класс» при $y=1$ и «второй» при <span class="nw">$y=0$,</span> и <span class="nw">$t=z_1-z_2$.</span></p>
+<ol class="ax" type="a">
+<li>Докажите, что потери на одном примере равны <span class="nw">$-y\ln s(t)-(1-y)\ln\bigl(1-s(t)\bigr)$.</span></li>
+<li>Докажите, что производная этих потерь по $t$ равна <span class="nw">$s(t)-y$.</span></li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $\sigma(z)_1=s(t)$ (§9), <span class="nw">$\sigma(z)_2=1-s(t)$.</span> Целевое распределение — $\delta_1$ при $y=1$ и $\delta_2$ при <span class="nw">$y=0$,</span> и по теореме {{#clsdec}} потери равны <span class="nw">$\ln\frac1{s(t)}$</span> или <span class="nw">$\ln\frac1{1-s(t)}$</span> соответственно; формула объединяет оба случая.</div>
+<div class="step"><span class="sh">Пункт (б).</span> По теореме {{#grad}} <span class="nw">$\frac{\partial\ell}{\partial z_1}=s(t)-y$,</span> $\frac{\partial\ell}{\partial z_2}=(1-s(t))-(1-y)=y-s(t)$. Потери зависят от $z$ только через $t$; при сдвиге $z_1\to z_1+\Delta$ разность $t$ растёт на <span class="nw">$\Delta$,</span> поэтому производная по $t$ равна <span class="nw">$\frac{\partial\ell}{\partial z_1}=s(t)-y$.</span> Прямой проверкой: $\frac d{dt}\bigl(-y\ln s-(1-y)\ln(1-s)\bigr)=-y(1-s)+(1-y)s=s-y$, так как <span class="nw">$s'=s(1-s)$.</span></div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exlin}}</span>
+<p><b>Контекст.</b> Последний слой классификатора обычно линейный: <span class="nw">$z=Wu+b$,</span> где $u\in\mathbb R^d$ — признаки объекта, <span class="nw">$W\in\mathbb R^{K\times d}$,</span> <span class="nw">$b\in\mathbb R^K$.</span> Если других слоёв нет, это логистическая регрессия.</p>
+<figure class="exfig">
+  <div class="fig1"><canvas id="exLin" width="760" height="210" aria-label="Последний слой классификатора"></canvas></div>
+  <figcaption>{{Рис:fexlin}}. Последний слой классификатора при $d=4$ признаках и $K=3$ классах. Признаки $u$ линейно переходят в логиты <span class="nw">$z=Wu+b$,</span> софтмакс превращает их в распределение <span class="nw">$\sigma(z)$,</span> которое сравнивается с меткой $p$ кросс-энтропией.</figcaption>
+</figure>
+<p><b>Задача.</b> Пусть <span class="nw">$\ell(W,b)=H\bigl(p,\sigma(Wu+b)\bigr)$</span> в натах. Докажите, что
+<span class="math-wrap">$$\frac{\partial\ell}{\partial W}=\bigl(\sigma(z)-p\bigr)\,u^{\mathsf T},\qquad \frac{\partial\ell}{\partial b}=\sigma(z)-p,$$</span>
+где $\frac{\partial\ell}{\partial W}$ — матрица из частных производных <span class="nw">$\frac{\partial\ell}{\partial W_{ij}}$.</span></p></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Шаг 1.</span> $z_k=\sum_jW_{kj}u_j+b_k$, поэтому <span class="nw">$\frac{\partial z_k}{\partial W_{ij}}=u_j$</span> при $k=i$ и $0$ иначе, а <span class="nw">$\frac{\partial z_k}{\partial b_i}=1$</span> при $k=i$ и $0$ иначе.</div>
+<div class="step"><span class="sh">Шаг 2.</span> По правилу сложной функции и теореме {{#grad}} $\frac{\partial\ell}{\partial W_{ij}}=\sum_k\frac{\partial\ell}{\partial z_k}\frac{\partial z_k}{\partial W_{ij}}=(\sigma(z)_i-p_i)\,u_j$ — это элемент $(i,j)$ матрицы <span class="nw">$(\sigma(z)-p)\,u^{\mathsf T}$;</span> аналогично $\frac{\partial\ell}{\partial b_i}=\sigma(z)_i-p_i$.</div>
+</div>
+
+<h3>Вопросы</h3>
+
+<div class="ex"><span class="lbl">{{Вопрос:qzero}}</span>
+<p>Удивление исхода вероятности $0$ бесконечно. Почему энтропия $H(p)$ всегда конечна?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Энтропия — среднее удивление по самому распределению <span class="nw">$p$,</span> и сумма идёт только по носителю: исходы вероятности ноль не происходят и в среднее не входят. На носителе все удивления конечны. С непрерывностью это согласовано, так как $t\log\frac1t\to0$ при $t\to0$ (лемма {{#phi}}). У кросс-энтропии ситуация другая: усредняют по <span class="nw">$p$,</span> а удивление измеряют по <span class="nw">$q$,</span> и исход с $p_x\gt0=q_x$ даёт бесконечность.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qhq}}</span>
+<p>Верно ли, что $H(p,q)\ge H(q)$ для любых $p$ и <span class="nw">$q$?</span></p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Нет. Неравенство Гиббса сравнивает $H(p,q)$ с энтропией <i>мира</i> <span class="nw">$H(p)$,</span> а не модели. Пример: <span class="nw">$p=(1,0)$,</span> <span class="nw">$q=(0{,}9;\ 0{,}1)$.</span> Тогда <span class="nw">$H(p,q)=\log_2\frac1{0{,}9}\approx0{,}152$</span> бита, а <span class="nw">$H(q)=h(0{,}9)\approx0{,}469$</span> бита.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qnoh}}</span>
+<p>Почему в функции потерь классификатора нет слагаемого $H(p)$, хотя кросс-энтропия равна <span class="nw">$H(p)+D_{\mathrm{KL}}(p\,\|\,q)$?</span></p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Для one-hot-меток $H(\delta_y)=0$, и кросс-энтропия совпадает с расхождением (теорема {{#clsdec}}). Для мягких меток $H(p_k)$ не зависит от параметров модели, поэтому не влияет ни на градиент, ни на положение минимума.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qover}}</span>
+<p>Может ли средняя кросс-энтропия обученной модели на обучающей выборке оказаться меньше энтропии $H(p)$ истинного распределения, хотя по неравенству Гиббса <span class="nw">$H(p,q)\ge H(p)$</span> для любой модели?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Может. Неравенство Гиббса относится к среднему по миру <span class="nw">$p$,</span> а на обучающей выборке потери равны <span class="nw">$H(\hat p_N,q)$.</span> Возьмём честную монету, $N=1$ и полную модель. Оценка максимального правдоподобия — <span class="nw">$q=\hat p_1$,</span> вырожденное распределение в выпавшей стороне, и потери равны <span class="nw">$H(\hat p_1)=0\lt1=H(p)$.</span> Модель «запомнила» выборку. Теорема {{#xlln}} здесь не помогает: она относится к модели, выбранной до того, как получены данные. Поэтому качество обученной модели оценивают на отдельной, отложенной выборке.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qunits}}</span>
+<p>Что изменится в градиентном спуске, если считать потери в битах, а не в натах?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Потери и их градиент умножатся на одну и ту же постоянную <span class="nw">$1/\ln2\approx1{,}443$.</span> Это равносильно умножению шага $\eta$ на ту же постоянную; точки минимума не изменятся.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qflat}}</span>
+<p>После рис. {{#flln}} объяснено, почему в равномерном мире холодные кривые $H(\hat p_n,p)$ не имеют разброса. Пусть теперь мир $p$ неравномерный, но все $p_x$ положительны. Существует ли модель $q$, при которой тёплые кривые $H(\hat p_n,q)$ тоже не имеют разброса? Опишите все такие модели.</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Существует, и это ровно одна модель — равномерная. Разброса нет, если $H(\hat p_n,q)=\sum_x\hat p_{n,x}\ln\frac1{q_x}$ одинаково для всех выборок. Выборка из одного примера $x$ даёт значение <span class="nw">$\ln\frac1{q_x}$,</span> а при $p_x\gt0$ любой исход может оказаться этим примером; значит, все $\ln\frac1{q_x}$ должны совпадать, то есть все $q_x$ равны и <span class="nw">$q_x=\frac1{|\mathcal X|}$.</span> Обратно, при равномерной $q$ получаем $H(\hat p_n,q)=\ln|\mathcal X|$ для любой выборки. Отсутствие разброса говорит о модели, а не о её качестве: при неравномерном $p$ равномерная модель далека от истины, <span class="nw">$D_{\mathrm{KL}}(p\,\|\,q)=\ln|\mathcal X|-H(p)\gt0$.</span></p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qcurve}}</span>
+<p>На рис. {{#fflow}} стрелка $-(\sigma(z)-p)$ всегда направлена прямо на <span class="nw">$p$,</span> а траектория спуска — кривая. Почему?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Шаг спуска меняет логиты: <span class="nw">$z\mapsto z-\eta(\sigma(z)-p)$.</span> Новое распределение $\sigma\bigl(z-\eta(\sigma(z)-p)\bigr)$ не равно <span class="nw">$\sigma(z)-\eta(\sigma(z)-p)$,</span> потому что софтмакс нелинеен: увеличение логита на одну и ту же величину сильнее меняет вероятность класса, у которого она близка к $\tfrac12$, чем у класса с вероятностью, близкой к $0$ или <span class="nw">$1$.</span> Поэтому распределение движется к $p$ не по прямой. Стрелка же нарисована в пространстве вероятностей как вектор $p-\sigma(z)$ и, конечно, смотрит на <span class="nw">$p$.</span></p></div>
+</section>
+</article>

@@ -1,0 +1,44 @@
+<nav class="gloss navm" aria-label="Содержание"><button class="gbtn" type="button" aria-label="Содержание" aria-expanded="false" title="Содержание"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><g fill="currentColor"><circle cx="5.5" cy="7" r="1.5"/><circle cx="5.5" cy="12" r="1.5"/><circle cx="5.5" cy="17" r="1.5"/></g><path d="M9.5 7h9M9.5 12h9M9.5 17h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><div class="gpanel" role="dialog" aria-label="Содержание"><div class="ghead">Содержание</div><ol class="glist nlist"></ol></div></nav>
+<button class="tbtn" type="button" aria-label="Переключить тему: светлая или тёмная" title="Светлая или тёмная тема"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4.8a7.2 7.2 0 0 1 0 14.4z" fill="currentColor"/></svg></button>
+<nav class="gloss" aria-label="Обозначения"><button class="gbtn" type="button" aria-label="Обозначения" aria-expanded="false" title="Обозначения"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M17 4H7l6 8-6 8h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="gpanel" role="dialog" aria-label="Обозначения"><div class="ghead">Обозначения <span>в порядке введения</span></div><ol class="glist">
+<li><span class="gs">$\mathcal X$</span><span class="gd">Конечное множество исходов. <a class="gref" href="#" data-t="{{@dist}}">{{~dist}}</a></span></li>
+<li><span class="gs">$p_x,\ p(A)$</span><span class="gd">Вероятность исхода $x$ и события $A\subset\mathcal X$ при распределении $p$. <a class="gref" href="#" data-t="{{@dist}}">{{~dist}}</a></span></li>
+<li><span class="gs">$\Delta(\mathcal X)$</span><span class="gd">Множество всех распределений на $\mathcal X$ (симплекс). <a class="gref" href="#" data-t="{{@dist}}">{{~dist}}</a></span></li>
+<li><span class="gs">$\operatorname{supp}p$</span><span class="gd">Носитель: исходы с $p_x\gt0$. <a class="gref" href="#" data-t="{{@supp}}">{{~supp}}</a></span></li>
+<li><span class="gs">$\delta_a$</span><span class="gd">Вырожденное распределение: вся вероятность в исходе $a$ (one-hot-вектор). <a class="gref" href="#" data-t="{{@supp}}">{{~supp}}</a></span></li>
+<li><span class="gs">$\mathbb E_pf,\ \operatorname{Var}_pf$</span><span class="gd">Математическое ожидание и дисперсия случайной величины $f$ при распределении $p$. <a class="gref" href="#" data-t="{{@expect}}">{{~expect}}</a></span></li>
+<li><span class="gs">$\mathcal X^N$</span><span class="gd">Декартова степень: все последовательности $(x_1,\dots,x_N)$ из элементов $\mathcal X$. <a class="gref" href="#" data-t="{{@iid}}">{{~iid}}</a></span></li>
+<li><span class="gs">$p^{\otimes N},\ X_k$</span><span class="gd">Распределение выборки из $N$ независимых исходов с распределением $p$; $X_k$ — $k$-й исход. <a class="gref" href="#" data-t="{{@iid}}">{{~iid}}</a></span></li>
+<li><span class="gs">$\hat p_N$</span><span class="gd">Эмпирическое распределение выборки: доли исходов. <a class="gref" href="#" data-t="{{@emp}}">{{~emp}}</a></span></li>
+<li><span class="gs">$\{q_\theta\}$</span><span class="gd">Статистическая модель: семейство распределений с параметром $\theta\in\Theta$. <a class="gref" href="#" data-t="{{@model}}">{{~model}}</a></span></li>
+<li><span class="gs">$L_x(\theta)$</span><span class="gd">Правдоподобие: вероятность данных $x$ при распределении $q_\theta$. <a class="gref" href="#" data-t="{{@lik}}">{{~lik}}</a></span></li>
+<li><span class="gs">$\hat\theta$</span><span class="gd">Оценка максимального правдоподобия. <a class="gref" href="#" data-t="{{@mle}}">{{~mle}}</a></span></li>
+<li><span class="gs">$I$</span><span class="gd">Функция удивления; оказывается, $I(t)=c\ln\frac1t$. <a class="gref" href="#" data-t="{{@surpf}}">{{~surpf}}</a></span></li>
+<li><span class="gs">$\log,\ \ln,\ \log_2$</span><span class="gd">Логарифм по фиксированному основанию $b\gt1$, натуральный и двоичный. <a class="gref" href="#" data-t="{{@units}}">{{~units}}</a></span></li>
+<li><span class="gs">$I_p(x)$</span><span class="gd">Удивление исхода $x$ для наблюдателя, верящего в $p$: $\log\frac1{p_x}$. <a class="gref" href="#" data-t="{{@units}}">{{~units}}</a></span></li>
+<li><span class="gs">$H(p)$</span><span class="gd">Энтропия: среднее удивление $\sum_xp_x\log\frac1{p_x}$. <a class="gref" href="#" data-t="{{@entropy}}">{{~entropy}}</a></span></li>
+<li><span class="gs">$h(\theta)$</span><span class="gd">Энтропия монеты с вероятностью герба $\theta$. <a class="gref" href="#" data-t="#binent">§5</a></span></li>
+<li><span class="gs">$H(p,q)$</span><span class="gd">Кросс-энтропия: среднее удивление наблюдателя, верящего в $q$, в мире с распределением $p$. <a class="gref" href="#" data-t="{{@xent}}">{{~xent}}</a></span></li>
+<li><span class="gs">$D_{\mathrm{KL}}(p\,\|\,q)$</span><span class="gd">Расхождение Кульбака–Лейблера: $H(p,q)-H(p)$. <a class="gref" href="#" data-t="{{@kl}}">{{~kl}}</a></span></li>
+<li><span class="gs">$\sigma(z)$</span><span class="gd">Софтмакс: распределение $e^{z_i}/\sum_je^{z_j}$ по вектору логитов $z$. <a class="gref" href="#" data-t="{{@softmax}}">{{~softmax}}</a></span></li>
+<li><span class="gs">$s(t)$</span><span class="gd">Сигмоида: $1/(1+e^{-t})$. <a class="gref" href="#" data-t="#s9sig">§9</a></span></li>
+</ol></div></nav>
+<article class="book">
+<header class="ch">
+  <div class="eyebrow">Мини-учебник</div>
+  <h1>Кросс-энтропия: удивление, информация и расстояние между распределениями</h1>
+  <p class="lead">Классификаторы в машинном обучении почти всегда обучают, минимизируя кросс-энтропию: среднее по примерам от минус логарифма вероятности правильного ответа. Здесь мы выведем эту формулу из одного естественного требования к мере удивления и увидим, что она измеряет, насколько удивительны данные для модели. Избыток этого удивления над неустранимым — расхождение Кульбака–Лейблера — ведёт себя как расстояние между истинным и предсказанным распределениями. Нужны только начала теории вероятностей на конечных множествах, анализа и линейной алгебры.</p>
+  <ul class="toc">
+    <li><a href="#s1">§1. Откуда вопрос</a></li>
+    <li><a href="#s2">§2. Напоминание и обозначения</a></li>
+    <li><a href="#s3">§3. Модель и правдоподобие</a></li>
+    <li><a href="#s4">§4. Информация и удивление</a></li>
+    <li><a href="#s5">§5. Энтропия: среднее удивление</a></li>
+    <li><a href="#s6">§6. Кросс-энтропия и неравенство Гиббса</a></li>
+    <li><a href="#s7">§7. В каком смысле это расстояние</a></li>
+    <li><a href="#s8">§8. От теории к обучению: функция потерь как кросс-энтропия</a></li>
+    <li><a href="#s9">§9. Кросс-энтропия в классификации</a></li>
+    <li><a href="#s10">§10. Итог</a></li>
+    <li><a href="#s11">§11. Упражнения и вопросы</a></li>
+  </ul>
+</header>

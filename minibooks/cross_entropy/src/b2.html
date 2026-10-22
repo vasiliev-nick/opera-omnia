@@ -1,0 +1,181 @@
+
+<section id="s2">
+<h2>§2. Напоминание и обозначения</h2>
+<p>Здесь собраны понятия из курса теории вероятностей, которые понадобятся дальше, в тех обозначениях, которыми мы будем пользоваться. Все множества исходов конечны, поэтому все вероятности и средние — конечные суммы.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:dist}} (распределение)</span>
+Пусть $\mathcal X$ — конечное непустое множество; его элементы называются <b>исходами</b>. <b>Распределение</b> на $\mathcal X$ — это набор чисел $p=(p_x)_{x\in\mathcal X}$ такой, что
+<ol class="ax">
+<li>$p_x\ge0$ для каждого <span class="nw">$x\in\mathcal X$;</span></li>
+<li>$\sum_{x\in\mathcal X}p_x=1$.</li>
+</ol>
+<b>Вероятность события</b> $A\subset\mathcal X$ равна <span class="nw">$p(A)=\sum_{x\in A}p_x$.</span> Множество всех распределений на $\mathcal X$ обозначается <span class="nw">$\Delta(\mathcal X)$.</span></div>
+<p>Если <span class="nw">$\mathcal X=\{1,\dots,n\}$,</span> распределение — это вектор $(p_1,\dots,p_n)\in\mathbb R^n$ с неотрицательными координатами и суммой <span class="nw">$1$,</span> а $\Delta(\mathcal X)$ — <b>стандартный симплекс</b>: при $n=2$ это отрезок, при $n=3$ — треугольник в <span class="nw">$\mathbb R^3$.</span> Этот треугольник мы будем рисовать в §7 и §9. Когда ясно, о каком распределении идёт речь, вероятность события пишут и как <span class="nw">$P(A)$.</span> Примеры:</p>
+<ul class="gl">
+<li>честный кубик: $\mathcal X=\{1,\dots,6\}$, $p_x=\tfrac16$ для всех $x$; так же определяется <b>равномерное распределение</b> на любом $\mathcal X$ из $n$ исходов: <span class="nw">$p_x=\tfrac1n$;</span></li>
+<li>монета с вероятностью герба <span class="nw">$\theta\in[0,1]$:</span> $\mathcal X=\{0,1\}$, где $1$ — герб, $p_1=\theta$, <span class="nw">$p_0=1-\theta$.</span></li>
+</ul>
+
+<p>Исходом может быть не только число. Бросим два кубика и запишем, что выпало на первом и на втором: исход — пара <span class="nw">$(i,j)$,</span> а множество исходов <span class="nw">$\mathcal X=\{1,\dots,6\}^2$</span> состоит из $36$ пар. Если оба кубика честные, все пары равновероятны: <span class="nw">$p_{(i,j)}=\tfrac1{36}$.</span> Если кубики несимметричные и первый выпадает гранью $i$ с вероятностью <span class="nw">$a_i$,</span> а второй гранью $j$ — с вероятностью <span class="nw">$b_j$,</span> то положим <span class="nw">$p_{(i,j)}=a_ib_j$.</span> Это распределение: числа неотрицательны, а их сумма равна <span class="nw">$\bigl(\sum_ia_i\bigr)\bigl(\sum_jb_j\bigr)=1$.</span> Событие — любое множество пар. Например, «сумма очков равна $7$» — это шестиэлементное множество
+<span class="math-wrap">$$A=\{(1,6),(2,5),(3,4),(4,3),(5,2),(6,1)\},$$</span>
+и при честных кубиках <span class="nw">$p(A)=6\cdot\tfrac1{36}=\tfrac16$.</span></p>
+
+<figure>
+  <div class="fig1 sq"><canvas id="dice" width="560" height="560" aria-label="Тридцать шесть исходов броска двух кубиков; события выбираются щелчком по клеткам"></canvas></div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Кубики"><button type="button" data-k="F" aria-pressed="true">честные кубики</button><button type="button" data-k="L" aria-pressed="false">несимметричные кубики</button></div>
+    <div class="seg" role="group" aria-label="Какое событие выбирать"><button type="button" data-k="A" aria-pressed="true">выбираю $A$</button><button type="button" data-k="B" aria-pressed="false">выбираю $B$</button></div>
+  </div>
+  <div class="controls">
+    <button type="button" class="act" data-pre="sum7">сумма $=7$</button><button type="button" class="act" data-pre="dbl">дубль</button><button type="button" class="act" data-pre="f5">первый $\ge5$</button><button type="button" class="act" data-pre="s2e">второй чётный</button><button type="button" class="act" data-pre="s10">сумма $\ge10$</button><button type="button" class="act" data-pre="none">пустое</button><button type="button" class="act" data-pre="all">все исходы</button>
+  </div>
+  <div id="dcFx" class="fx" aria-live="polite"></div>
+  <div class="ro" style="--lw:7rem">
+    <div class="rr"><span class="rl">$p(A)$</span><span class="gauge" id="gDcA" data-min="0" data-max="1" data-d="3"></span><output class="gv"></output></div>
+    <div class="rr"><span class="rl">$p(B)$</span><span class="gauge" id="gDcB" data-min="0" data-max="1" data-d="3"></span><output class="gv"></output></div>
+    <div class="rr"><span class="rl">$p(A\cap B)$</span><span class="gauge" id="gDcI" data-min="0" data-max="1" data-d="3"></span><output class="gv"></output></div>
+    <div class="rr"><span class="rl">$p(A\cup B)$</span><span class="gauge" id="gDcU" data-min="0" data-max="1" data-d="3"></span><output class="gv"></output></div>
+  </div>
+  <figcaption>{{Рис:fdice}}. Множество исходов броска двух кубиков. Столбец — грань первого кубика, строка — грань второго, клетка — исход <span class="nw">$(i,j)$.</span> Ширина столбца равна <span class="nw">$a_i$,</span> высота строки — <span class="nw">$b_j$,</span> поэтому площадь клетки равна её вероятности <span class="nw">$p_{(i,j)}$,</span> а площадь всего квадрата — <span class="nw">$1$.</span> Щелчок по клетке добавляет исход в выбранное событие или убирает его оттуда; можно вести указателем по нескольким клеткам. Кнопки под переключателями задают готовые события. Событие $A$ закрашено, событие $B$ заштриховано, их пересечение и закрашено, и заштриховано. Вероятность события — сумма вероятностей его клеток, то есть закрашенная площадь; строка под рисунком выписывает эту сумму.</figcaption>
+</figure>
+
+<p>Само множество $\Delta(\mathcal X)$ тоже можно увидеть. Распределение на $n$ исходах — это точка пространства <span class="nw">$\mathbb R^n$,</span> а условия определения {{#dist}} вырезают из пространства все такие точки сразу. При $n=2$ равенство $p_1+p_2=1$ задаёт прямую, а неотрицательность координат оставляет от неё отрезок между точками $(1,0)$ и <span class="nw">$(0,1)$.</span> При $n=3$ плоскость $p_1+p_2+p_3=1$ пересекается с первым октантом по треугольнику с вершинами <span class="nw">$(1,0,0)$,</span> $(0,1,0)$ и <span class="nw">$(0,0,1)$.</span> Каждая точка отрезка или треугольника — одно распределение, и наоборот.</p>
+
+<figure>
+  <div class="fig1"><canvas id="delta" width="760" height="430" aria-label="Множество распределений на двух исходах — отрезок, на трёх — треугольник в пространстве"></canvas></div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Число исходов"><button type="button" data-k="2" aria-pressed="false">два исхода</button><button type="button" data-k="3" aria-pressed="true">три исхода</button></div>
+    <button type="button" class="act" data-pre="u">равномерное</button><button type="button" class="act" data-pre="d">в вершину</button><button type="button" class="act" data-pre="r">случайное</button>
+  </div>
+  <div id="dlFx" class="fx" aria-live="polite"></div>
+  <figcaption>{{Рис:fdelta}}. Множество $\Delta(\mathcal X)$ всех распределений. Для двух исходов это отрезок прямой $p_1+p_2=1$ в первой четверти плоскости. Штриховые продолжения прямой состоят из точек с суммой координат $1$, но с отрицательной координатой, и распределениями не являются. Для трёх исходов это треугольник в пространстве; тонкие линии внутри соединяют точки, у которых одна из координат равна $0{,}2$, $0{,}4$, $0{,}6$ или <span class="nw">$0{,}8$.</span> Точку $p$ можно перетаскивать; штриховые линии показывают её координаты на осях, а столбики справа — те же числа как вероятности исходов. Треугольник поворачивается, если тянуть фон рисунка в сторону. В вершинах один исход достоверен, на сторонах вероятность одного из исходов равна <span class="nw">$0$,</span> в центре лежит равномерное распределение.</figcaption>
+</figure>
+
+<div class="stmt"><span class="lbl">{{Определение:supp}} (носитель, вырожденное распределение)</span>
+<b>Носитель</b> распределения $p$ — множество исходов, имеющих положительную вероятность:
+<span class="math-wrap">$$\operatorname{supp}p=\{x\in\mathcal X:\ p_x\gt0\}.$$</span>
+Распределение $\delta_a$, у которого $(\delta_a)_a=1$, а остальные вероятности равны <span class="nw">$0$,</span> называется <b>вырожденным</b> в точке <span class="nw">$a$.</span></div>
+<p>Вырожденное распределение описывает опыт, исход которого известен заранее. В классификации вырожденное распределение $\delta_y$ на множестве классов называют <b>one-hot</b>-вектором: это вектор из нулей с единицей на месте правильного класса <span class="nw">$y$.</span></p>
+
+<div class="stmt"><span class="lbl">{{Определение:indep}} (независимые события)</span>
+События $A,B\subset\mathcal X$ <b>независимы</b> относительно распределения <span class="nw">$p$,</span> если <span class="nw">$p(A\cap B)=p(A)\,p(B)$.</span></div>
+<p>Строка под рисунком {{#fdice}} показывает обе части этого равенства. Для честных кубиков события «сумма равна $7$» и «на первом кубике не меньше $5$» независимы: $p(A\cap B)=\tfrac2{36}=\tfrac16\cdot\tfrac13$. Знание того, что первый кубик выпал крупно, не меняет шансов на сумму <span class="nw">$7$.</span> Для несимметричных кубиков с теми же событиями равенство нарушается, $0{,}098\ne0{,}178\cdot0{,}520$. Зато в обоих случаях независимы события «на первом выпало $i$» и «на втором выпало $j$»: вероятность их пересечения равна <span class="nw">$a_ib_j$,</span> то есть площади клетки, а это произведение ширины столбца на высоту строки.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:expect}} (случайная величина, математическое ожидание, дисперсия)</span>
+<b>Случайная величина</b> — это функция <span class="nw">$f:\mathcal X\to\mathbb R$.</span> Её <b>математическое ожидание</b> и <b>дисперсия</b> относительно $p$ равны
+<span class="math-wrap">$$\mathbb E_pf=\sum_{x\in\operatorname{supp}p}p_x\,f(x),\qquad \operatorname{Var}_pf=\mathbb E_p\bigl(f-\mathbb E_pf\bigr)^2.$$</span>
+Мы допускаем и функции со значениями в <span class="nw">$(-\infty,+\infty]$;</span> тогда $\mathbb E_pf=+\infty$, если $f(x)=+\infty$ хотя бы для одного <span class="nw">$x\in\operatorname{supp}p$.</span></div>
+<p>Сумма берётся только по носителю: исходы нулевой вероятности в среднем не участвуют, даже если $f$ в них равна <span class="nw">$+\infty$.</span> Для функций с конечными значениями это ничего не меняет, потому что слагаемые $p_xf(x)$ с $p_x=0$ равны нулю. Бесконечные значения понадобятся в §4: удивление исхода, который наблюдатель считал невозможным, будет бесконечным. Если исход опыта обозначен через <span class="nw">$X$,</span> часто пишут $\mathbb E_pf(X)$ вместо <span class="nw">$\mathbb E_pf$.</span> Математическое ожидание линейно и монотонно: если $f\le g$ на <span class="nw">$\operatorname{supp}p$,</span> то <span class="nw">$\mathbb E_pf\le\mathbb E_pg$.</span></p>
+
+<div class="stmt"><span class="lbl">{{Определение:iid}} (независимые повторения опыта)</span>
+Пусть опыт с распределением исходов $p\in\Delta(\mathcal X)$ повторяют $N$ раз независимо. Исход всей серии — последовательность $(x_1,\dots,x_N)$ исходов отдельных повторений, где <span class="nw">$x_k\in\mathcal X$.</span> Множество всех таких последовательностей обозначается
+<span class="math-wrap">$$\mathcal X^N=\underbrace{\mathcal X\times\dots\times\mathcal X}_{N\text{ раз}}=\bigl\{(x_1,\dots,x_N):\ x_1,\dots,x_N\in\mathcal X\bigr\}$$</span>
+и называется <b>декартовой степенью</b> <span class="nw">$\mathcal X$.</span> Распределение исходов серии — это распределение на <span class="nw">$\mathcal X^N$,</span> равное
+<span class="math-wrap">$$p^{\otimes N}(x_1,\dots,x_N)=p_{x_1}\,p_{x_2}\cdots p_{x_N}.$$</span>
+Функция $X_k(x_1,\dots,x_N)=x_k$ — исход $k$-го повторения.</div>
+<p>Это действительно распределение на <span class="nw">$\mathcal X^N$:</span> сумма произведений по всем последовательностям равна произведению сумм, $\bigl(\sum_xp_x\bigr)^N=1$. Относительно $p^{\otimes N}$ исходы $X_1,\dots,X_N$ независимы и каждый имеет распределение <span class="nw">$p$;</span> именно поэтому вероятность всей последовательности равна произведению вероятностей её членов. Мы будем называть такую последовательность <b>выборкой</b> из <span class="nw">$p$.</span></p>
+<p>Например, если подбросить три раза монету с <span class="nw">$\mathcal X=\{0,1\}$,</span> то множество $\mathcal X^3$ состоит из $2^3=8$ последовательностей <span class="nw">$(0,0,0)$,</span> <span class="nw">$(0,0,1)$,</span> …, <span class="nw">$(1,1,1)$,</span> и вероятность последовательности $(1,0,1)$ равна <span class="nw">$\theta\,(1-\theta)\,\theta$.</span> Два честных кубика с рисунка {{#fdice}} — это два повторения броска одного кубика: исход — элемент <span class="nw">$\{1,\dots,6\}^2$,</span> а вероятность каждой пары <span class="nw">$\tfrac16\cdot\tfrac16=\tfrac1{36}$.</span></p>
+
+<figure>
+  <div class="fig1"><canvas id="iid" width="760" height="300" aria-label="Серия бросков монеты: каждый бросок делит отрезки предыдущей строки в пропорции θ к 1−θ"></canvas></div>
+  <div class="controls">
+    <label for="iiN">Бросков $N$ <input id="iiN" type="range" min="1" max="6" step="1" value="3"><output id="iiNOut">3</output></label>
+    <label for="iiT">Вероятность герба $\theta$ <input id="iiT" type="range" min="0.05" max="0.95" step="0.05" value="0.7"><output id="iiTOut">0,70</output></label>
+    <button type="button" class="act" id="iiRun">Провести серию</button>
+  </div>
+  <div id="iiFx" class="fx" aria-live="polite"></div>
+  <figcaption>{{Рис:fiid}}. Независимые повторения: $N$ бросков монеты, $1$ — герб, $0$ — решка. Первая строка делит отрезок $[0,1]$ на части длины $\theta$ и <span class="nw">$1-\theta$.</span> Каждая следующая строка делит каждую часть предыдущей в той же пропорции: при любых результатах прежних бросков очередной бросок даёт герб с вероятностью <span class="nw">$\theta$.</span> Так в этом рисунке выглядит независимость. Части строки $k$ — это все возможные результаты первых $k$ бросков, а длина части равна произведению вероятностей вдоль пути к ней. Части последней строки — элементы множества <span class="nw">$\mathcal X^N$;</span> они вместе покрывают <span class="nw">$[0,1]$,</span> поэтому их вероятности в сумме дают <span class="nw">$1$.</span> Наведите указатель или щёлкните по любой части, чтобы выделить путь к ней. Кнопка проводит новую случайную серию бросок за броском, сверху вниз: в очередной строке указатель пробегает по части, в которую привели прежние броски, замедляется и останавливается в случайной точке. Доля герба в этой части равна <span class="nw">$\theta$,</span> поэтому указатель останавливается на гербе с вероятностью <span class="nw">$\theta$,</span> что бы ни выпало раньше.</figcaption>
+</figure>
+
+<div class="stmt"><span class="lbl">{{Определение:emp}} (эмпирическое распределение)</span>
+<b>Эмпирическое распределение</b> последовательности $(x_1,\dots,x_N)\in\mathcal X^N$ — это распределение долей:
+<span class="math-wrap">$$\hat p_N(a)=\frac{\#\{k:\ x_k=a\}}N,\qquad a\in\mathcal X.$$</span></div>
+<p>Числа $\hat p_N(a)$ неотрицательны и в сумме дают <span class="nw">$1$,</span> так что $\hat p_N\in\Delta(\mathcal X)$. Например, у последовательности бросков кубика $(3,6,3,1)$ эмпирическое распределение равно $\tfrac12$ в точке <span class="nw">$3$,</span> $\tfrac14$ в точках $1$ и $6$ и $0$ в остальных.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:regroup}} (перегруппировка)</span>
+Для любой последовательности $(x_1,\dots,x_N)$ и любой функции $f:\mathcal X\to(-\infty,+\infty]$
+<span class="math-wrap">$$\frac1N\sum_{k=1}^Nf(x_k)=\mathbb E_{\hat p_N}f.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Соберём в сумме слева одинаковые слагаемые: значение $f(a)$ встречается столько раз, сколько раз в последовательности встречается <span class="nw">$a$.</span></div>
+<div class="step"><span class="sh">Шаг 1. Конечный случай.</span> Пусть все $f(x_k)$ конечны. Разобьём номера $k$ по значению <span class="nw">$x_k$:</span>
+<span class="math-wrap">$$\begin{aligned}\sum_{k=1}^Nf(x_k)&=\sum_{a\in\mathcal X}\ \sum_{k:\,x_k=a}f(a)=\sum_{a\in\mathcal X}\#\{k:\ x_k=a\}\,f(a)\\&=N\sum_{a\in\mathcal X}\hat p_N(a)\,f(a).\end{aligned}$$</span>
+Слагаемые с $\hat p_N(a)=0$ равны нулю, так что последняя сумма — это сумма по носителю <span class="nw">$\hat p_N$,</span> то есть <span class="nw">$N\,\mathbb E_{\hat p_N}f$.</span></div>
+<div class="step"><span class="sh">Шаг 2. Бесконечные значения.</span> Если $f(x_k)=+\infty$ для некоторого <span class="nw">$k$,</span> левая часть равна <span class="nw">$+\infty$.</span> Но тогда $\hat p_N(x_k)\ge\tfrac1N\gt0$, то есть $x_k$ лежит в носителе <span class="nw">$\hat p_N$,</span> и правая часть тоже равна $+\infty$ по определению {{#expect}}. Если же все $f(x_k)$ конечны, то $f$ конечна на всём носителе <span class="nw">$\hat p_N$,</span> и работает шаг 1.</div>
+</div>
+<p>Лемма говорит, что среднее по выборке — это математическое ожидание по эмпирическому распределению. Это простое наблюдение — ключ к §8.</p>
+
+<p>Последний факт этого параграфа — закон больших чисел: среднее значение функции по большой выборке почти наверняка близко к её математическому ожиданию. Для доказательства понадобятся два неравенства и одно вычисление с произведениями. Неравенства верны для любого распределения на любом конечном множестве, поэтому сформулируем их для распределения $r$ на конечном множестве <span class="nw">$\mathcal Y$;</span> применять их мы будем к <span class="nw">$\mathcal Y=\mathcal X^N$.</span> Для функции $g$ на $\mathcal Y$ событие $\{y\in\mathcal Y:\ g(y)\ge a\}$ коротко записывают как <span class="nw">$\{g\ge a\}$,</span> а его вероятность — как <span class="nw">$r(g\ge a)$.</span></p>
+
+<div class="stmt"><span class="lbl">{{Лемма:markov}} (неравенство Маркова)</span>
+Пусть $r$ — распределение на конечном множестве <span class="nw">$\mathcal Y$,</span> $g:\mathcal Y\to[0,+\infty)$ и <span class="nw">$a\gt0$.</span> Тогда
+<span class="math-wrap">$$r(g\ge a)\le\frac{\mathbb E_rg}a.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Одни только исходы, где $g\ge a$, дают в среднее значение $g$ вклад не меньше <span class="nw">$a\cdot r(g\ge a)$;</span> остальные исходы вклад не уменьшают, потому что $g$ неотрицательна.</div>
+<div class="step"><span class="sh">Шаг 1. Отбрасываем часть слагаемых.</span> Обозначим <span class="nw">$A=\{g\ge a\}$.</span> Все слагаемые $r_y\,g(y)$ в определении среднего неотрицательны, поэтому, оставив только исходы из <span class="nw">$A$,</span> мы сумму не увеличим:
+<span class="math-wrap">$$\mathbb E_rg=\sum_{y\in\operatorname{supp}r}r_y\,g(y)\ge\sum_{y\in A\cap\operatorname{supp}r}r_y\,g(y).$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Оцениваем оставшееся.</span> На $A$ выполнено <span class="nw">$g(y)\ge a$,</span> поэтому
+<span class="math-wrap">$$\sum_{y\in A\cap\operatorname{supp}r}r_y\,g(y)\ge a\sum_{y\in A\cap\operatorname{supp}r}r_y=a\,r(A).$$</span>
+Последнее равенство верно, потому что исходы нулевой вероятности в сумму $r(A)=\sum_{y\in A}r_y$ ничего не добавляют. Итак, <span class="nw">$\mathbb E_rg\ge a\,r(A)$;</span> остаётся разделить на <span class="nw">$a$.</span></div>
+</div>
+
+<div class="stmt"><span class="lbl">{{Лемма:cheb}} (неравенство Чебышёва)</span>
+Пусть $r$ — распределение на конечном множестве <span class="nw">$\mathcal Y$,</span> $g:\mathcal Y\to\mathbb R$ и <span class="nw">$\varepsilon\gt0$.</span> Тогда
+<span class="math-wrap">$$r\bigl(|g-\mathbb E_rg|\ge\varepsilon\bigr)\le\frac{\operatorname{Var}_rg}{\varepsilon^2}.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Применить неравенство Маркова к квадрату отклонения от среднего: среднее значение этого квадрата и есть дисперсия.</div>
+<div class="step"><span class="sh">Шаг 1. Переписываем событие.</span> Обозначим <span class="nw">$m=\mathbb E_rg$.</span> Обе части неравенства $|g(y)-m|\ge\varepsilon$ неотрицательны, поэтому его можно возвести в квадрат: события $\{|g-m|\ge\varepsilon\}$ и $\{(g-m)^2\ge\varepsilon^2\}$ совпадают.</div>
+<div class="step"><span class="sh">Шаг 2. Неравенство Маркова.</span> Функция $(g-m)^2$ неотрицательна. По лемме {{#markov}} с <span class="nw">$a=\varepsilon^2$</span>
+<span class="math-wrap">$$r\bigl((g-m)^2\ge\varepsilon^2\bigr)\le\frac{\mathbb E_r(g-m)^2}{\varepsilon^2}=\frac{\operatorname{Var}_rg}{\varepsilon^2}.$$</span></div>
+</div>
+
+<p>Теперь вычисления с выборкой. Для функции $g:\mathcal X\to\mathbb R$ через $g(X_k)$ обозначим функцию на <span class="nw">$\mathcal X^N$,</span> которая последовательности $(x_1,\dots,x_N)$ сопоставляет число <span class="nw">$g(x_k)$.</span> Все функции здесь принимают конечные значения, поэтому средние можно считать суммами по всем последовательностям, а не только по носителю: слагаемые нулевой вероятности равны нулю.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:coord}} (средние по выборке)</span>
+Пусть <span class="nw">$p\in\Delta(\mathcal X)$,</span> $g,h:\mathcal X\to\mathbb R$, и среднее $\mathbb E$ берётся по распределению <span class="nw">$p^{\otimes N}$.</span> Тогда
+<ol class="ax">
+<li>$\mathbb E\,g(X_k)=\mathbb E_pg$ для каждого <span class="nw">$k$;</span></li>
+<li>$\mathbb E\,g(X_j)\,h(X_k)=\mathbb E_pg\cdot\mathbb E_ph$ при <span class="nw">$j\ne k$.</span></li>
+</ol></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Вероятность последовательности — произведение множителей, по одному на каждое повторение. Поэтому сумма по всем последовательностям распадается в произведение сумм по отдельным повторениям. Повторения, от которых функция не зависит, дают множитель $\sum_xp_x=1$.</div>
+<div class="step"><span class="sh">Шаг 1. Сумма произведений.</span> Для любых функций $u_1,\dots,u_N:\mathcal X\to\mathbb R$
+<span class="math-wrap">$$\sum_{(x_1,\dots,x_N)\in\mathcal X^N}u_1(x_1)\,u_2(x_2)\cdots u_N(x_N)=\prod_{i=1}^N\ \sum_{x\in\mathcal X}u_i(x).$$</span>
+Действительно, раскроем скобки в произведении справа: каждое слагаемое получается выбором по одному $x_i$ из каждой скобки, то есть одной последовательностью <span class="nw">$(x_1,\dots,x_N)$,</span> и каждая последовательность встречается ровно один раз.</div>
+<div class="step"><span class="sh">Шаг 2. Пункт 1.</span> По определению
+<span class="math-wrap">$$\mathbb E\,g(X_k)=\sum_{(x_1,\dots,x_N)}p_{x_1}\cdots p_{x_N}\,g(x_k).$$</span>
+Применим шаг 1 с $u_k(x)=p_x\,g(x)$ и $u_i(x)=p_x$ при <span class="nw">$i\ne k$:</span> сумма равна <span class="nw">$\bigl(\sum_xp_x\bigr)^{N-1}\sum_xp_x\,g(x)=\mathbb E_pg$.</span></div>
+<div class="step"><span class="sh">Шаг 3. Пункт 2.</span> Так же, с $u_j(x)=p_x\,g(x)$, $u_k(x)=p_x\,h(x)$ и $u_i(x)=p_x$ для остальных <span class="nw">$i$:</span>
+<span class="math-wrap">$$\mathbb E\,g(X_j)\,h(X_k)=\Bigl(\sum_xp_x\,g(x)\Bigr)\Bigl(\sum_xp_x\,h(x)\Bigr)\cdot1^{N-2}=\mathbb E_pg\cdot\mathbb E_ph.$$</span></div>
+</div>
+
+<div class="stmt"><span class="lbl">{{Теорема:lln}} (закон больших чисел)</span>
+Пусть $p\in\Delta(\mathcal X)$ и $f:\mathcal X\to\mathbb R$. Тогда для любого $\varepsilon\gt0$
+<span class="math-wrap">$$p^{\otimes N}\Bigl(\Bigl|\frac1N\sum_{k=1}^Nf(X_k)-\mathbb E_pf\Bigr|\ge\varepsilon\Bigr)\le\frac{\operatorname{Var}_pf}{N\varepsilon^2}\xrightarrow[N\to\infty]{}0.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Выборочное среднее имеет то же математическое ожидание, что и <span class="nw">$f$,</span> а дисперсию в $N$ раз меньше. Неравенство Чебышёва превращает малую дисперсию в малую вероятность заметного отклонения.</div>
+<div class="step"><span class="sh">Шаг 1. Обозначения и среднее.</span> Пусть <span class="nw">$m=\mathbb E_pf$,</span> <span class="nw">$\sigma^2=\operatorname{Var}_pf$,</span> а $S_N=\frac1N\sum_{k=1}^Nf(X_k)$ — функция на <span class="nw">$\mathcal X^N$.</span> Все средние берутся по <span class="nw">$p^{\otimes N}$.</span> По линейности и пункту 1 леммы {{#coord}}
+<span class="math-wrap">$$\mathbb E\,S_N=\frac1N\sum_{k=1}^N\mathbb E\,f(X_k)=\frac1N\cdot Nm=m.$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Дисперсия.</span> Так как <span class="nw">$\mathbb E\,S_N=m$,</span> дисперсия равна <span class="nw">$\mathbb E(S_N-m)^2$.</span> Запишем $S_N-m=\frac1N\sum_k\bigl(f(X_k)-m\bigr)$ и раскроем квадрат:
+<span class="math-wrap">$$(S_N-m)^2=\frac1{N^2}\sum_{j=1}^N\sum_{k=1}^N\bigl(f(X_j)-m\bigr)\bigl(f(X_k)-m\bigr).$$</span>
+Возьмём среднее от каждого слагаемого. При $j=k$ по пункту 1 леммы {{#coord}} с $g=(f-m)^2$ получаем <span class="nw">$\mathbb E_p(f-m)^2=\sigma^2$.</span> При $j\ne k$ по пункту 2 с $g=h=f-m$ получаем <span class="nw">$\mathbb E_p(f-m)\cdot\mathbb E_p(f-m)=0\cdot0=0$.</span> Ненулевых слагаемых $N$ — те, где <span class="nw">$j=k$,</span> поэтому
+<span class="math-wrap">$$\operatorname{Var}S_N=\frac{N\sigma^2}{N^2}=\frac{\sigma^2}N.$$</span></div>
+<div class="step"><span class="sh">Шаг 3. Неравенство Чебышёва.</span> Применим лемму {{#cheb}} к распределению $p^{\otimes N}$ на $\mathcal X^N$ и функции <span class="nw">$S_N$:</span>
+<span class="math-wrap">$$p^{\otimes N}\bigl(|S_N-m|\ge\varepsilon\bigr)\le\frac{\operatorname{Var}S_N}{\varepsilon^2}=\frac{\sigma^2}{N\varepsilon^2}.$$</span>
+Числитель не зависит от <span class="nw">$N$,</span> поэтому правая часть стремится к нулю при <span class="nw">$N\to\infty$.</span></div>
+</div>
+<p>Независимость повторений понадобилась только в шаге 2: она обнуляет перекрёстные слагаемые. Упражнение {{#exvar}} показывает, что без неё дисперсия среднего может и не уменьшаться. Взяв в качестве $f$ индикатор точки <span class="nw">$a$</span> ($f(a)=1$, $f(x)=0$ при $x\ne a$), получаем, что доля исходов $a$ в выборке сходится по вероятности к <span class="nw">$p_a$:</span> эмпирическое распределение большой выборки близко к истинному.</p>
+
+<figure>
+  <div class="fig1"><canvas id="emp" width="760" height="450" aria-label="Растущая выборка и путь её эмпирического распределения в треугольнике распределений"></canvas></div>
+  <div class="controls">
+    <label for="emN">Размер выборки $N$ <input id="emN" type="range" min="0" max="3.7" step="0.01" value="1.3"><output id="emNOut">20</output></label>
+    <button type="button" class="act" id="emPlay">Показать рост выборки</button>
+    <button type="button" class="act" id="emNew">Новая выборка</button>
+  </div>
+  <div id="emFx" class="fx" aria-live="polite"></div>
+  <div class="ro" style="--lw:12rem">
+    <div class="rr"><span class="rl">$\max_x\bigl|\hat p_N(x)-p_x\bigr|$</span><span class="gauge" id="gEm" data-min="0" data-max="0.5" data-d="3"></span><output class="gv"></output></div>
+  </div>
+  <figcaption>{{Рис:femp}}. Выборка из распределения $p$ на трёх исходах. Сверху — первые члены выборки. Слева — треугольник распределений из рисунка {{#fdelta}}, повёрнутый к нам лицом: вершина с номером $x$ — вырожденное распределение <span class="nw">$\delta_x$.</span> Холодная точка — распределение <span class="nw">$p$,</span> её можно перетаскивать. Тёплая точка — эмпирическое распределение <span class="nw">$\hat p_N$,</span> а тёплая линия — путь, который проходят $\hat p_1,\hat p_2,\dots,\hat p_N$ по мере роста выборки; чем раньше участок пути, тем он бледнее. Первые шаги большие: $\hat p_1$ всегда вершина. Справа — доли исходов в выборке (столбики) и вероятности $p_x$ (штриховые рамки). Шкала показывает наибольшее расхождение долей с вероятностями; по теореме {{#lln}} оно стремится к нулю по вероятности.</figcaption>
+</figure>
+</section>

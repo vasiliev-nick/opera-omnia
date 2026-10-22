@@ -1,0 +1,77 @@
+<script>
+(function(){
+  /* §∅.10, canvas rv3: random variables on three equally likely outcomes as vectors of ℝ³. The view is turned so that the diagonal of constants is vertical: the means lift the arrows along it, and the deviations lie in the horizontal plane of zero mean. */
+  const TB=window.TB,cv=document.getElementById('rv3');if(!TB||!cv||!TB.V3||!TB.fit)return;
+  const V=TB.V3,$=id=>document.getElementById(id),fx=$('rvFx'),sA=$('rvA'),sB=$('rvB'),sP=$('rvP'),oA=$('rvAOut'),oB=$('rvBOut'),oP=$('rvPOut');
+  const gC=new TB.Gauge('gRvC'),gR=new TB.Gauge('gRvR'),PI=Math.PI,S2=Math.SQRT2,S3=Math.sqrt(3),S6=Math.sqrt(6),TOP=3.8;
+  /* an orthonormal frame of ℝ³: a and b span the plane of zero mean, c = (1,1,1)/√3 runs along the constants */
+  const fa=[1/S2,-1/S2,0],fb=[1/S6,1/S6,-2/S6],fc=[1/S3,1/S3,1/S3],view=v=>[V.dot(v,fa),V.dot(v,fb),V.dot(v,fc)];
+  /* unit deviations in outcome coordinates: u = (−1,0,1)/√2, w = (1,−2,1)/√6 */
+  const U=[-1/S2,0,1/S2],Wv=[1/S6,-2/S6,1/S6],ONE=[1,1,1];
+  const st={yaw:-0.8,pitch:0.42,dist:16};
+  let cam=null,tips=null;
+  function vals(){const a=+sA.value,b=+sB.value,p=+sP.value*PI/180,du=V.mul(U,S2),dv=V.add(V.mul(U,S2*Math.cos(p)),V.mul(Wv,S2*Math.sin(p)));
+    return {a:a,b:b,p:p,du:du,dv:dv,x:V.add(V.mul(ONE,a),du),y:V.add(V.mul(ONE,b),dv)};}
+  const E=v=>(v[0]+v[1]+v[2])/3,ip=(u,v)=>V.dot(u,v)/3;
+  function draw(){
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?1.45:0.66))),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,fs=sm?12:13;
+    c.clearRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'line',col:col.eth,t:[['ξ','i']]},{k:'line',col:col.warm,t:[['η','i']]},
+      {k:'dash',col:col.ink,t:[['перпендикуляр на прямую постоянных','r']]}],sm?8:14,W-8,4,fs);
+    const s0=Math.min(W*(sm?0.17:0.11),(H-yb)/9.2);
+    cam=V.camera(st,W,H,W*(sm?0.5:0.46),yb+(H-yb)*0.5,s0);
+    const q=vals(),X=view(q.x),Y=view(q.y),DX=view(q.du),DY=view(q.dv),fX=[0,0,X[2]],fY=[0,0,Y[2]];
+    oA.textContent=TB.fmt(q.a,2);oB.textContent=TB.fmt(q.b,2);oP.textContent=Math.round(+sP.value)+'°';
+    const items=[];
+    /* the plane of zero mean */
+    items.push({t:'patch',p:[0,0,0],e1:[1,0,0],e2:[0,1,0],h:1.9,n:8,fill:col.eth,alpha:0.1,edge:TB.rgba(col.ink,0.22),bias:-0.02});
+    /* the axes of the outcomes */
+    for(let i=0;i<3;i++){const e=[0,0,0];e[i]=2.7;const P=view(e);
+      items.push({t:'line',pts:[[0,0,0],P],col:TB.rgba(col.ink,0.4),w:1,dash:[2,4]},{t:'label',p:P,segs:[[String(i+1),'m']],dx:4,dy:4,size:fs-1,col:col.muted});}
+    /* the line of constants with its ticks */
+    items.push({t:'line',pts:[[0,0,-TOP],[0,0,TOP]],col:TB.rgba(col.ink,0.75),w:1.3,ghost:0.35});
+    for(let k=-2;k<=2;k++){const z=k*S3;items.push({t:'segs',s:[[[-0.09,0,z],[0.09,0,z]]],col:TB.rgba(col.ink,0.75),w:1.2},
+      {t:'label',p:[0,0,z],segs:[[TB.fmt(k,0),'m']],dx:-8,dy:-4,size:fs-2,col:col.muted,al:'right'});}
+    items.push({t:'label',p:[0,0,TOP],segs:[['постоянные','r']],dx:8,dy:2,size:fs-1,col:col.muted});
+    /* perpendiculars from the tips to the constants, with right-angle marks */
+    const corner=(foot,d,cl)=>{const n=V.norm(d);if(n<1e-6)return;const h=V.mul(d,0.2/n),v=[0,0,foot[2]>0.05?-0.2:0.2];
+      items.push({t:'line',pts:[V.add(foot,h),V.add(V.add(foot,h),v),V.add(foot,v)],col:cl,w:1,alpha:0.8,bias:0.02});};
+    items.push({t:'line',pts:[fX,X],col:col.eth,w:1.5,dash:[5,4],bias:0.02},{t:'line',pts:[fY,Y],col:col.warm,w:1.5,dash:[5,4],bias:0.02});
+    corner(fX,DX,col.eth);corner(fY,DY,col.warm);
+    items.push({t:'pt',p:fX,r:3.6,fill:col.eth,stroke:col.paper,w:1.2},{t:'pt',p:fY,r:3.6,fill:col.warm,stroke:col.paper,w:1.2});
+    /* deviations in the plane and the angle ψ between them */
+    items.push({t:'arrow',p:[0,0,0],v:DX,col:TB.rgba(col.eth,0.75),w:1.4},{t:'arrow',p:[0,0,0],v:DY,col:TB.rgba(col.warm,0.8),w:1.4});
+    const arcPs=[];for(let i=0;i<=40;i++){const t=q.p*i/40;arcPs.push(view(V.add(V.mul(U,0.55*Math.cos(t)),V.mul(Wv,0.55*Math.sin(t)))));}
+    if(q.p>0.02)items.push({t:'line',pts:arcPs,col:col.ink,w:1.2,alpha:0.8,bias:0.03});
+    const mid=view(V.add(V.mul(U,0.8*Math.cos(q.p/2)),V.mul(Wv,0.8*Math.sin(q.p/2))));
+    items.push({t:'label',p:mid,segs:[['ψ','i']],dx:-4,dy:5,size:fs+1,col:col.ink});
+    /* the vectors ξ, η and the angle φ between them */
+    items.push({t:'arrow',p:[0,0,0],v:X,col:col.eth,w:2.6},{t:'arrow',p:[0,0,0],v:Y,col:col.warm,w:2.6});
+    const xh=V.unit(X),yp=V.sub(Y,V.mul(xh,V.dot(Y,xh))),phi=Math.acos(Math.max(-1,Math.min(1,V.dot(xh,V.unit(Y)))));
+    if(V.norm(yp)>1e-6&&phi>0.02){const e2=V.unit(yp),R=0.95,ps=[];for(let i=0;i<=40;i++){const t=phi*i/40;ps.push(V.add(V.mul(xh,R*Math.cos(t)),V.mul(e2,R*Math.sin(t))));}
+      items.push({t:'line',pts:ps,col:col.ink,w:1.2,alpha:0.55,dash:[3,3],bias:0.03});
+      const m2=V.add(V.mul(xh,1.25*Math.cos(phi/2)),V.mul(e2,1.25*Math.sin(phi/2)));items.push({t:'label',p:m2,segs:[['φ','i']],dx:-4,dy:5,size:fs+1,col:col.ink});}
+    const lab=(P,t,cl)=>{const n=V.norm(P)||1;items.push({t:'label',p:V.add(P,V.mul(P,0.22/n)),segs:t,dx:-4,dy:5,size:fs+2,col:cl});};
+    lab(X,[['ξ','i']],col.eth);lab(Y,[['η','i']],col.warm);
+    c.save();c.beginPath();c.rect(0,yb,W,H-yb);c.clip();V.render(c,cam,items,col);c.restore();
+    tips=[cam.P(X),cam.P(Y)];
+    /* readouts */
+    const exy=ip(q.x,q.y),cov=exy-E(q.x)*E(q.y),dx=ip(q.du,q.du),dy=ip(q.dv,q.dv),cphi=exy/Math.sqrt(ip(q.x,q.x)*ip(q.y,q.y)),rho=cov/Math.sqrt(dx*dy);
+    gC.set(cphi);gR.set(rho);
+    const tr=v=>'('+v.map(z=>TB.fmt(z,2)).join('; ')+')';
+    fx.innerHTML=TB.rows([['<i>ξ</i> = '+tr(q.x)+',','<i>η</i> = '+tr(q.y)],
+      ['𝔼<i>ξη</i> = '+TB.fmt(exy,3)+',','𝔼<i>ξ</i>·𝔼<i>η</i> = '+TB.fmt(E(q.x)*E(q.y),3)],
+      ['Cov(<i>ξ</i>, <i>η</i>) = 𝔼<i>ξη</i> − 𝔼<i>ξ</i>·𝔼<i>η</i> = '+TB.fmt(cov,3)]]);
+  }
+  /* a tip of an arrow can be pulled up or down: that changes the mean of its variable */
+  let drag=null;
+  V.interact(cv,st,{active:()=>true,state:()=>st,
+    grab(x,y){if(!tips)return false;for(let i=0;i<2;i++)if(Math.hypot(tips[i][0]-x,tips[i][1]-y)<24){const sl=i?sB:sA;drag={sl:sl,y0:y,m0:+sl.value};return true;}drag=null;return false;},
+    move(x,y){if(!drag)return;const m=drag.m0+(drag.y0-y)/(cam.s*Math.cos(st.pitch)*S3),sl=drag.sl;
+      sl.value=String(Math.max(+sl.min,Math.min(+sl.max,Math.round(m/0.05)*0.05)));draw();},
+    redraw:draw});
+  cv.style.touchAction='none';cv.style.cursor='grab';
+  [sA,sB,sP].forEach(s=>s.addEventListener('input',draw));TB.onTheme(draw);TB.onResize(cv,draw);draw();
+  if(window.IntersectionObserver){const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();V.intro(st,draw);}},{threshold:0.4});io.observe(cv);}
+})();
+</script>

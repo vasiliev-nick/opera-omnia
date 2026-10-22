@@ -1,0 +1,22 @@
+const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const fs=require('fs');const MJ=fs.readFileSync(process.cwd()+'/mj/node_modules/mathjax/es5/tex-svg.js','utf8');
+(async()=>{const b=await chromium.launch();const p=await b.newPage();const errs=[];
+p.on('pageerror',e=>errs.push(String(e)));p.on('console',m=>{if(m.type()==='error')errs.push(m.text());});
+await p.route('**/mathjax/**',r=>r.fulfill({body:MJ,contentType:'application/javascript'}));
+await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
+await p.goto('file://'+process.cwd()+'/p2/ch0p2.html');await p.evaluate(()=>MathJax.startup.promise);
+const r=await p.evaluate(()=>{
+  const bad=[...document.querySelectorAll('.gref')].filter(a=>{const t=a.dataset.t;let el=null;
+    if(t[0]==='#')el=document.getElementById(t.slice(1));else{const l=[...document.querySelectorAll('.stmt>.lbl,.ex>.lbl')].find(x=>x.textContent.trim().startsWith(t));el=l;}return !el;}).map(a=>a.dataset.t);
+  const merr=[...document.querySelectorAll('mjx-merror,[data-mjx-error]')].map(e=>e.getAttribute('data-mjx-error')||e.textContent);
+  const rawEls=[...document.querySelectorAll('.book p,.book li,.book figcaption,.rl,.book h2,.book h3,.stmt,.ex,.plain,.aside,.step,.fx,.gloss')].filter(e=>/\$/.test(e.textContent));
+  const raw=rawEls.length,rawS=rawEls.slice(0,5).map(e=>e.textContent.slice(0,120));
+  const sols=document.querySelectorAll('.proof.sol.folded').length, ex=document.querySelectorAll('.ex').length;
+  const exNoSol=[...document.querySelectorAll('.ex')].filter(e=>{const n=e.nextElementSibling;return !(n&&n.matches('.proof.sol'));}).map(e=>e.querySelector('.lbl').textContent);
+  const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);const dup=ids.filter((x,i)=>ids.indexOf(x)!==i);
+  const hrefs=[...document.querySelectorAll('a[href^="#"]')].map(a=>a.getAttribute('href').slice(1)).filter(h=>h&&!document.getElementById(h));
+  const lbls=[...document.querySelectorAll('.stmt>.lbl,.ex>.lbl')].map(e=>e.textContent.trim().split(/[ (.]/).slice(0,2).join(' ')+' '+(e.textContent.match(/∅\.\d+|Вопрос \d+/)||[''])[0]);
+  const figs=[...document.querySelectorAll('figcaption')].map(e=>(e.textContent.match(/^Рис\. ∅\.\d+/)||['?'])[0]);
+  const ov=[...document.querySelectorAll('.book *')].filter(e=>{const r=e.getBoundingClientRect();return r.right>document.documentElement.clientWidth+1&&!e.closest('.svgwrap')&&!e.closest('mjx-container');}).length;
+  return {bad,merr,raw,rawS,sols,ex,exNoSol,dup,hrefs,gl:document.querySelectorAll('.glist li').length,figs,lbls:lbls.join(' | '),ov};});
+console.log(JSON.stringify(r,null,1));console.log('errors',JSON.stringify(errs));await b.close();})();

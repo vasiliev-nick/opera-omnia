@@ -1,0 +1,91 @@
+<script>
+(function(){
+  /* Fig. ∇.@cassini: level lines of f = |x|⁴ − 2(x₁² − x₂²), a draggable point, its level line, gradient, tangent and the osculating circle from Theorem ∇.15. */
+  const TB=window.TB,cv=document.getElementById('cassini');if(!TB||!cv)return;
+  const fx=document.getElementById('csFx'),gauge=TB.G('gCs');
+  const XR=1.95,LV=[-0.75,-0.5,-0.25,0.5,1,2],GMIN=1;
+  const F=(x,y)=>{const r=x*x+y*y;return r*r-2*(x*x-y*y);};
+  function diff(x,y){const r=x*x+y*y,f1=4*x*(r-1),f2=4*y*(r+1),f11=4*(r-1)+8*x*x,f22=4*(r+1)+8*y*y,f12=8*x*y,g=Math.hypot(f1,f2);
+    return {f:F(x,y),f1:f1,f2:f2,g:g,k:g>0?(f11*f2*f2-2*f12*f1*f2+f22*f1*f1)/(g*g*g):NaN};}
+  let geo=null,base=null,key='',grd=null,pt=[1.3,0.5],drag=false;
+  /* marching squares on a coarse grid of values */
+  function contour(c,vals,n,m,X,Y,lev){
+    c.beginPath();
+    const lerp=(a,b,va,vb)=>a+(b-a)*(lev-va)/(vb-va);
+    for(let j=0;j<m;j++)for(let i=0;i<n;i++){
+      const v0=vals[j*(n+1)+i],v1=vals[j*(n+1)+i+1],v2=vals[(j+1)*(n+1)+i+1],v3=vals[(j+1)*(n+1)+i],pts=[];
+      if((v0<lev)!==(v1<lev))pts.push([lerp(i,i+1,v0,v1),j]);
+      if((v1<lev)!==(v2<lev))pts.push([i+1,lerp(j,j+1,v1,v2)]);
+      if((v2<lev)!==(v3<lev))pts.push([lerp(i+1,i,v2,v3),j+1]);
+      if((v3<lev)!==(v0<lev))pts.push([i,lerp(j+1,j,v3,v0)]);
+      for(let q=0;q+1<pts.length;q+=2){c.moveTo(X(pts[q][0]),Y(pts[q][1]));c.lineTo(X(pts[q+1][0]),Y(pts[q+1][1]));}
+    }
+    c.stroke();}
+  function grid(W,H,sc,cx,cy){const n=Math.ceil(W/3),m=Math.ceil(H/3),v=new Float64Array((n+1)*(m+1));
+    for(let j=0;j<=m;j++)for(let i=0;i<=n;i++)v[j*(n+1)+i]=F((i*W/n-cx)/sc,(cy-j*H/m)/sc);
+    return {v:v,n:n,m:m,X:i=>i*W/n,Y:j=>j*H/m};}
+  function paintBase(){
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?0.78:0.6))),W=f.W,H=f.H,col=TB.cols();
+    geo={W:W,H:H,sc:W/(2*XR),cx:W/2,cy:H/2,r:f.r};
+    const kk=[W,H,f.r,col.paper,col.eth,col.warm,col.ink].join('|');if(kk===key)return;key=kk;
+    base=document.createElement('canvas');base.width=Math.round(W*f.r);base.height=Math.round(H*f.r);
+    const b=base.getContext('2d');b.setTransform(f.r,0,0,f.r,0,0);
+    /* colour field: purple inside {f<0}, warm outside, strongest near the level f=0 */
+    const n=Math.ceil(W/2),m=Math.ceil(H/2),o=document.createElement('canvas');o.width=n;o.height=m;
+    const ox=o.getContext('2d'),im=ox.createImageData(n,m),d=im.data,Pp=TB.hex(col.paper),E=TB.hex(col.eth),Wm=TB.hex(col.warm);
+    for(let j=0;j<m;j++)for(let i=0;i<n;i++){const v=F(((i+0.5)*W/n-geo.cx)/geo.sc,(geo.cy-(j+0.5)*H/m)/geo.sc);
+      const a=v<0?0.55*(1-0.45*Math.min(1,-v)):0.42*(1-Math.min(1,v/2.6)),C=v<0?E:Wm,q=4*(j*n+i);
+      for(let u=0;u<3;u++)d[q+u]=Pp[u]+(C[u]-Pp[u])*a;d[q+3]=255;}
+    ox.putImageData(im,0,0);b.imageSmoothingEnabled=true;b.drawImage(o,0,0,W,H);
+    b.strokeStyle=TB.rgba(col.ink,0.28);b.lineWidth=1;TB.ln(b,0,geo.cy,W,geo.cy);TB.ln(b,geo.cx,0,geo.cx,H);
+    TB.rich(b,[['x','i'],['1','s']],W-8,geo.cy-8,14,col.ink,'right');TB.rich(b,[['x','i'],['2','s']],geo.cx+8,18,14,col.ink,'start');
+    const gr=grid(W,H,geo.sc,geo.cx,geo.cy);grd=gr;
+    b.strokeStyle=TB.rgba(col.ink,0.32);b.lineWidth=1;for(const L of LV)contour(b,gr.v,gr.n,gr.m,gr.X,gr.Y,L);
+    b.strokeStyle=TB.rgba(col.ink,0.75);b.lineWidth=1.5;contour(b,gr.v,gr.n,gr.m,gr.X,gr.Y,0);
+    /* critical points: the saddle 0 and the minima (±1, 0) */
+    for(const x of [-1,0,1]){const X=geo.cx+x*geo.sc;b.fillStyle=col.ink;b.beginPath();b.arc(X,geo.cy,2.4,0,7);b.fill();}
+    const x0=14,y0=H-14;b.strokeStyle=col.ink;b.lineWidth=1.5;TB.ln(b,x0,y0,x0+geo.sc,y0);TB.ln(b,x0,y0-4,x0,y0+4);TB.ln(b,x0+geo.sc,y0-4,x0+geo.sc,y0+4);
+    TB.rich(b,[['1','m']],x0+geo.sc/2,y0-7,13,col.ink,'center');
+  }
+  function arrow(c,x1,y1,x2,y2,colr,w){const a=Math.atan2(y2-y1,x2-x1),hl=8;c.strokeStyle=colr;c.fillStyle=colr;c.lineWidth=w;
+    TB.ln(c,x1,y1,x2-Math.cos(a)*hl*0.6,y2-Math.sin(a)*hl*0.6);c.beginPath();c.moveTo(x2,y2);
+    c.lineTo(x2-hl*Math.cos(a-0.4),y2-hl*Math.sin(a-0.4));c.lineTo(x2-hl*Math.cos(a+0.4),y2-hl*Math.sin(a+0.4));c.closePath();c.fill();}
+  function draw(){
+    if(cv.dataset.dim==='3')return;
+    paintBase();const c=cv.getContext('2d'),g=geo,col=TB.cols(),X=x=>g.cx+x*g.sc,Y=y=>g.cy-y*g.sc;
+    c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);c.drawImage(base,0,0);c.setTransform(g.r,0,0,g.r,0,0);
+    const D=diff(pt[0],pt[1]),gr=grd;
+    /* labels stay inside the canvas */
+    const lab=(segs,x,y,colr,al)=>{const w=TB.richW(c,segs,14);if(al==='start'&&x+w>g.W-4){x=g.W-4;al='right';}else if(al==='right'&&x-w<4){x=4;al='start';}TB.rich(c,segs,x,Math.max(14,Math.min(g.H-4,y)),14,colr,al);};
+    c.strokeStyle=col.eth;c.lineWidth=2.6;contour(c,gr.v,gr.n,gr.m,gr.X,gr.Y,D.f);
+    const px=X(pt[0]),py=Y(pt[1]);
+    if(D.g>=GMIN){
+      const n=[D.f1/D.g,D.f2/D.g],t=[-n[1],n[0]];
+      c.strokeStyle=TB.rgba(col.ink,0.75);c.lineWidth=1.3;c.setLineDash([6,4]);TB.ln(c,X(pt[0]-0.7*t[0]),Y(pt[1]-0.7*t[1]),X(pt[0]+0.7*t[0]),Y(pt[1]+0.7*t[1]));c.setLineDash([]);
+      if(Math.abs(D.k)>0.04){const R=1/D.k,z=[pt[0]-R*n[0],pt[1]-R*n[1]];
+        c.strokeStyle=col.ink;c.lineWidth=1.2;c.beginPath();c.arc(X(z[0]),Y(z[1]),Math.abs(R)*g.sc,0,7);c.stroke();
+        c.fillStyle=col.paper;c.strokeStyle=col.ink;c.lineWidth=1.4;c.beginPath();c.arc(X(z[0]),Y(z[1]),3.6,0,7);c.fill();c.stroke();
+        lab([['z','i']],X(z[0])+7,Y(z[1])-6,col.ink,'start');}
+      const L=Math.min(0.55,0.09*D.g);arrow(c,px,py,X(pt[0]+L*n[0]),Y(pt[1]+L*n[1]),col.warm,2);
+      lab([['∇','m'],['f','i']],X(pt[0]+L*n[0])+8*n[0]+(n[0]<0?-4:4),Y(pt[1]+L*n[1])-8*n[1]+4,col.warm,n[0]<0?'right':'start');
+      lab([['t','i']],X(pt[0]+0.7*t[0])+6,Y(pt[1]+0.7*t[1])-6,col.ink,'start');
+    }
+    c.lineWidth=2.5;c.strokeStyle=col.paper;c.beginPath();c.arc(px,py,5.5,0,7);c.stroke();
+    c.lineWidth=1.8;c.strokeStyle=col.ink;c.fillStyle=col.eth;c.beginPath();c.arc(px,py,5,0,7);c.fill();c.stroke();
+    lab([['x','i']],px-8,py+16,col.ink,'right');
+    const head='<i>c</i> = <i>f</i>(<i>x</i>) = '+TB.fmt(D.f,3)+',',gtxt='|∇<i>f</i>(<i>x</i>)| = '+TB.fmt(D.g,2);
+    if(D.g>=GMIN){fx.innerHTML=TB.rows([[head,gtxt+','],['<i>κ</i> = '+TB.fmt(D.k,3)+(Math.abs(D.k)>0.04?',':''),Math.abs(D.k)>0.04?'радиус кривизны '+TB.fmt(1/Math.abs(D.k),3):''].filter(Boolean)]);
+      gauge.set(Math.max(-4,Math.min(9,D.k)));}
+    else{fx.innerHTML=TB.rows([[head,gtxt],['градиент мал: рядом критическая точка, и линия уровня здесь может не быть регулярной кривой; кривизна не выводится']]);
+      gauge.set(0);if(gauge.out)gauge.out.textContent='—';}
+  }
+  function at(e){const r=cv.getBoundingClientRect(),g=geo;
+    pt=[Math.max(-XR,Math.min(XR,((e.clientX-r.left)-g.cx)/g.sc)),Math.max(-g.cy/g.sc,Math.min(g.cy/g.sc,(g.cy-(e.clientY-r.top))/g.sc))];draw();}
+  cv.style.touchAction='pan-y';
+  TB.segs(cv,k=>{if(k!=='plane')return;if(TB.V3)TB.V3.dim(cv,false);key='';draw();});
+  cv.addEventListener('pointerdown',e=>{if(cv.dataset.dim==='3')return;drag=true;cv.setPointerCapture(e.pointerId);at(e);});
+  cv.addEventListener('pointermove',e=>{if(drag&&cv.dataset.dim!=='3')at(e);});
+  cv.addEventListener('pointerup',()=>{drag=false;});cv.addEventListener('pointercancel',()=>{drag=false;});
+  const redraw=()=>{key='';draw();};TB.onTheme(redraw);TB.onResize(cv,redraw);draw();
+})();
+</script>

@@ -1,0 +1,74 @@
+<script>
+(function(){
+  /* Fig. ∇.@gap: the gap g(θ) of Lemma ∇.23 for the drop and f the signed distance: a contact point p dragged along the boundary, the centre c = p − r n, the path of the finger in the frame of the object, and g(θ) next to its second-order approximation θ²/2 · r(κr − 1). */
+  const TB=window.TB,cv=document.getElementById('gap');if(!TB||!cv)return;
+  const fx=document.getElementById('gpFx'),sr=document.getElementById('gpR'),so=document.getElementById('gpROut');
+  const rad=t=>1+0.15*Math.cos(t)+0.18*Math.cos(2*t)+0.06*Math.sin(3*t),N=720,TM=30*Math.PI/180,YM=0.08,NS=121;
+  /* the boundary: points, unit tangents, outward normals n = −Jt and curvature, from the polar parametrisation */
+  const B=[];
+  for(let i=0;i<N;i++){const t=i/N*2*Math.PI,r=rad(t),r1=-0.15*Math.sin(t)-0.36*Math.sin(2*t)+0.18*Math.cos(3*t),r2=-0.15*Math.cos(t)-0.72*Math.cos(2*t)-0.54*Math.sin(3*t);
+    const x1=r1*Math.cos(t)-r*Math.sin(t),y1=r1*Math.sin(t)+r*Math.cos(t),x2=r2*Math.cos(t)-2*r1*Math.sin(t)-r*Math.cos(t),y2=r2*Math.sin(t)+2*r1*Math.cos(t)-r*Math.sin(t),l=Math.hypot(x1,y1);
+    B.push({p:[r*Math.cos(t),r*Math.sin(t)],t:[x1/l,y1/l],n:[y1/l,-x1/l],k:(x1*y2-y1*x2)/(l*l*l)});}
+  /* signed distance to the drop: distance to the polygon, negative inside (the drop is star-shaped about 0) */
+  function sd(q){let m=1e9;
+    for(let i=0;i<N;i++){const a=B[i].p,b=B[(i+1)%N].p,dx=b[0]-a[0],dy=b[1]-a[1],u=Math.max(0,Math.min(1,((q[0]-a[0])*dx+(q[1]-a[1])*dy)/(dx*dx+dy*dy))),ex=a[0]+u*dx-q[0],ey=a[1]+u*dy-q[1],d=ex*ex+ey*ey;if(d<m)m=d;}
+    return (Math.hypot(q[0],q[1])<rad(Math.atan2(q[1],q[0]))?-1:1)*Math.sqrt(m);}
+  let ip=Math.round(N*0.75),drag=false,geo=null;
+  const sm=()=>cv.parentNode.getBoundingClientRect().width<600;
+  function draw(){
+    const wide=!sm(),f=TB.fit(cv,W=>wide?Math.round(W*0.5):Math.round(W*0.85)+Math.round(W*0.62)),c=f.c,W=f.W,H=f.H,col=TB.cols(),s=wide?13:12;
+    c.clearRect(0,0,W,H);
+    const P=wide?{x:0,y:0,w:Math.round(W*0.5),h:H}:{x:0,y:0,w:W,h:Math.round(W*0.85)},G=wide?{x:P.w+12,y:0,w:W-P.w-12,h:H}:{x:0,y:P.h+8,w:W,h:H-P.h-8};
+    const r=+sr.value;so.textContent=TB.fmt(r,2);
+    const b=B[ip],p=b.p,n=b.n,C=[p[0]-r*n[0],p[1]-r*n[1]],k=b.k;
+    /* the finger in the frame of the object: q(θ) = c + R₋θ(p − c) */
+    const q=th=>{const d=[p[0]-C[0],p[1]-C[1]],cs=Math.cos(th),sn=Math.sin(th);return [C[0]+cs*d[0]+sn*d[1],C[1]-sn*d[0]+cs*d[1]];};
+    const T=[],gv=[];for(let i=0;i<NS;i++){const th=-TM+2*TM*i/(NS-1);T.push(th);gv.push(i===(NS-1)/2?0:sd(q(th)));}
+    /* left: the drop, the circle of radius |r| about c, the finger's path for |θ| ≤ 30° coloured by the sign of the gap */
+    const yb=TB.legend(c,[{k:'line',col:col.eth,t:[['палец внутри: ','r'],['g','i'],[' < 0','m']]},{k:'line',col:col.warm,t:[['зазор: ','r'],['g','i'],[' > 0','m']]}],P.x+8,P.x+P.w-8,P.y+2,s-1);
+    const sc=Math.min(P.w/3.3,(P.h-yb-8)/3.1),X=x=>P.x+P.w/2+x*sc,Y=y=>yb+(P.h-yb)/2-y*sc;
+    geo={X:X,Y:Y,sc:sc,P:P};
+    c.save();c.beginPath();c.rect(P.x,yb,P.w,P.h-yb);c.clip();
+    c.beginPath();B.forEach((e,i)=>i?c.lineTo(X(e.p[0]),Y(e.p[1])):c.moveTo(X(e.p[0]),Y(e.p[1])));c.closePath();
+    c.fillStyle=TB.rgba(col.ink,0.05);c.fill();c.strokeStyle=col.ink;c.lineWidth=2;c.stroke();
+    if(Math.abs(r)>0.01){c.strokeStyle=TB.rgba(col.ink,0.35);c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.arc(X(C[0]),Y(C[1]),Math.abs(r)*sc,0,7);c.stroke();c.setLineDash([]);
+      c.lineWidth=3.2;c.lineCap='round';for(let i=0;i+1<NS;i++){const a=q(T[i]),e=q(T[i+1]),m=(gv[i]+gv[i+1])/2;if(Math.abs(m)<1e-7)continue;c.strokeStyle=m<0?col.eth:col.warm;TB.ln(c,X(a[0]),Y(a[1]),X(e[0]),Y(e[1]));}c.lineCap='butt';}
+    c.strokeStyle=TB.rgba(col.ink,0.6);c.lineWidth=1.1;c.setLineDash([2,3]);TB.ln(c,X(p[0]+0.1*n[0]),Y(p[1]+0.1*n[1]),X(C[0]),Y(C[1]));c.setLineDash([]);
+    c.fillStyle=col.paper;c.strokeStyle=col.ink;c.lineWidth=1.8;c.beginPath();c.arc(X(C[0]),Y(C[1]),4.5,0,7);c.fill();c.stroke();
+    TB.rich(c,[['c','i']],X(C[0])+8,Y(C[1])+5,s+1,col.ink,'start');
+    c.fillStyle=col.ink;c.beginPath();c.arc(X(p[0]),Y(p[1]),5,0,7);c.fill();
+    TB.rich(c,[['p','i']],X(p[0]+0.2*n[0])+(n[0]<0?-6:6),Y(p[1]+0.2*n[1])+5,s+1,col.ink,n[0]<0?'right':'start');
+    c.restore();
+    /* right: g(θ) and its second-order approximation on fixed axes */
+    const l=G.x+(wide?44:40),rr=G.x+G.w-10,t=G.y+(wide?30:26),bt=G.y+G.h-30,U=th=>l+(th+TM)/(2*TM)*(rr-l),Vy=y=>t+(YM-y)/(2*YM)*(bt-t);
+    TB.legend(c,[{k:'line',col:col.ink,t:[['g','i'],['(','m'],['θ','i'],[')','m']]},{k:'dash',col:col.ink,t:[['θ','i'],['²','m'],['/2 · ','m'],['r','i'],['(','m'],['κr','i'],[' − 1)','m']]}],G.x+8,G.x+G.w-8,G.y+2,s-1);
+    c.strokeStyle=TB.rgba(col.ink,0.12);c.lineWidth=1;for(const y of [-0.05,0.05])TB.ln(c,l,Vy(y),rr,Vy(y));
+    c.strokeStyle=TB.rgba(col.ink,0.45);TB.ln(c,l,Vy(0),rr,Vy(0));TB.ln(c,U(0),t,U(0),bt);
+    c.font=(s-1)+'px '+TB.ui;c.fillStyle=col.muted;c.textAlign='right';
+    for(const y of [-0.05,0,0.05])c.fillText(TB.fmt(y,2),l-5,Vy(y)+4);
+    c.textAlign='center';for(const d of [-30,-15,0,15,30])c.fillText((d<0?'−':'')+Math.abs(d)+'°',U(d*Math.PI/180),bt+16);c.textAlign='start';
+    TB.rich(c,[['θ','i']],rr,bt-6,s,col.muted,'right');
+    c.save();c.beginPath();c.rect(l,t,rr-l,bt-t);c.clip();
+    const A=0.5*r*(k*r-1);c.strokeStyle=col.ink;c.lineWidth=1.4;c.setLineDash([6,4]);c.beginPath();
+    for(let i=0;i<NS;i++){const y=A*T[i]*T[i];if(i)c.lineTo(U(T[i]),Vy(y));else c.moveTo(U(T[i]),Vy(y));}c.stroke();c.setLineDash([]);
+    c.lineWidth=2.4;for(let i=0;i+1<NS;i++){const m=(gv[i]+gv[i+1])/2;c.strokeStyle=Math.abs(m)<1e-7?col.ink:m<0?col.eth:col.warm;TB.ln(c,U(T[i]),Vy(gv[i]),U(T[i+1]),Vy(gv[i+1]));}
+    c.restore();
+    if(gv.some(y=>Math.abs(y)>YM))TB.rich(c,[['часть графика за пределами оси','r']],rr,t-6,s-2,col.muted,'right');
+    const v=Math.abs(A)<0.004?'<i>r</i>(<i>κr</i> − 1) близко к нулю: второй порядок почти исчезает, и знак зазора решают следующие члены'
+      :A<0?'<i>r</i>(<i>κr</i> − 1) &lt; 0: при малом повороте в любую сторону палец оказался бы внутри предмета, поворот заблокирован'
+      :'<i>r</i>(<i>κr</i> − 1) &gt; 0: при малом повороте в любую сторону открывается зазор, палец поворот пропускает';
+    fx.innerHTML=TB.rows([['<i>κ</i> = '+TB.fmt(k,2)+',','<i>r</i> = '+TB.fmt(r,2)+',','<i>r</i>(<i>κr</i> − 1) = '+TB.fmt(2*A,3)]])+'<span>'+v+'</span>';
+  }
+  function at(e){if(!geo)return false;const R=cv.getBoundingClientRect(),x=e.clientX-R.left,y=e.clientY-R.top,P=geo.P;
+    if(!drag&&(x>P.x+P.w||y>P.y+P.h))return false;
+    const wx=(x-geo.X(0))/geo.sc,wy=(geo.Y(0)-y)/geo.sc;let bi=0,bd=1e9;
+    for(let i=0;i<N;i++){const d=(B[i].p[0]-wx)**2+(B[i].p[1]-wy)**2;if(d<bd){bd=d;bi=i;}}
+    ip=bi;draw();return true;}
+  cv.style.touchAction='pan-y';
+  cv.addEventListener('pointerdown',e=>{if(at(e)){drag=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}}});
+  cv.addEventListener('pointermove',e=>{if(drag)at(e);});
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{drag=false;}));
+  sr.addEventListener('input',draw);
+  TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>

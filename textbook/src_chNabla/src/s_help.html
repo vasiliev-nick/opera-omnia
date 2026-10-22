@@ -1,0 +1,65 @@
+<script>
+(function(){
+  /* Canvas sizing for the figures of this chapter: drawing in CSS pixels at the width of the column, sharp on dense screens; rich labels and a legend row. */
+  const TB=window.TB;if(!TB)return;
+  TB.fit=function(cv,hOf){
+    const W=Math.round(cv.parentNode.getBoundingClientRect().width)||760,H=Math.round(hOf(W)),r=window.devicePixelRatio||1;
+    const bw=Math.round(W*r),bh=Math.round(H*r);if(cv.width!==bw)cv.width=bw;if(cv.height!==bh)cv.height=bh;
+    const c=cv.getContext('2d');c.setTransform(r,0,0,r,0,0);c.textAlign='start';c.textBaseline='alphabetic';c.setLineDash([]);
+    return {c:c,W:W,H:H,r:r};};
+  TB.onResize=function(cv,fn){let w=Math.round(cv.parentNode.getBoundingClientRect().width);
+    if(window.ResizeObserver)new ResizeObserver(()=>{const nw=Math.round(cv.parentNode.getBoundingClientRect().width);if(nw!==w){w=nw;fn();}}).observe(cv.parentNode);
+    else window.addEventListener('resize',fn);};
+  /* A label is a list of [text, kind]: 'i' italic letter, 's' italic subscript, 'p' italic superscript, 'r' upright sans, 'm' upright serif. */
+  function font(k,s){return k==='i'?'italic '+(s+2)+'px '+TB.serif:(k==='s'||k==='p')?'italic '+Math.round(s*0.78)+'px '+TB.serif:k==='m'?(s+1)+'px '+TB.serif:s+'px '+TB.ui;}
+  /* The italic θ of the text fonts is often the open, cursive form; the closed formula θ is drawn by hand, so that labels match the formulas. */
+  const fsz=(k,s)=>(k==='s'||k==='p')?Math.round(s*0.78):k==='m'?s+1:k==='r'?s:s+2,dy=(k,s)=>k==='s'?s*0.3:k==='p'?-s*0.45:0;
+  TB.theta=function(c,x,y,f,col){c.save();c.translate(x,y);c.transform(1,0,-0.2,1,0,0);c.strokeStyle=col;c.setLineDash([]);
+    c.lineWidth=Math.max(1,f*0.075);c.beginPath();c.ellipse(f*0.27,-f*0.36,f*0.155,f*0.335,0,0,7);c.stroke();
+    c.lineWidth=Math.max(0.9,f*0.06);c.beginPath();c.moveTo(f*0.12,-f*0.36);c.lineTo(f*0.42,-f*0.36);c.stroke();c.restore();};
+  const segW=(c,q,s)=>{if(q[0]==='θ')return fsz(q[1],s)*0.56;c.font=font(q[1],s);return c.measureText(q[0]).width;};
+  TB.richW=function(c,segs,s){let w=0;for(const q of segs)w+=segW(c,q,s)+(q[1]==='i'?1:0);return w;};
+  TB.rich=function(c,segs,x,y,s,col,align){
+    const w=TB.richW(c,segs,s);if(align==='center')x-=w/2;else if(align==='right')x-=w;
+    c.fillStyle=col;c.textAlign='start';
+    for(const q of segs){const yy=y+dy(q[1],s);
+      if(q[0]==='θ')TB.theta(c,x,yy,fsz(q[1],s),col);else{c.font=font(q[1],s);c.fillStyle=col;c.fillText(q[0],x,yy);}
+      x+=segW(c,q,s)+(q[1]==='i'?1:0);}
+    return w;};
+  /* The same closed θ inside HTML readouts. */
+  TB.thSvg='<svg class="gth" viewBox="0 -74 58 76" aria-label="θ"><g transform="skewX(-11.3)"><ellipse cx="27" cy="-36" rx="15.5" ry="33.5"/><line x1="12" y1="-36" x2="42" y2="-36"/></g></svg>';
+  /* Legend items: {k:'line'|'thin'|'dash'|'fill', col, a (fill opacity), t: label}. Wraps to the next row when needed; returns the bottom y. */
+  TB.legend=function(c,items,L,R,y,s){
+    const sw=22,gap=18,rowH=s+9;let x=L;y+=s;
+    for(const it of items){const w=sw+6+TB.richW(c,it.t,s);
+      if(x>L&&x+w>R){x=L;y+=rowH;}
+      const ym=y-s*0.33;
+      if(it.k==='fill'){c.fillStyle=TB.rgba(it.col,it.a||0.3);c.fillRect(x,ym-6,sw,12);}
+      else{c.strokeStyle=it.col;c.lineWidth=it.k==='thin'?1.2:2.2;c.setLineDash(it.k==='dash'?[5,4]:[]);
+        c.beginPath();c.moveTo(x,ym);c.lineTo(x+sw,ym);c.stroke();c.setLineDash([]);}
+      TB.rich(c,it.t,x+sw+6,y,s,TB.tok('--ink'));x+=w+gap;}
+    return y+7;};
+  /* Readout lines for .fx: each part stays on one line, a line may break only between parts (at an ordinary space; the gap is padding of the parts). */
+  TB.rows=rows=>rows.map(r=>'<span>'+r.map(p=>'<span class="nw">'+p+'</span>').join(' ')+'</span>').join('').replace(/(<i[^>]*>)θ(<\/i>)/g,'$1'+TB.thSvg+'$2');
+  /* One gauge object per element: the flat and the spatial script of a figure share it (a second constructor would rebuild the element under the first). */
+  TB.G=id=>{const m=TB._gauges||(TB._gauges={});return m[id]||(m[id]=new TB.Gauge(id));};
+  /* Remove marks that belong to the other mode of a figure. */
+  TB.Gauge.prototype.unmark=function(...ks){for(const k of ks){const m=this.m&&this.m[k];if(m){m.remove();delete this.m[k];}}return this;};
+  TB.segs=function(cv,fn){const b=[...cv.closest('figure').querySelectorAll('.seg button')];
+    b.forEach(e=>e.addEventListener('click',()=>{b.forEach(o=>o.setAttribute('aria-pressed',o===e?'true':'false'));fn(e.dataset.k);}));
+    const on=b.find(e=>e.getAttribute('aria-pressed')==='true');return on?on.dataset.k:b[0].dataset.k;};
+})();
+</script>
+<script>
+(function(){
+  /* Theme colours, a seeded normal generator, a one-time visibility hook and a line helper. */
+  const TB=window.TB;if(!TB)return;
+  TB.cols=()=>({ink:TB.tok('--ink'),muted:TB.tok('--muted'),rule:TB.tok('--rule'),eth:TB.tok('--ether'),warm:TB.tok('--warm'),paper:TB.tok('--paper'),esoft:TB.tok('--ether-soft'),wsoft:TB.tok('--warm-soft')});
+  TB.lcg=function(seed){let s=seed>>>0;return ()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return (s+0.5)/4294967296;};};
+  TB.normal2=function(u){const a=u(),b=u(),r=Math.sqrt(-2*Math.log(a));return [r*Math.cos(2*Math.PI*b),r*Math.sin(2*Math.PI*b)];};
+  TB.reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+  TB.whenSeen=function(el,fn){if(!window.IntersectionObserver){fn();return;}
+    const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();fn();}},{threshold:0.3});io.observe(el);};
+  TB.ln=function(c,x1,y1,x2,y2){c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();};
+})();
+</script>

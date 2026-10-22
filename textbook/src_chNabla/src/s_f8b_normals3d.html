@@ -1,0 +1,58 @@
+<script>
+(function(){
+  /* Fig. ∇.@normals, spatial shapes: a contact point p dragged over a surface, the centre c = p − r n on the inner normal, the sphere of radius |r| about c, the surface coloured by whether its points are nearer to c than p is, the centres of principal curvature, and the numbers 1 − rκ₁, 1 − rκ₂ that decide between a bowl, a dome and a saddle. */
+  const TB=window.TB,cv=document.getElementById('normals');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,fx=document.getElementById('nmFx'),g=TB.G('gNr'),sr=document.getElementById('nmR'),so=document.getElementById('nmROut');
+  const st={elld:{yaw:0.55,pitch:0.42},torus:{yaw:0.4,pitch:0.62},saddle:{yaw:0.75,pitch:0.5}};
+  const P0={elld:[5.0,0.45],torus:[5.48,0.7],saddle:[0.35,0.25]},RLO=+g.min,RHI=+g.max;
+  let shape=null,cam=null;const uv={};
+  const is3=()=>cv.dataset.dim==='3';
+  TB.segs(cv,k=>{if(!V.SURF[k])return;shape=k;V.dim(cv,true);draw();V.intro(st[k],draw);});
+  function draw(){
+    if(!is3()||!shape)return;
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?1.05:0.62))),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,d=V.SURF[shape],m=V.meshOf(shape);
+    c.clearRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'fill',col:col.eth,a:0.5,t:[['дальше от ','r'],['c','i'],[', чем ','r'],['p','i']]},{k:'fill',col:col.warm,a:0.5,t:[['ближе к ','r'],['c','i'],[', чем ','r'],['p','i']]},
+      {k:'thin',col:col.ink,t:[['сфера радиуса |','r'],['r','i'],['| с центром ','r'],['c','i']]}],sm?8:14,W-8,4,sm?12:13);
+    cam=V.camera(st[shape],W,H,W*0.5,yb+(H-yb)*0.52,Math.min(W*(sm?0.3:0.22),(H-yb)*(sm?0.33:0.3)));
+    if(!uv[shape])uv[shape]=P0[shape].slice();
+    const q=uv[shape],G=V.geom(d.S,q[0],q[1],d.o),r=+sr.value;so.textContent=TB.fmt(r,2);
+    const C=V.sub(G.p,V.mul(G.n,r)),ar=Math.abs(r);
+    /* colour: a point q farther from c than p is violet, a nearer one warm; the strength is (|q−c|² − r²)/|q−p|², which near p tends to 1 − rκ(v) */
+    const cols=m.P.map(P=>{const a=V.sub(P,C),b=V.sub(P,G.p),q2=V.dot(b,b);return TB.mixh(col.eth,col.warm,q2<1e-8?0.5:0.5-0.5*Math.tanh(2.5*(V.dot(a,a)-r*r)/q2));});
+    const items=[{t:'mesh',m:m,cols:cols,grid:4,gridA:0.07,amb:0.36,alpha:0.84}];
+    /* the sphere: meridians and parallels, their hidden parts dashed */
+    if(ar>0.03){const sph=(a,b)=>V.add(C,[ar*Math.cos(b)*Math.cos(a),ar*Math.cos(b)*Math.sin(a),ar*Math.sin(b)]);
+      for(let i=0;i<6;i++){const a=i*Math.PI/6,pts=[];for(let k=0;k<=64;k++)pts.push(sph(a,k/64*2*Math.PI));items.push({t:'line',pts:pts,col:TB.rgba(col.ink,0.55),w:1,bias:0,ghost:0.22});}
+      for(const b of [-1,-0.5,0,0.5,1]){const pts=[];for(let k=0;k<=64;k++)pts.push(sph(k/64*2*Math.PI,b));items.push({t:'line',pts:pts,col:TB.rgba(col.ink,0.55),w:1,bias:0,ghost:0.22});}}
+    /* the normal line through p, c and the centres of principal curvature z₁, z₂ */
+    const inView=P=>{const Q=cam.P(P);return Q[0]>10&&Q[0]<W-10&&Q[1]>yb+12&&Q[1]<H-8;};
+    const zs=[[G.k1,'1'],[G.k2,'2']].filter(([k])=>Math.abs(k)>1/2.8).map(([k,i])=>({p:V.sub(G.p,V.mul(G.n,1/k)),i:i,k:k})).filter(z=>inView(z.p));
+    const ends=[0.5,-r,...zs.map(z=>-1/z.k)],lo=Math.min(...ends),hi=Math.max(...ends);
+    items.push({t:'line',pts:[V.add(G.p,V.mul(G.n,lo-0.15)),V.add(G.p,V.mul(G.n,hi))],col:TB.rgba(col.ink,0.7),w:1.2,bias:0.03,ghost:0.4},
+      {t:'arrow',p:G.p,v:V.mul(G.n,0.5),col:col.warm,w:2},
+      {t:'pt',p:G.p,r:5,fill:col.ink,top:cam.rot(G.n)[2]>0});
+    for(const z of zs)items.push({t:'pt',p:z.p,r:3.4,fill:col.paper,stroke:col.muted,w:1.6,top:true},
+      {t:'label',p:z.p,segs:[['z','i'],[z.i,'s']],col:col.ink,dx:7,dy:4,size:13});
+    items.push({t:'pt',p:C,r:4.6,fill:col.paper,stroke:col.ink,w:1.9,top:true},{t:'label',p:C,segs:[['c','i']],col:col.ink,dx:-8,dy:-6,al:'right'},
+      {t:'label',p:V.add(G.p,V.mul(G.n,0.58)),segs:[['n','i']],col:col.warm,dx:4,dy:-2},{t:'label',p:G.p,segs:[['p','i']],col:col.ink,dx:8,dy:14});
+    c.save();c.beginPath();c.rect(0,yb,W,H-yb);c.clip();V.render(c,cam,items,col);c.restore();
+    /* readouts */
+    const a1=1-r*G.k1,a2=1-r*G.k2,e=0.02;
+    const kind=a1>e&&a2>e?['bowl','оба числа положительны: <i>p</i> — точка строгого локального минимума расстояния до <i>c</i>, чаша']
+      :a1<-e&&a2<-e?['dome','оба числа отрицательны: <i>p</i> — точка строгого локального максимума расстояния до <i>c</i>, купол']
+      :Math.abs(a1)<=e||Math.abs(a2)<=e?['edge','одно из чисел близко к нулю: точка <i>c</i> рядом с центром главной кривизны']
+      :['sad','знаки разные: в одних направлениях расстояние до <i>c</i> растёт, в других убывает, седло'];
+    g.set(r,kind[0]==='bowl'?col.eth:kind[0]==='dome'?col.warm:col.muted);
+    for(const [key,k,lab] of [['k1',G.k1,'1/<i>κ</i><sub>1</sub>'],['k2',G.k2,'1/<i>κ</i><sub>2</sub>']]){const ok=Math.abs(k)>1e-3&&1/k>RLO&&1/k<RHI;
+      g.mark(key,ok?1/k:RLO,lab,key==='k1');g.m[key].style.display=ok?'':'none';}
+    fx.innerHTML=TB.rows([['<i>κ</i><sub>1</sub> = '+TB.fmt(G.k1,2)+',','<i>κ</i><sub>2</sub> = '+TB.fmt(G.k2,2)+',','<i>r</i> = '+TB.fmt(r,2)],
+      ['1 − <i>rκ</i><sub>1</sub> = '+TB.fmt(a1,2)+',','1 − <i>rκ</i><sub>2</sub> = '+TB.fmt(a2,2)]])+'<span>'+kind[1]+'</span>';
+  }
+  const near=(x,y)=>{if(!cam||!shape)return false;const d=V.SURF[shape],q=uv[shape]||P0[shape],P=cam.P(d.S(q[0],q[1]));return Math.hypot(P[0]-x,P[1]-y)<26;};
+  const place=(x,y,r0)=>{const d=V.SURF[shape],r=V.pick(cam,V.meshOf(shape),x,y,r0);if(r){uv[shape]=d.fix(r[0],r[1]);draw();}};
+  V.interact(cv,st.elld,{active:is3,state:()=>st[shape],grab:near,move:(x,y)=>place(x,y,40),tap:(x,y)=>place(x,y,14),redraw:draw});
+  sr.addEventListener('input',draw);
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+})();
+</script>

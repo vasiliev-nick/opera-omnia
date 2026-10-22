@@ -1,0 +1,172 @@
+<section id="a15">
+<h2>∅.15. Произведение мер и теорема Фубини</h2>
+<p>Двойной интеграл в анализе вычисляют как повторный: сначала по одной переменной при фиксированной другой, затем по второй. В теории вероятностей тот же приём нужен постоянно.</p>
+<ol class="ax">
+<li>Если у пары $(\xi,\eta)$ есть совместная плотность $p(x,y)$ (плотность пары как случайного вектора), то плотность $\xi$ получается интегрированием по второй переменной, $p_\xi(x)=\int p(x,y)\,dy$. На этой формуле стоит выражение условной плотности $p(x,y_0)/p_\eta(y_0)$ из главы о гауссовских процессах.</li>
+<li>Для независимых $\xi$ и $\eta$ формула $\mathbb E[g(\xi)h(\eta)]=\mathbb Eg(\xi)\,\mathbb Eh(\eta)$ есть повторный интеграл от функции $g(x)h(y)$.</li>
+<li>Математическое ожидание $\mathbb E\int_0^1Y_t\,dt$ случайной функции $Y_t$ хочется вычислять как $\int_0^1\mathbb EY_t\,dt$. Это перестановка интеграла по $\Omega$ и интеграла по $t$.</li>
+</ol>
+<p>Порядок интегрирования переставлять можно не всегда. Следствие ∅.49 (§∅.12: двойной ряд из неотрицательных или абсолютно суммируемых членов можно суммировать в любом порядке) — частный случай для считающей меры на $\mathbb N\times\mathbb N$, и уже там таблица с $a_{kk}=1$, $a_{k,k+1}=-1$ даёт две разные повторные суммы, $0$ и $1$. Ниже будет такой же пример для функции на квадрате и пример, где ломается не знак, а конечность меры. Сначала нужно определить σ-алгебру и меру на произведении, относительно которых «двойной интеграл» имеет смысл. Затем теоремы Тонелли и Фубини дают условия перестановки порядка интегрирования, а из них получается формула для маргинальной плотности из первого пункта.</p>
+
+<div class="stmt"><span class="lbl">Определение ∅.70 (произведение σ-алгебр)</span>
+Пусть $(X,\mathcal A)$ и $(Y,\mathcal B)$ — измеримые пространства. Множества $A\times B$ с $A\in\mathcal A$, $B\in\mathcal B$ называются <b>измеримыми прямоугольниками</b>. σ-алгебра на $X\times Y$, порождённая измеримыми прямоугольниками, называется <b>произведением σ-алгебр</b> и обозначается $\mathcal A\otimes\mathcal B$.</div>
+<p>Прямоугольники образуют полукольцо: $\varnothing=\varnothing\times\varnothing$, пересечение прямоугольников — прямоугольник (пример после определения ∅.57), и
+<span class="math-wrap">$$(A\times B)\setminus(A'\times B')=\bigl((A\setminus A')\times B\bigr)\sqcup\bigl((A\cap A')\times(B\setminus B')\bigr).$$</span>
+Для евклидовых пространств произведение борелевских σ-алгебр — снова борелевская σ-алгебра. Это нужно, чтобы применять теоремы параграфа к парам случайных векторов: плотность пары задаётся на $\mathcal B(\mathbb R^{m+n})$, а произведение мер строится на $\mathcal B(\mathbb R^m)\otimes\mathcal B(\mathbb R^n)$.</p>
+<div class="stmt"><span class="lbl">Лемма ∅.71</span>
+При отождествлении $\mathbb R^m\times\mathbb R^n=\mathbb R^{m+n}$ имеем $\mathcal B(\mathbb R^m)\otimes\mathcal B(\mathbb R^n)=\mathcal B(\mathbb R^{m+n})$.</div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Борелевские прямоугольники — прообразы при непрерывных проекциях, а брусы, порождающие $\mathcal B(\mathbb R^{m+n})$, — прямоугольники.</div>
+<div class="step"><span class="sh">Включение $\subset$.</span> Проекции $\pi_1(x,y)=x$ и $\pi_2(x,y)=y$ непрерывны, и $A\times B=\pi_1^{-1}(A)\cap\pi_2^{-1}(B)$ борелевское для борелевских $A,B$ (лемма ∅.51(б)). Значит, σ-алгебра, порождённая такими прямоугольниками, лежит в $\mathcal B(\mathbb R^{m+n})$.</div>
+<div class="step"><span class="sh">Включение $\supset$.</span> Брус в $\mathbb R^{m+n}$ есть $P\times Q$, где $P$ — брус в $\mathbb R^m$ из первых $m$ сомножителей, $Q$ — брус в $\mathbb R^n$ из остальных. Брусы порождают $\mathcal B(\mathbb R^{m+n})$ (шаг 3 доказательства следствия ∅.16), поэтому $\mathcal B(\mathbb R^{m+n})\subset\mathcal B(\mathbb R^m)\otimes\mathcal B(\mathbb R^n)$.</div>
+</div>
+
+<p>Повторный интеграл начинается с сечения — функции одной переменной, которая получается при фиксированной другой. Следующая лемма гарантирует, что сечения измеримы; без неё внутренние интегралы в теоремах Тонелли и Фубини не определены.</p>
+<div class="stmt"><span class="lbl">Лемма ∅.72 (сечения)</span>
+Для $E\subset X\times Y$, $x\in X$ и $y\in Y$ положим $E_x=\{y'\in Y:\ (x,y')\in E\}$ и $E^y=\{x'\in X:\ (x',y)\in E\}$. Для функции $f$ на $X\times Y$ положим $f_x(y)=f(x,y)$ и $f^y(x)=f(x,y)$.
+<ol class="ax" type="a">
+<li>Если $E\in\mathcal A\otimes\mathcal B$, то $E_x\in\mathcal B$ и $E^y\in\mathcal A$ при всех $x$ и $y$.</li>
+<li>Если $f:X\times Y\to[-\infty,+\infty]$ является $\mathcal A\otimes\mathcal B$-измеримой, то $f_x$ измерима на $(Y,\mathcal B)$ и $f^y$ измерима на $(X,\mathcal A)$.</li>
+</ol></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Сечение перестановочно с дополнениями и объединениями, поэтому множества с измеримыми сечениями образуют σ-алгебру, и в ней лежат прямоугольники.</div>
+<div class="step"><span class="sh">Пункт (а).</span> Зафиксируем $x$ и положим $\mathcal M=\{E\subset X\times Y:\ E_x\in\mathcal B\}$. Так как $(X\times Y)_x=Y$, $\bigl((X\times Y)\setminus E\bigr)_x=Y\setminus E_x$ и $\bigl(\bigcup_kE_k\bigr)_x=\bigcup_k(E_k)_x$, это σ-алгебра. Сечение прямоугольника $(A\times B)_x$ равно $B$ при $x\in A$ и $\varnothing$ при $x\notin A$, так что прямоугольники лежат в $\mathcal M$, и $\mathcal A\otimes\mathcal B\subset\mathcal M$. Для $E^y$ рассуждение симметрично.</div>
+<div class="step"><span class="sh">Пункт (б).</span> $\{f_x&gt;t\}=\bigl(\{f&gt;t\}\bigr)_x\in\mathcal B$ по пункту (а).</div>
+</div>
+
+<p>Для индикатора $\mathbf 1_E$ внутренний интеграл — это мера сечения $\nu(E_x)$, а внешний интеграл от неё имеет смысл, только если она измерима по $x$. Это утверждение следующей леммы. На ней держатся само определение меры на произведении и теорема Тонелли.</p>
+<div class="stmt"><span class="lbl">Лемма ∅.73 (мера сечения)</span>
+Пусть $(Y,\mathcal B,\nu)$ — пространство с σ-конечной мерой и $E\in\mathcal A\otimes\mathcal B$. Тогда функция $x\mapsto\nu(E_x)$ со значениями в $[0,+\infty]$ измерима на $(X,\mathcal A)$.</div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Для прямоугольников функция $\nu(E_x)$ простая. Множества $E$, для которых она измерима, образуют λ-систему, если $\nu$ конечна: разность сечений даёт разность конечных чисел. Теорема Дынкина переносит измеримость на $\mathcal A\otimes\mathcal B$, а σ-конечный случай сводится к конечному предельным переходом. Здесь нужна именно теорема ∅.59, а не единственность меры: σ-алгебру $\mathcal A\otimes\mathcal B$ не перечислить явно, и проверить измеримость для каждого её элемента по отдельности нельзя.</div>
+<div class="step"><span class="sh">Шаг 1. Конечная мера $\nu$.</span> Пусть $\mathcal D$ — семейство тех $E\in\mathcal A\otimes\mathcal B$, для которых $x\mapsto\nu(E_x)$ измерима.
+<ol class="ax" type="i">
+<li>Прямоугольники лежат в $\mathcal D$: $\nu\bigl((A\times B)_x\bigr)=\nu(B)\,\mathbf 1_A(x)$.</li>
+<li>$X\times Y\in\mathcal D$: функция постоянна, $\nu(Y)$.</li>
+<li>Если $E\subset F$ лежат в $\mathcal D$, то $(F\setminus E)_x=F_x\setminus E_x$ и $\nu\bigl((F\setminus E)_x\bigr)=\nu(F_x)-\nu(E_x)$ — разность измеримых функций с конечными значениями (лемма ∅.21(в)).</li>
+<li>Если $E_k\in\mathcal D$ возрастают к $E$, то $(E_k)_x$ возрастают к $E_x$, и $\nu(E_x)=\lim_k\nu\bigl((E_k)_x\bigr)$ — предел измеримых функций (лемма ∅.21(б)).</li>
+</ol>
+Итак, $\mathcal D$ — λ-система, содержащая π-систему прямоугольников. По теореме ∅.59 она содержит $\mathcal A\otimes\mathcal B$.</div>
+<div class="step"><span class="sh">Шаг 2. σ-конечная мера $\nu$.</span> Пусть $Y_k\uparrow Y$, $\nu(Y_k)&lt;\infty$. Меры $\nu_k(B)=\nu(B\cap Y_k)$ конечны, и по шагу 1 функции $x\mapsto\nu_k(E_x)$ измеримы. По непрерывности снизу $\nu(E_x)=\lim_k\nu_k(E_x)$, и предел измерим.</div>
+</div>
+
+<div class="stmt"><span class="lbl">Теорема ∅.74 (произведение мер)</span>
+Пусть $(X,\mathcal A,\mu)$ и $(Y,\mathcal B,\nu)$ — пространства с σ-конечными мерами. На $\mathcal A\otimes\mathcal B$ существует единственная мера $\pi$, для которой
+<span class="math-wrap">$$\pi(A\times B)=\mu(A)\,\nu(B)\qquad(A\in\mathcal A,\ B\in\mathcal B;\ 0\cdot\infty=0).$$</span>
+Она σ-конечна, и для всех $E\in\mathcal A\otimes\mathcal B$
+<span class="math-wrap">$$\pi(E)=\int_X\nu(E_x)\,d\mu(x)=\int_Y\mu(E^y)\,d\nu(y).$$</span>
+Мера $\pi$ называется <b>произведением мер</b> и обозначается $\mu\otimes\nu$.</div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Каждая из двух формул задаёт меру с нужными значениями на прямоугольниках: σ-аддитивность даёт почленное интегрирование ряда (упражнение ∅.3(б)). Прямоугольники образуют π-систему, и по следствию ∅.61 мера определяется значениями на них. Значит, формулы задают одну и ту же меру, и она единственна.</div>
+<div class="step"><span class="sh">Шаг 1. Первая формула задаёт меру.</span> По лемме ∅.73 функция $x\mapsto\nu(E_x)$ измерима, и $\pi_1(E)=\int\nu(E_x)\,d\mu(x)$ определено. Ясно, что $\pi_1(\varnothing)=0$. Если $E=\bigsqcup_kE_k$, то сечения $(E_k)_x$ попарно не пересекаются и $E_x=\bigsqcup_k(E_k)_x$, так что $\nu(E_x)=\sum_k\nu\bigl((E_k)_x\bigr)$, и по упражнению ∅.3(б) $\pi_1(E)=\sum_k\pi_1(E_k)$.</div>
+<div class="step"><span class="sh">Шаг 2. Прямоугольники.</span> $\nu\bigl((A\times B)_x\bigr)=c\,\mathbf 1_A(x)$ с $c=\nu(B)\in[0,+\infty]$. При конечном $c$ это простая функция с интегралом $c\,\mu(A)$. При $c=+\infty$ интеграл равен $0$, если $\mu(A)=0$ (функция $c\,\mathbf 1_A$ равна нулю п.в., и по следствию ∅.31(в) интегралы функций, равных п.в., равны), и не меньше $m\,\mu(A)$ при каждом $m$, то есть $+\infty$, если $\mu(A)&gt;0$. В обоих случаях $\pi_1(A\times B)=\mu(A)\nu(B)$.</div>
+<div class="step"><span class="sh">Шаг 3. Вторая формула.</span> Меняя ролями $X$ и $Y$ (здесь нужна σ-конечность $\mu$), получаем меру $\pi_2(E)=\int\mu(E^y)\,d\nu(y)$ с $\pi_2(A\times B)=\mu(A)\nu(B)$.</div>
+<div class="step"><span class="sh">Шаг 4. Единственность.</span> Пусть $X_k\uparrow X$, $Y_k\uparrow Y$, $\mu(X_k)&lt;\infty$, $\nu(Y_k)&lt;\infty$. Прямоугольники $X_k\times Y_k$ возрастают к $X\times Y$ и имеют конечную меру $\mu(X_k)\nu(Y_k)$. По следствию ∅.61(б) любые две меры на $\mathcal A\otimes\mathcal B$, совпадающие на прямоугольниках, совпадают. В частности, $\pi_1=\pi_2$, и это единственная мера с нужными значениями. Она σ-конечна: $X\times Y=\bigcup_k(X_k\times Y_k)$.</div>
+</div>
+<p>Пример: считающие меры. На $\mathbb N\times\mathbb N$ σ-алгебра $2^{\mathbb N}\otimes2^{\mathbb N}$ содержит все точки $\{(k,n)\}=\{k\}\times\{n\}$, а значит, и все подмножества (они счётны). Считающая мера $\#$ на $\mathbb N^2$ на прямоугольниках равна $\#(A)\,\#(B)$, поэтому $\#\otimes\#=\#$.</p>
+<p>Для меры Лебега теорема ∅.74 даёт то, чем пользуются в анализе: объём тела — интеграл площадей его сечений. Следующее следствие позволяет применять теоремы Тонелли и Фубини к интегралам по $\lambda_{m+n}$; так считаются обычные кратные интегралы и интегралы от плотностей случайных векторов.</p>
+<div class="stmt"><span class="lbl">Следствие ∅.75 (мера Лебега как произведение)</span>
+На $\mathcal B(\mathbb R^{m+n})=\mathcal B(\mathbb R^m)\otimes\mathcal B(\mathbb R^n)$ выполнено $\lambda_{m+n}=\lambda_m\otimes\lambda_n$. В частности, для борелевского $E\subset\mathbb R^{m+n}$
+<span class="math-wrap">$$\lambda_{m+n}(E)=\int_{\mathbb R^m}\lambda_n(E_x)\,d\lambda_m(x)\qquad\text{(принцип Кавальери).}$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Обе меры дают брусу произведение длин его сторон, а мера на $\mathcal B(\mathbb R^{m+n})$ определяется значениями на брусах.</div>
+<div class="step"><span class="sh">Шаг 1. Брусы.</span> Брус в $\mathbb R^{m+n}$ — это $P\times Q$ с брусами $P\subset\mathbb R^m$, $Q\subset\mathbb R^n$, и $v(P\times Q)=v(P)\,v(Q)$: объём — произведение длин всех $m+n$ сторон. По теореме ∅.74 и лемме ∅.11(г) (мера Лебега бруса равна его объёму) $(\lambda_m\otimes\lambda_n)(P\times Q)=v(P)v(Q)=\lambda_{m+n}(P\times Q)$.</div>
+<div class="step"><span class="sh">Шаг 2. Единственность.</span> Брусы образуют π-систему, порождающую $\mathcal B(\mathbb R^{m+n})$ (лемма ∅.71), и брусы $[-k,k)^{m+n}$ конечного объёма возрастают к $\mathbb R^{m+n}$. По следствию ∅.61(б) меры совпадают. Формула Кавальери — первая формула теоремы ∅.74.</div>
+</div>
+<p>Например, треугольник $\Delta=\{(x,y):\ 0\le y&lt;x&lt;1\}$ борелевский (он задан неравенствами между непрерывными функциями), его сечение $\Delta_x=[0,x)$ при $x\in(0,1)$ и пусто при остальных $x$, так что $\lambda_2(\Delta)=\int_0^1x\,dx=\tfrac12$. До конца главы меры $\lambda_n$ рассматриваются на борелевских множествах; для всех применений ниже этого достаточно.</p>
+
+<div class="stmt"><span class="lbl">Теорема ∅.76 (Тонелли)</span>
+Пусть $(X,\mathcal A,\mu)$ и $(Y,\mathcal B,\nu)$ — пространства с σ-конечными мерами и $f:X\times Y\to[0,+\infty]$ — $\mathcal A\otimes\mathcal B$-измеримая функция.
+<ol class="ax" type="a">
+<li>Функция $x\mapsto\int_Yf(x,y)\,d\nu(y)$ измерима на $(X,\mathcal A)$, а функция $y\mapsto\int_Xf(x,y)\,d\mu(x)$ измерима на $(Y,\mathcal B)$.</li>
+<li>Выполнено
+<span class="math-wrap">$$\begin{aligned}\int_{X\times Y}f\,d(\mu\otimes\nu)&=\int_X\Bigl(\int_Yf(x,y)\,d\nu(y)\Bigr)d\mu(x)\\&=\int_Y\Bigl(\int_Xf(x,y)\,d\mu(x)\Bigr)d\nu(y).\end{aligned}$$</span></li>
+</ol>
+Внутренние интегралы определены: по лемме ∅.72(б) функции $f_x$ и $f^y$ измеримы.</div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Для индикаторов это теорема ∅.74. Дальше та же лестница, что в теореме ∅.53: простые функции по линейности, неотрицательные — через стандартное приближение. Теорема Беппо Леви ∅.26 применяется трижды: во внутреннем интеграле при каждом $x$, во внешнем и в интеграле по произведению.</div>
+<div class="step"><span class="sh">Шаг 1. Индикаторы.</span> Для $f=\mathbf 1_E$, $E\in\mathcal A\otimes\mathcal B$, имеем $\int\mathbf 1_E(x,y)\,d\nu(y)=\nu(E_x)$. Измеримость — лемма ∅.73, равенство — теорема ∅.74.</div>
+<div class="step"><span class="sh">Шаг 2. Простые функции.</span> Для $f=\sum_ic_i\mathbf 1_{E_i}$ с $c_i\ge0$ внутренний интеграл равен $\sum_ic_i\,\nu\bigl((E_i)_x\bigr)$ по аддитивности (упражнение ∅.3(а)) и однородности интеграла неотрицательных функций. Это конечная сумма неотрицательных измеримых функций, она измерима (сумма — поточечный предел частичных сумм стандартных приближений, как в решении упражнения ∅.3(а)). Интегрируя ещё раз и пользуясь шагом 1, получаем $\sum_ic_i\,(\mu\otimes\nu)(E_i)=\int f\,d(\mu\otimes\nu)$.</div>
+<div class="step"><span class="sh">Шаг 3. Неотрицательные функции.</span> Пусть $\varphi_n\uparrow f$ — стандартное приближение $f$ на $X\times Y$ (лемма ∅.24); это простые $\mathcal A\otimes\mathcal B$-измеримые функции. Положим $I_n(x)=\int\varphi_n(x,y)\,d\nu(y)$ и $I(x)=\int f(x,y)\,d\nu(y)$.
+<ol class="ax" type="i">
+<li>При каждом $x$ функции $\varphi_n(x,\cdot)$ возрастают к $f(x,\cdot)$, и по теореме ∅.26 $I_n(x)\uparrow I(x)$.</li>
+<li>$I_n$ измеримы по шагу 2, и $I$ измерима как их предел (лемма ∅.21(б)). Это пункт (а).</li>
+<li>По теореме ∅.26 для $I_n\uparrow I$, по шагу 2 и по теореме ∅.26 для $\varphi_n\uparrow f$:
+<span class="math-wrap">$$\int I\,d\mu=\lim_n\int I_n\,d\mu=\lim_n\int\varphi_n\,d(\mu\otimes\nu)=\int f\,d(\mu\otimes\nu).$$</span></li>
+</ol>
+Второй порядок интегрирования рассматривается так же.</div>
+</div>
+
+<div class="stmt"><span class="lbl">Теорема ∅.77 (Фубини)</span>
+Пусть меры $\mu$ и $\nu$ σ-конечны и $f\in\mathcal L^1(\mu\otimes\nu)$.
+<ol class="ax" type="a">
+<li>Для $\mu$-почти всех $x$ функция $f(x,\cdot)$ лежит в $\mathcal L^1(\nu)$.</li>
+<li>Функция $I(x)=\int_Yf(x,y)\,d\nu(y)$, определённая для таких $x$ и равная нулю для остальных, лежит в $\mathcal L^1(\mu)$, и
+<span class="math-wrap">$$\int_XI\,d\mu=\int_{X\times Y}f\,d(\mu\otimes\nu).$$</span></li>
+</ol>
+То же верно при перемене ролей $X$ и $Y$. Коротко: оба повторных интеграла существуют и равны двойному.</div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Теорема Тонелли для $|f|$ показывает, что внутренний интеграл модуля конечен почти всюду. Вне этого множества меры ноль $f=f^+-f^-$ интегрируется по частям, и равенство получается вычитанием двух равенств Тонелли для $f^+$ и $f^-$.</div>
+<div class="step"><span class="sh">Шаг 1. Исключительное множество.</span> По теореме ∅.76 для $|f|$ функция $J(x)=\int|f(x,y)|\,d\nu(y)$ измерима и $\int J\,d\mu=\int|f|\,d(\mu\otimes\nu)&lt;\infty$. По следствию ∅.31(б) (функция с конечным интегралом конечна п.в.) множество $N=\{J=\infty\}$ измеримо и $\mu(N)=0$. При $x\notin N$ функция $f(x,\cdot)$ измерима (лемма ∅.72(б)), её значения конечны, а интеграл модуля конечен: $f(x,\cdot)\in\mathcal L^1(\nu)$. Это пункт (а).</div>
+<div class="step"><span class="sh">Шаг 2. Положительная и отрицательная части.</span> Функции $f^\pm$ неотрицательны и измеримы. По теореме ∅.76 функции $I^\pm(x)=\int f^\pm(x,y)\,d\nu(y)$ измеримы и $\int I^\pm\,d\mu=\int f^\pm\,d(\mu\otimes\nu)&lt;\infty$. Вне $N$ они конечны (не больше $J$), и $I=(I^+-I^-)\mathbf 1_{X\setminus N}$ — разность двух измеримых функций с конечными значениями.</div>
+<div class="step"><span class="sh">Шаг 3. Равенство.</span> Функции $I^\pm\mathbf 1_{X\setminus N}$ совпадают с $I^\pm$ п.в., и по следствию ∅.31(в) имеют те же конечные интегралы. По линейности интеграла (лемма ∅.32)
+<span class="math-wrap">$$\begin{aligned}\int I\,d\mu&=\int I^+\mathbf 1_{X\setminus N}\,d\mu-\int I^-\mathbf 1_{X\setminus N}\,d\mu\\&=\int f^+\,d(\mu\otimes\nu)-\int f^-\,d(\mu\otimes\nu)=\int f\,d(\mu\otimes\nu).\end{aligned}$$</span></div>
+</div>
+<p>На практике теоремы применяют вместе. Чтобы переставить порядок интегрирования для измеримой $f$ любого знака, вычисляют повторный интеграл от $|f|$ в каком-нибудь одном порядке; по теореме Тонелли это всегда законно. Если он конечен, то $f\in\mathcal L^1(\mu\otimes\nu)$, и по теореме Фубини оба повторных интеграла от $f$ равны двойному. Следствие ∅.49 — частный случай для $\mu=\nu=\#$ на $\mathbb N$: таблица $a_{kn}$ есть функция на $\mathbb N^2$, пункт (а) следствия — теорема ∅.76, пункт (б) — теорема ∅.77.</p>
+<p>Рис. ∅.40 показывает обе стороны равенства для неотрицательной функции на квадрате. Сечение $f(x,\cdot)$ при фиксированном $x$ — функция одной переменной, её интеграл $I(x)$ — площадь под ней. Повторный интеграл складывает эти площади по $x$.</p>
+<figure>
+  <div class="fig1"><canvas id="fubini" width="760" height="460" aria-label="Неотрицательная функция на квадрате, её сечение и внутренний интеграл как функция внешней переменной"></canvas></div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Порядок интегрирования"><button type="button" data-k="X" aria-pressed="true">сечения <i>x</i> = <i>s</i></button><button type="button" data-k="Y" aria-pressed="false">сечения <i>y</i> = <i>s</i></button></div>
+    <label for="fbS">Положение сечения $s$ <input id="fbS" type="range" min="0" max="1" step="0.005" value="0.38"><output id="fbSOut">0,38</output></label>
+  </div>
+  <div id="fbFx" class="fx" aria-live="polite"></div>
+  <div class="ro" style="--lw:12.5rem">
+    <div class="rr"><span class="rl">$\int_0^s\!\bigl(\int_0^1f(x,y)\,dy\bigr)dx$</span><span class="gauge" id="gFb1" data-min="0" data-max="1.2"></span><output class="gv"></output></div>
+    <div class="rr"><span class="rl">$\int_0^s\!\bigl(\int_0^1f(x,y)\,dx\bigr)dy$</span><span class="gauge" id="gFb2" data-min="0" data-max="1.2"></span><output class="gv"></output></div>
+  </div>
+  <figcaption>Рис. ∅.40. Слева — неотрицательная функция $f$ на квадрате $[0,1]^2$: чем насыщеннее цвет, тем больше значение; линия — сечение на уровне $s$ (вертикальное $x=s$ или горизонтальное $y=s$, переключатель под рисунком; линию можно перетаскивать). Справа вверху — график сечения ($f(s,\cdot)$ или $f(\cdot,s)$) и площадь под ним, внутренний интеграл. Справа внизу — внутренний интеграл $I$ как функция положения сечения; закрашена площадь под этим графиком от $0$ до $s$. Шкалы показывают эту площадь для обоих порядков: $\int_0^s\bigl(\int_0^1f\,dy\bigr)dx$ — интеграл $f$ по полосе $[0,s]\times[0,1]$, $\int_0^s\bigl(\int_0^1f\,dx\bigr)dy$ — по полосе $[0,1]\times[0,s]$. Это разные числа, но при $s=1$ оба равны $\int f\,d\lambda_2$ (метки): это теорема ∅.76. Интегралы вычислены по сетке $400\times400$.</figcaption>
+</figure>
+
+<h3>Без условий теоремы равенство ломается</h3>
+<p><b>Знак.</b> Пусть $f(x,y)=\dfrac{x^2-y^2}{(x^2+y^2)^2}$ на $(0,1]^2$ и $f=0$ вне этого квадрата. Функция борелевская: она непрерывна на $\mathbb R^2\setminus\{0\}$ и умножена на индикатор борелевского квадрата.</p>
+<ol class="ax">
+<li><b>Внутренний интеграл по $y$.</b> Зафиксируем $x\in(0,1]$. Функция $y\mapsto f(x,y)$ непрерывна на $[0,1]$, и $\frac{\partial}{\partial y}\frac y{x^2+y^2}=\frac{x^2+y^2-2y^2}{(x^2+y^2)^2}=f(x,y)$. По факту ∅.27 (интеграл Лебега непрерывной функции по отрезку равен её интегралу Римана) и формуле Ньютона–Лейбница
+<span class="math-wrap">$$\int_0^1f(x,y)\,dy=\frac y{x^2+y^2}\Big|_{y=0}^{y=1}=\frac1{1+x^2},$$</span><span class="math-wrap">$$\int_0^1\frac{dx}{1+x^2}=\operatorname{arctg}1=\frac\pi4.$$</span></li>
+<li><b>Другой порядок.</b> $f(y,x)=-f(x,y)$, поэтому $\int_0^1f(x,y)\,dx=-\frac1{1+y^2}$, и повторный интеграл в обратном порядке равен $-\frac\pi4$.</li>
+<li><b>Где нарушено условие.</b> На треугольнике $0&lt;y&lt;x\le1$ функция $f$ положительна, и $\int_0^xf(x,y)\,dy=\frac x{2x^2}=\frac1{2x}$. По теореме ∅.76 $\int|f|\,d\lambda_2\ge\int_0^1\frac{dx}{2x}=+\infty$ (пример из §∅.7: $\int_{(0,1]}\frac{dx}x=+\infty$), так что $f\notin\mathcal L^1(\lambda_2)$, и теорема ∅.77 неприменима. Каждый повторный интеграл существует, потому что при фиксированной внешней переменной внутренний интеграл конечен; но положительная и отрицательная массы $f$ обе бесконечны и сосредоточены у угла $(0,0)$.</li>
+</ol>
+<figure>
+  <div class="fig1"><canvas id="fcounter" width="760" height="440" aria-label="Функция (x²−y²)/(x²+y²)² на квадрате: положительная масса под диагональю, отрицательная над ней, обе бесконечны у угла"></canvas></div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Полоса"><button type="button" data-k="X" aria-pressed="true">полоса [<i>ε</i>, 1] × [0, 1]</button><button type="button" data-k="Y" aria-pressed="false">полоса [0, 1] × [<i>ε</i>, 1]</button></div>
+    <label for="fcE">Отступ от угла $\varepsilon$ <input id="fcE" type="range" min="0" max="5" step="0.05" value="1.2"><output id="fcEOut">0,063</output></label>
+  </div>
+  <div id="fcFx" class="fx" aria-live="polite"></div>
+  <div class="ro" style="--lw:12.5rem">
+    <div class="rr"><span class="rl">$\int_\varepsilon^1\!\bigl(\int_0^1f\,dy\bigr)dx$</span><span class="gauge" id="gFc1" data-min="-1" data-max="1" data-zero="0"></span><output class="gv"></output></div>
+    <div class="rr"><span class="rl">$\int_\varepsilon^1\!\bigl(\int_0^1f\,dx\bigr)dy$</span><span class="gauge" id="gFc2" data-min="-1" data-max="1" data-zero="0"></span><output class="gv"></output></div>
+    <div class="rr"><span class="rl">$\int_{[\varepsilon,1]^2}f^+\,d\lambda_2$</span><span class="gauge" id="gFc3" data-min="0" data-max="6"></span><output class="gv"></output></div>
+  </div>
+  <figcaption>Рис. ∅.41. Функция $f(x,y)=(x^2-y^2)/(x^2+y^2)^2$ на $(0,1]^2$: тёплый цвет — $f&gt;0$ (под диагональю), фиолетовый — $f&lt;0$ (над ней); насыщенность растёт с $|f|$ и у угла $(0,0)$ становится полной. Пунктирный квадрат — угол $[0,\varepsilon)^2$; выделенная полоса — область внешнего интегрирования в первой или второй шкале, переключатель под рисунком выбирает полосу. Первая шкала — $\int_\varepsilon^1\frac{dx}{1+x^2}=\frac\pi4-\operatorname{arctg}\varepsilon$, вторая — то же со знаком минус; метки $\pm\frac\pi4$ — повторные интегралы по всему квадрату. Третья шкала — положительная масса $f$ на квадрате $[\varepsilon,1]^2$, равная $\frac12\ln\frac1\varepsilon-\operatorname{arctg}\frac1\varepsilon+\frac\pi4$; при $\varepsilon\to0$ она уходит в $+\infty$. На самом квадрате $[\varepsilon,1]^2$ функция ограничена, теорема ∅.77 применима, и оба повторных интеграла по нему равны $0$, так как $f(y,x)=-f(x,y)$. Ползунок задаёт $\varepsilon=10^{-u}$, $u\in[0,5]$.</figcaption>
+</figure>
+<p><b>σ-конечность.</b> Пусть $X=Y=[0,1]$ с борелевскими подмножествами, $\mu=\lambda_1$, а $\nu=\#$ — считающая мера, которая не σ-конечна. Диагональ $D=\{(x,x):\ x\in[0,1]\}$ лежит в произведении σ-алгебр: точки $x,y\in[0,1)$ лежат в одном двоичном полуинтервале каждого ранга $k$ тогда и только тогда, когда $x=y$, поэтому
+<span class="math-wrap">$$D=\{(1,1)\}\cup\bigcap_{k\ge1}\,\bigcup_{j=0}^{2^k-1}\bigl[j2^{-k},(j+1)2^{-k}\bigr)^2.$$</span>
+Сечения: $D_x=\{x\}$ и $D^y=\{y\}$, так что функции $x\mapsto\nu(D_x)=1$ и $y\mapsto\mu(D^y)=0$ постоянны, и повторные интегралы индикатора $\mathbf 1_D$ различны:
+<span class="math-wrap">$$\int_{[0,1]}\nu(D_x)\,d\lambda_1(x)=1,\qquad\int_{[0,1]}\mu(D^y)\,d\#(y)=0.$$</span>
+Значит, нет меры $\pi$ на $\mathcal A\otimes\mathcal B$ с $\pi(A\times B)=\lambda_1(A)\,\#(B)$, для которой были бы верны обе формулы теоремы ∅.74, и теорема Тонелли для $\mathbf 1_D$ неверна. В доказательстве теоремы ∅.74 σ-конечность $\nu$ нужна дважды: в лемме ∅.73 (вычитание конечных мер сечений) и в шаге 4, где без возрастающих прямоугольников конечной меры следствие ∅.61(б) неприменимо, и мера на произведении значениями на прямоугольниках не определяется.</p>
+
+<h3>Совместная и маргинальная плотности</h3>
+<p>Теперь можно ответить на первый вопрос начала параграфа: как по плотности пары найти плотность одной компоненты. Ответ даёт следующая лемма; с её помощью в упражнениях проверяется определение условного распределения из главы о гауссовских процессах.</p>
+<div class="stmt"><span class="lbl">Лемма ∅.78 (маргинальная плотность)</span>
+Пусть $\xi$ и $\eta$ — случайные векторы в $\mathbb R^m$ и $\mathbb R^n$, и пара $(\xi,\eta)$ имеет плотность $p$ на $\mathbb R^{m+n}$. Тогда функция
+<span class="math-wrap">$$p_\xi(x)=\int_{\mathbb R^n}p(x,y)\,d\lambda_n(y)\in[0,+\infty]$$</span>
+борелевская и конечна $\lambda_m$-п.в.; функция, равная $p_\xi$ там, где она конечна, и нулю в остальных точках, — плотность $\xi$. То же для $\eta$ с $p_\eta(y)=\int p(x,y)\,d\lambda_m(x)$.</div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Событие $\{\xi\in A\}$ — это $\{(\xi,\eta)\in A\times\mathbb R^n\}$, а интеграл плотности по прямоугольнику $A\times\mathbb R^n$ — по теореме Тонелли — интеграл по $A$ от интеграла по $y$.</div>
+<div class="step"><span class="sh">Шаг 1. Формула для вероятностей.</span> По теореме ∅.76(а) и следствию ∅.75 $p_\xi$ борелевская. Для борелевского $A\subset\mathbb R^m$
+<span class="math-wrap">$$\begin{aligned}P(\xi\in A)&=P\bigl((\xi,\eta)\in A\times\mathbb R^n\bigr)=\int_{A\times\mathbb R^n}p\,d\lambda_{m+n}\\&=\int_A\Bigl(\int_{\mathbb R^n}p(x,y)\,d\lambda_n(y)\Bigr)d\lambda_m(x)=\int_Ap_\xi\,d\lambda_m.\end{aligned}$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Конечность.</span> При $A=\mathbb R^m$ получаем $\int p_\xi\,d\lambda_m=1$, и по следствию ∅.31(б) $p_\xi&lt;\infty$ п.в. Изменённая функция совпадает с $p_\xi$ п.в. и по следствию ∅.31(в) имеет те же интегралы по всем $A$.</div>
+</div>
+<p>Пример. Пусть $(\xi,\eta)$ имеет плотность $p=2\cdot\mathbf 1_\Delta$, где $\Delta=\{0\le y&lt;x&lt;1\}$ — треугольник выше ($\lambda_2(\Delta)=\tfrac12$, так что $\int p=1$). Тогда $p_\xi(x)=2x$ и $p_\eta(y)=2(1-y)$ на $(0,1)$ и $0$ вне. Обратного пути нет: по плотностям $p_\xi$ и $p_\eta$ совместную плотность восстановить нельзя. Например, плотность $p_\xi(x)p_\eta(y)$ имеет те же маргинальные плотности, но положительна на всём квадрате. Когда совместная плотность равна произведению маргинальных, выясняется в §∅.16.</p>
+</section>

@@ -1,0 +1,104 @@
+<script>
+(function(){
+  /* Fig. ∇.@roof: the graph x₃ = f_K(x) of the signed distance of an ellipse or a peanut, its crests (points with two nearest boundary points), the level line {f_K = c}, and a draggable point with the straight lines of slope 1 that run from it down to its nearest boundary points; a top view in the corner. */
+  const TB=window.TB,cv=document.getElementById('roof');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,sl=document.getElementById('rfC'),so=document.getElementById('rfCOut'),fx=document.getElementById('rfFx');
+  const SH={
+    ell:{X:2.5,Y:1.55,g:t=>[2*Math.cos(t),Math.sin(t)],inside:(x,y)=>x*x/4+y*y<1,p0:[1.25,0.95]},
+    pea:{X:2.05,Y:1.95,g:t=>{const c=Math.cos(2*t),r=Math.sqrt(c+Math.sqrt(c*c+0.6));return [r*Math.cos(t),r*Math.sin(t)];},
+      inside:(x,y)=>{const q=x*x+y*y;return q*q-2*(x*x-y*y)<0.6;},p0:[0.55,1.2]}};
+  const M=720,NX=97;
+  /* distances to the polygon of M boundary points: the nearest point, its index, and the nearest point on a far part of the boundary */
+  function near(S,x,y){let m=1e9,k0=0,P=null;const Q=S.Q;
+    for(let k=0;k<M;k++){const A=Q[k],B=Q[(k+1)%M],ux=B[0]-A[0],uy=B[1]-A[1],wx=x-A[0],wy=y-A[1];
+      let s=(wx*ux+wy*uy)/(ux*ux+uy*uy);s=s<0?0:s>1?1:s;const dx=wx-s*ux,dy=wy-s*uy,q=dx*dx+dy*dy;if(q<m){m=q;k0=k;P=[A[0]+s*ux,A[1]+s*uy];}}
+    return {d:Math.sqrt(m),k:k0,P:P};}
+  /* the second candidate: the nearest point among boundary points at least a quarter of the samples away from the first */
+  function second(S,x,y,k0){let m=1e9,P=null;const Q=S.Q;
+    for(let k=0;k<M;k++){const di=Math.min(Math.abs(k-k0),M-Math.abs(k-k0));if(di<M/8)continue;
+      const A=Q[k],B=Q[(k+1)%M],ux=B[0]-A[0],uy=B[1]-A[1],wx=x-A[0],wy=y-A[1];
+      let s=(wx*ux+wy*uy)/(ux*ux+uy*uy);s=s<0?0:s>1?1:s;const dx=wx-s*ux,dy=wy-s*uy,q=dx*dx+dy*dy;if(q<m){m=q;P=[A[0]+s*ux,A[1]+s*uy];}}
+    return {d:Math.sqrt(m),P:P};}
+  /* once per shape: f_K on the grid (odd sizes, so that no grid line runs exactly along a symmetry axis, where the nearest point is ambiguous), the nearest-point index at each vertex, and the crests */
+  function prep(S){if(S.F)return S;S.Q=[];for(let i=0;i<M;i++)S.Q.push(S.g(i/M*2*Math.PI));
+    const NY=2*Math.round(NX*S.Y/S.X/2)+1,F=new Float64Array((NX+1)*(NY+1)),I=new Int32Array((NX+1)*(NY+1)),P=[],U=[],Vv=[];
+    for(let j=0;j<=NY;j++)for(let i=0;i<=NX;i++){const x=-S.X+2*S.X*i/NX,y=-S.Y+2*S.Y*j/NY,r=near(S,x,y),f=S.inside(x,y)?-r.d:r.d,id=j*(NX+1)+i;
+      F[id]=f;I[id]=r.k;P.push([x,y,f]);U.push(x);Vv.push(y);}
+    S.NY=NY;S.F=F;
+    const fAt=(x,y)=>{const gi=(x+S.X)/(2*S.X)*NX,gj=(y+S.Y)/(2*S.Y)*NY,i=Math.max(0,Math.min(NX-1,Math.floor(gi))),j=Math.max(0,Math.min(NY-1,Math.floor(gj))),a=gi-i,b=gj-j,k=j*(NX+1)+i;
+      return F[k]*(1-a)*(1-b)+F[k+1]*a*(1-b)+F[k+NX+1]*(1-a)*b+F[k+NX+2]*a*b;};
+    const fix=(x,y)=>[Math.max(-S.X,Math.min(S.X,x)),Math.max(-S.Y,Math.min(S.Y,y))];
+    S.mesh={nu:NX,nv:NY,P:P,U:U,V:Vv,o:{fix:fix},S:(x,y)=>[x,y,fAt(x,y)]};S.fix=fix;
+    /* the drawn surface is a coarser mesh with values interpolated from the grid; the lines on it come from the full grid */
+    const nu=48,nv=Math.round(48*S.Y/S.X),P2=[],U2=[],V2=[];
+    for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){const x=-S.X+2*S.X*i/nu,y=-S.Y+2*S.Y*j/nv;P2.push([x,y,fAt(x,y)]);U2.push(x);V2.push(y);}
+    S.view={nu:nu,nv:nv,P:P2,U:U2,V:V2,o:{fix:fix},S:S.mesh.S};
+    /* crests: grid edges whose ends have nearest points far apart along the boundary; the crossing is where the two distances are equal */
+    const jump=(a,b)=>{const di=Math.abs(I[a]-I[b]);return Math.min(di,M-di)>M/40;};
+    const cross=(a,b)=>{const A=P[a],B=P[b],Q1=S.Q[I[a]],Q2=S.Q[I[b]];
+      const g=s=>{const x=A[0]+s*(B[0]-A[0]),y=A[1]+s*(B[1]-A[1]);return Math.hypot(x-Q1[0],y-Q1[1])-Math.hypot(x-Q2[0],y-Q2[1]);};
+      let lo=0,hi=1,glo=g(0);if(glo*g(1)>0)return null;for(let it=0;it<30;it++){const mid=(lo+hi)/2,gm=g(mid);if((gm<0)===(glo<0)){lo=mid;glo=gm;}else hi=mid;}
+      const s=(lo+hi)/2,x=A[0]+s*(B[0]-A[0]),y=A[1]+s*(B[1]-A[1]),d=Math.hypot(x-Q1[0],y-Q1[1]);return [x,y,S.inside(x,y)?-d:d];};
+    const cr=[];
+    for(let j=0;j<NY;j++)for(let i=0;i<NX;i++){const a=j*(NX+1)+i,b=a+1,c=a+NX+2,e=a+NX+1,pts=[];
+      for(const [p,q] of [[a,b],[b,c],[e,c],[a,e]])if(jump(p,q)){const z=cross(p,q);if(z)pts.push(z);}
+      if(pts.length===2)cr.push([pts[0],pts[1]]);}
+    S.crest=cr;return S;}
+  /* level lines of f_K on the grid, as segments at height c */
+  function level(S,c){const out=[],NY=S.NY,F=S.F,P=S.mesh.P;
+    for(let j=0;j<NY;j++)for(let i=0;i<NX;i++){const id=[j*(NX+1)+i,j*(NX+1)+i+1,(j+1)*(NX+1)+i+1,(j+1)*(NX+1)+i],w=id.map(k=>F[k]-c),pts=[];
+      for(let e=0;e<4;e++){const a=w[e],b=w[(e+1)%4];if((a<0)!==(b<0)){const t=a/(a-b),A=P[id[e]],B=P[id[(e+1)%4]];pts.push([A[0]+t*(B[0]-A[0]),A[1]+t*(B[1]-A[1]),c]);}}
+      if(pts.length===2)out.push([pts[0],pts[1]]);else if(pts.length===4)out.push([pts[0],pts[1]],[pts[2],pts[3]]);}
+    return out;}
+  const st={ell:{yaw:0.35,pitch:0.72},pea:{yaw:0.5,pitch:0.72}};
+  let md=TB.segs(cv,k=>{if(!SH[k])return;md=k;draw();V.intro(st[md],draw);}),cam=null,xy={},lv={};
+  let col0=null,cols={};
+  function draw(){
+    const S=prep(SH[md]),c0=+sl.value;so.textContent=TB.fmt(c0,2);
+    const sm=cv.parentNode.getBoundingClientRect().width<520,f=TB.fit(cv,W=>Math.round(W*(W<520?1.3:0.62))),c=f.c,W=f.W,H=f.H,col=TB.cols(),s=sm?12:13;
+    c.fillStyle=col.paper;c.fillRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'line',col:col.ink,t:[['граница ','r'],['Γ','m']]},{k:'line',col:col.eth,t:[['{','m'],['f','i'],['K','s'],[' = ','m'],['c','i'],['}','m']]},
+      {k:'line',col:col.warm,t:[['гребни','r']]},{k:'dash',col:col.ink,t:[['спуск к ближайшей точке','r']]}],sm?8:14,W-8,4,s);
+    /* top view: a strip along the bottom on a phone, the lower right corner otherwise */
+    const iw=sm?Math.round(W*0.4):Math.round(W*0.24),ih=Math.round(iw*S.Y/S.X),ix=W-iw-(sm?8:12),iy=H-ih-(sm?8:12);
+    const sc=sm?Math.min(W*0.115,(iy-yb)*0.19):Math.min(W*0.12,(H-yb)*0.2);
+    cam=V.camera(st[md],W,H,sm?W*0.5:W*0.43,sm?yb+(iy-yb)*0.5:yb+(H-yb)*0.5,sc);
+    /* colours per vertex, cached per shape and theme: the inside of K purple, the outside warm, both pale so that the lines read */
+    const ck=md+col.eth+col.warm+col.paper;if(col0!==ck){col0=ck;cols={};}
+    if(!cols[md])cols[md]=S.view.P.map(p=>TB.mixh(TB.mixh(col.paper,col.eth,0.55),TB.mixh(col.paper,col.warm,0.45),0.5+0.5*Math.tanh(p[2]/0.15)));
+    const lk=md+'|'+c0;if(!lv[lk]){lv={};lv[lk]={c:level(S,c0),g:level(S,0)};}
+    const L=lv[lk];
+    const items=[{t:'mesh',m:S.view,cols:cols[md],grid:4,gridA:0.1,amb:0.38},
+      {t:'segs',s:L.g,col:col.ink,w:2.4,bias:0.03},{t:'segs',s:L.c,col:col.eth,w:2.4,bias:0.035},{t:'segs',s:S.crest,col:col.warm,w:2.4,bias:0.04}];
+    /* the chosen point, its nearest boundary point y and the straight descent from (x, f(x)) to (y, 0); a second one when two nearest points compete */
+    if(!xy[md])xy[md]=S.p0.slice();const [x,y]=xy[md],r=near(S,x,y),r2=second(S,x,y,r.k),fv=S.inside(x,y)?-r.d:r.d;
+    const two=r2.P&&r2.d-r.d<0.02,top=[x,y,fv];
+    items.push({t:'line',pts:[top,[x,y,0]],col:TB.rgba(col.ink,0.45),w:1,dash:[2,3],bias:0.05,ghost:0.3});
+    const ys=[r.P].concat(two?[r2.P]:[]);
+    for(const Y of ys)items.push({t:'line',pts:[top,[Y[0],Y[1],0]],col:col.ink,w:1.6,dash:[5,4],bias:0.06,ghost:0.4},{t:'pt',p:[Y[0],Y[1],0],r:3.8,fill:col.paper,stroke:col.ink,w:1.6,bias:0.08});
+    items.push({t:'pt',p:top,r:5,fill:col.ink,bias:0.1});
+    c.save();c.beginPath();c.rect(0,yb,W,H-yb);c.clip();V.render(c,cam,items,col);c.restore();
+    /* top view */
+    const X=u=>ix+(u+S.X)/(2*S.X)*iw,Y=v=>iy+ih-(v+S.Y)/(2*S.Y)*ih;
+    c.fillStyle=TB.rgba(col.paper,0.9);c.strokeStyle=col.rule;c.lineWidth=1;c.beginPath();c.rect(ix,iy,iw,ih);c.fill();c.stroke();
+    c.save();c.beginPath();c.rect(ix,iy,iw,ih);c.clip();
+    const seg2=(ss,colr,w)=>{c.strokeStyle=colr;c.lineWidth=w;c.beginPath();for(const [a,b] of ss){c.moveTo(X(a[0]),Y(a[1]));c.lineTo(X(b[0]),Y(b[1]));}c.stroke();};
+    seg2(L.g,col.ink,1.6);seg2(L.c,col.eth,1.6);seg2(S.crest,col.warm,1.6);
+    c.setLineDash([3,3]);c.strokeStyle=col.ink;c.lineWidth=1;for(const Q of ys)TB.ln(c,X(x),Y(y),X(Q[0]),Y(Q[1]));c.setLineDash([]);
+    c.fillStyle=col.ink;c.beginPath();c.arc(X(x),Y(y),3.2,0,7);c.fill();c.restore();
+    TB.rich(c,[['вид сверху','r']],ix+5,iy+13,11,col.muted,'start');
+    /* readout */
+    const sub=i=>'<sub>'+i+'</sub>';
+    fx.innerHTML=TB.rows([['<i>f</i>'+sub('<i>K</i>')+'(<i>x</i>) = '+TB.fmt(fv,2)+',',two?'две ближайшие точки границы:':'ближайшая точка границы одна:',
+      ...(two?['<i>x</i> на гребне,','<i>f</i>'+sub('<i>K</i>')+' в ней не дифференцируема']:['спуск к ней — прямая с наклоном 1'])]]);
+  }
+  const grab=(px,py)=>{if(!cam)return false;const S=SH[md],q=xy[md]||S.p0,r=near(prep(S),q[0],q[1]),P=cam.P([q[0],q[1],S.inside(q[0],q[1])?-r.d:r.d]);return Math.hypot(P[0]-px,P[1]-py)<24;};
+  const place=(px,py,r0)=>{const S=prep(SH[md]),r=V.pick(cam,S.view,px,py,r0);if(r){xy[md]=S.fix(r[0],r[1]);draw();}};
+  cv.dataset.dim='3';cv.style.touchAction='none';cv.style.cursor='grab';
+  V.interact(cv,st.ell,{active:()=>true,state:()=>st[md],grab:grab,move:(x,y)=>place(x,y,40),tap:(x,y)=>place(x,y,14),redraw:draw});
+  sl.addEventListener('input',draw);
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+  /* the grid of the first shape is computed when the figure comes near the screen */
+  TB.whenSeen(cv,()=>{draw();V.intro(st[md],draw);});
+})();
+</script>

@@ -1,0 +1,82 @@
+<script>
+(function(){
+  /* Fig. ∇.@cusp: the family γ_ε(τ) = (τ², τ³ + ετ): a loop for ε < 0, the cusp for ε = 0, a smooth nose for ε > 0; velocity and unit tangent at the moment τ, the path of the unit tangent on the unit circle, and the speed |γ′(τ)| as a function of τ. */
+  const TB=window.TB,cv=document.getElementById('cusp');if(!TB||!cv)return;
+  const sE=document.getElementById('cuE'),oE=document.getElementById('cuEOut'),sT=document.getElementById('cuT'),oT=document.getElementById('cuTOut'),
+    bGo=document.getElementById('cuGo'),fx=document.getElementById('cuFx'),gauge=TB.G?TB.G('gCu'):new TB.Gauge('gCu');
+  const T0=1.1,TP=2*Math.PI,K=0.33;
+  const g=(t,e)=>[t*t,t*t*t+e*t],dg=(t,e)=>[2*t,3*t*t+e],sp=(t,e)=>Math.hypot(2*t,3*t*t+e);
+  let anim=0,drag=false,geo=null;
+  function arrow(c,x1,y1,x2,y2,col,lw,hs){const a=Math.atan2(y2-y1,x2-x1),l=Math.hypot(x2-x1,y2-y1);c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw;
+    if(l<1)return;hs=Math.min(hs,l*0.9);TB.ln(c,x1,y1,x2-hs*0.6*Math.cos(a),y2-hs*0.6*Math.sin(a));c.beginPath();c.moveTo(x2,y2);
+    c.lineTo(x2-hs*Math.cos(a-0.4),y2-hs*Math.sin(a-0.4));c.lineTo(x2-hs*Math.cos(a+0.4),y2-hs*Math.sin(a+0.4));c.closePath();c.fill();}
+  function draw(){
+    const e=+sE.value,tau=+sT.value,col=TB.cols();oE.textContent=TB.fmt(e,2);oT.textContent=TB.fmt(tau,2);
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?1.08:0.52))),c=f.c,W=f.W,H=f.H,sm=W<520,fs=sm?12:13;c.clearRect(0,0,W,H);
+    /* panels: the curve, the unit circle of directions, the speed graph */
+    const A=sm?{x0:0,x1:W*0.52,y0:6,y1:H*0.64}:{x0:0,x1:W*0.36,y0:8,y1:H-8};
+    const sc=Math.min((A.x1-A.x0)/1.95,(A.y1-A.y0)/4.0),ox=A.x0+0.42*sc+6,oy=(A.y0+A.y1)/2,P=p=>[ox+p[0]*sc,oy-p[1]*sc];
+    const B=sm?{cx:W*0.77,cy:H*0.3,r:Math.min(W*0.17,H*0.2)}:{cx:W*0.52,cy:H*0.47,r:Math.min(W*0.12,H*0.3)};
+    const G=sm?{x0:40,x1:W-12,y0:H*0.72,y1:H-24}:{x0:W*0.7,x1:W-14,y0:H*0.16,y1:H*0.8};
+    geo={P:P,sc:sc};
+    /* axes of the curve panel */
+    c.strokeStyle=TB.rgba(col.ink,0.28);c.lineWidth=1;TB.ln(c,ox-0.35*sc,oy,ox+1.45*sc,oy);TB.ln(c,ox,oy-1.95*sc,ox,oy+1.95*sc);
+    c.fillStyle=TB.rgba(col.ink,0.55);c.fillRect(ox+sc-0.5,oy-3,1,6);c.fillRect(ox-3,oy-sc-0.5,6,1);c.fillRect(ox-3,oy+sc-0.5,6,1);
+    TB.rich(c,[['1','m']],ox+sc,oy+15,11,col.muted,'center');TB.rich(c,[['1','m']],ox-6,oy-sc+4,11,col.muted,'right');
+    TB.rich(c,[['x','i'],['1','s']],ox+1.45*sc,oy-6,fs,col.muted,'right');TB.rich(c,[['x','i'],['2','s']],ox+6,oy-1.95*sc+12,fs,col.muted,'start');
+    /* the curve, purple where it has been travelled */
+    const path=(a,b)=>{c.beginPath();for(let i=0;i<=300;i++){const Q=P(g(a+(b-a)*i/300,e));if(i)c.lineTo(Q[0],Q[1]);else c.moveTo(Q[0],Q[1]);}c.stroke();};
+    c.lineCap='round';c.strokeStyle=TB.rgba(col.ink,0.55);c.lineWidth=1.6;path(-T0,T0);
+    c.strokeStyle=col.eth;c.lineWidth=3;if(tau>-T0)path(-T0,tau);c.lineCap='butt';
+    if(e<0){const Q=P([-e,0]);c.strokeStyle=col.ink;c.lineWidth=1.2;c.beginPath();c.arc(Q[0],Q[1],5,0,TP);c.stroke();}
+    /* velocity (a third of its length) and unit tangent */
+    const p=g(tau,e),d=dg(tau,e),v=sp(tau,e),Q=P(p),hs=8;
+    if(v>1e-9){const t=[d[0]/v,d[1]/v],Ab=P([p[0]+K*d[0],p[1]+K*d[1]]),Bt=P([p[0]+0.5*t[0],p[1]+0.5*t[1]]);
+      arrow(c,Q[0],Q[1],Ab[0],Ab[1],col.eth,4,hs+3);arrow(c,Q[0],Q[1],Bt[0],Bt[1],col.warm,1.6,hs);
+      /* labels beside the tips, on the side away from the curve */
+      const nx=-t[1],ny=t[0],side=(p[1]+0.3*ny<0)===(p[1]<0)?1:-1;
+      TB.rich(c,[['t','i']],Bt[0]+8*t[0]+10*nx*side*(1)-4,Bt[1]-8*t[1]-10*ny*side+5,fs+1,col.warm,'start');
+      if(K*v>0.62)TB.rich(c,[['γ','i'],['′','m']],Ab[0]+8*t[0]-4,Ab[1]-8*t[1]+5,fs+1,col.eth,'start');}
+    c.fillStyle=col.paper;c.strokeStyle=col.ink;c.lineWidth=1.6;c.beginPath();c.arc(Q[0],Q[1],4.4,0,TP);c.fill();c.stroke();
+    /* the unit circle: where the tangent t(u) points for -T0 ≤ u ≤ τ */
+    c.strokeStyle=TB.rgba(col.ink,0.3);c.lineWidth=1;c.beginPath();c.arc(B.cx,B.cy,B.r,0,TP);c.stroke();
+    TB.ln(c,B.cx-B.r-6,B.cy,B.cx+B.r+6,B.cy);TB.ln(c,B.cx,B.cy-B.r-6,B.cx,B.cy+B.r+6);
+    const ang=u=>{const q=dg(u,e);return Math.atan2(q[1],q[0]);},C=a=>[B.cx+B.r*Math.cos(a),B.cy-B.r*Math.sin(a)];
+    c.strokeStyle=col.warm;c.lineWidth=3;c.lineCap='round';let prev=null,jump=null;c.beginPath();
+    const n=Math.max(1,Math.round((tau+T0)/(2*T0)*400));
+    for(let i=0;i<=n;i++){const u=-T0+(tau+T0)*i/n;if(sp(u,e)<1e-6){prev=null;continue;}const a=ang(u),X=C(a);
+      if(prev!==null&&Math.abs(Math.atan2(Math.sin(a-prev),Math.cos(a-prev)))>0.6){jump=[prev,a];c.moveTo(X[0],X[1]);}else if(prev===null)c.moveTo(X[0],X[1]);else c.lineTo(X[0],X[1]);prev=a;}
+    c.stroke();c.lineCap='butt';
+    if(jump){const a1=C(jump[0]),a2=C(jump[1]);c.setLineDash([3,4]);c.strokeStyle=TB.rgba(col.warm,0.8);c.lineWidth=1.3;TB.ln(c,a1[0],a1[1],a2[0],a2[1]);c.setLineDash([]);}
+    if(v>1e-9){const X=C(ang(tau));arrow(c,B.cx,B.cy,X[0],X[1],col.warm,1.6,8);c.fillStyle=col.warm;c.beginPath();c.arc(X[0],X[1],3.6,0,TP);c.fill();}
+    TB.rich(c,[['t','i'],['(','m'],['τ','i'],[')','m']],B.cx+B.r*0.72+4,B.cy-B.r*0.72-6,fs+1,col.warm,'start');
+    TB.rich(c,[['единичная касательная','r']],B.cx,B.cy+B.r+(sm?24:28),fs-1,col.muted,'center');
+    /* speed |γ′(u)| for -T0 ≤ u ≤ T0, axis to 5 */
+    const gx=u=>G.x0+(u+T0)/(2*T0)*(G.x1-G.x0),gy=s=>G.y1-Math.min(5,s)/5*(G.y1-G.y0);
+    c.strokeStyle=TB.rgba(col.ink,0.4);c.lineWidth=1;TB.ln(c,G.x0,G.y1,G.x1,G.y1);TB.ln(c,gx(0),G.y1,gx(0),G.y0-4);TB.ln(c,G.x0,G.y1,G.x0,G.y0-4);
+    for(const u of [-1,0,1]){TB.ln(c,gx(u),G.y1,gx(u),G.y1+4);TB.rich(c,[[TB.fmt(u,0),'m']],gx(u),G.y1+16,11,col.muted,'center');}
+    for(const s of [0,1,5]){TB.ln(c,G.x0-4,gy(s),G.x0,gy(s));TB.rich(c,[[String(s),'m']],G.x0-6,gy(s)+4,11,col.muted,'right');}
+    TB.rich(c,[['|','m'],['γ','i'],['′','m'],['|','m']],G.x0+6,G.y0-8,fs,col.ink,'start');TB.rich(c,[['τ','i']],G.x1,G.y1-6,fs,col.ink,'right');
+    c.strokeStyle=col.eth;c.lineWidth=2;c.beginPath();for(let i=0;i<=200;i++){const u=-T0+2*T0*i/200,X=gx(u),Y=gy(sp(u,e));if(i)c.lineTo(X,Y);else c.moveTo(X,Y);}c.stroke();
+    c.fillStyle=col.eth;c.beginPath();c.arc(gx(tau),gy(v),4,0,TP);c.fill();
+    gauge.set(v,col.eth);
+    const kind=e>0?'<i>ε</i> &gt; 0: кривая регулярна, остриё сгладилось':e<0?'<i>ε</i> &lt; 0: кривая регулярна, но не проста: петля, самопересечение в точке ('+TB.fmt(-e,2)+'; 0) при <i>τ</i> = ±'+TB.fmt(Math.sqrt(-e),2):'<i>ε</i> = 0: <i>γ</i>′(0) = 0, кривая не регулярна, в начале координат остриё';
+    const r1=['<i>τ</i> = '+TB.fmt(tau,2)+',','<i>γ</i>(<i>τ</i>) = ('+TB.fmt(p[0],2)+'; '+TB.fmt(p[1],2)+'),','|<i>γ</i>′(<i>τ</i>)| = '+TB.fmt(v,2)];
+    const r2=v>1e-9?['<i>t</i>(<i>τ</i>) = ('+TB.fmt(d[0]/v,2)+'; '+TB.fmt(d[1]/v,2)+')']:['скорость равна нулю: единичная касательная не определена'];
+    fx.innerHTML=TB.rows([r1,r2])+'<span>'+kind+'</span>';
+  }
+  /* dragging the point: the nearest moment of the curve */
+  function at(ev){const r=cv.getBoundingClientRect(),x=ev.clientX-r.left,y=ev.clientY-r.top,e=+sE.value;let best=null,bd=40*40;
+    for(let i=0;i<=440;i++){const u=-T0+2*T0*i/440,Q=geo.P(g(u,e)),d=(Q[0]-x)**2+(Q[1]-y)**2;if(d<bd){bd=d;best=u;}}
+    if(best!==null){sT.value=Math.round(best*100)/100;draw();}return best!==null;}
+  cv.style.touchAction='pan-y';
+  cv.addEventListener('pointerdown',ev=>{if(!geo)return;cancelAnimationFrame(anim);anim=0;if(at(ev)){drag=true;cv.setPointerCapture(ev.pointerId);}});
+  cv.addEventListener('pointermove',ev=>{if(drag)at(ev);});
+  cv.addEventListener('pointerup',()=>{drag=false;});cv.addEventListener('pointercancel',()=>{drag=false;});
+  /* a ride along the curve at a constant rate of the parameter; it stops at the end */
+  bGo.addEventListener('click',()=>{cancelAnimationFrame(anim);if(TB.reduced()){sT.value=T0;draw();return;}const t0=performance.now(),D=4500;
+    const step=now=>{const a=Math.min(1,(now-t0)/D);sT.value=(-T0+2*T0*a).toFixed(3);draw();anim=a<1?requestAnimationFrame(step):0;};anim=requestAnimationFrame(step);});
+  sE.addEventListener('input',draw);sT.addEventListener('input',()=>{cancelAnimationFrame(anim);anim=0;draw();});
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);draw();
+})();
+</script>

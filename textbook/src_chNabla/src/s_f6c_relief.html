@@ -1,0 +1,91 @@
+<script>
+(function(){
+  /* Fig. ∇.@relief: the graph x₃ = f(x₁, x₂) of f(x) = |x|⁴ − 2(x₁² − x₂²) over {f ≤ 2}, flooded up to the height c. The edge of the water is the slice of the graph at height c; its shadow on the base plane is the level line {f = c}. A base point with ∇f and its own level line. */
+  const TB=window.TB,cv=document.getElementById('relief');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,fx=document.getElementById('rlFx'),sl=document.getElementById('rlC'),so=document.getElementById('rlCOut'),PI=Math.PI;
+  const LAM=0.45,ZB=-1.5,BX=1.8,BY=1.25,TOP=2;   /* height scale, base plane, base rectangle, top level of the graph */
+  const st={yaw:-0.45,pitch:0.62};
+  const f=(x,y)=>{const r=x*x+y*y;return r*r-2*(x*x-y*y);};
+  const grad=(x,y)=>{const r=x*x+y*y;return [4*x*(r-1),4*y*(r+1)];};
+  /* level lines: for c > 0 one curve r² = cos2θ + √(cos²2θ + c); for −1 < c ≤ 0 two ovals R(α) about the foci (±1, 0) */
+  const rPol=(c,t)=>{const q=Math.cos(2*t);return Math.sqrt(q+Math.sqrt(q*q+c));};
+  function Rf(c,a){const b4=1+c,ca=Math.cos(a);let lo=0,hi=1;for(let i=0;i<46;i++){const m=(lo+hi)/2;if(m*m*(m*m+4*m*ca+4)>b4)hi=m;else lo=m;}return (lo+hi)/2;}
+  function level(c,N){N=N||160;if(c<=-1)return [];
+    if(c>0){const L=[];for(let i=0;i<=N;i++){const t=2*PI*i/N,r=rPol(c,t);L.push([r*Math.cos(t),r*Math.sin(t)]);}return [L];}
+    return [1,-1].map(sg=>{const L=[];for(let i=0;i<=N;i++){const a=2*PI*i/N,R=Rf(c,a);L.push([sg*(1+R*Math.cos(a)),R*Math.sin(a)]);}return L;});}
+  /* keep the base point in {f ≤ 2}: slide it along its ray onto the rim */
+  const clampIn=(x,y)=>{if(f(x,y)<=TOP)return [x,y];const t=Math.atan2(y,x),r=rPol(TOP,t)*0.999;return [r*Math.cos(t),r*Math.sin(t)];};
+  const gS=(x,y)=>[x,y,LAM*f(x,y)];
+  const gm=V.mesh(gS,{u0:0,u1:2*PI,v0:0,v1:1,nu:96,nv:30,map:(t,s)=>{const r=s*rPol(TOP,t);return [r*Math.cos(t),r*Math.sin(t)];},fix:clampIn});
+  const fv=gm.P.map(p=>p[2]/LAM);
+  const bm=V.mesh((x,y)=>[x,y,ZB],{u0:-BX,u1:BX,v0:-BY,v1:BY,nu:24,nv:16,fix:(x,y)=>clampIn(Math.max(-BX,Math.min(BX,x)),Math.max(-BY,Math.min(BY,y)))});
+  const L0=V.unit([-0.45,0.7,0.55]);
+  let c=+sl.value,pt=[0.6,-0.3],cam=null,hold=null;
+  /* faces of the graph whose mean height is below (lo) or above (hi) the water, with lines and points, sorted far to near */
+  function layer(cx,col,pal,lo,extra){const pr=[],m=gm,nu=m.nu,Q=m.P.map(p=>cam.P(p)),R=m.P.map(p=>cam.rot(p));
+    for(let j=0;j<m.nv;j++)for(let i=0;i<m.nu;i++){const a=j*(nu+1)+i,b=a+1,d=a+nu+1,e=d+1,fm=(fv[a]+fv[b]+fv[d]+fv[e])/4;if((fm<c)!==lo)continue;
+      const q=[Q[a],Q[b],Q[e],Q[d]];let n=V.unit(V.add(V.cross(V.sub(R[b],R[a]),V.sub(R[d],R[a])),V.cross(V.sub(R[e],R[d]),V.sub(R[e],R[b]))));if(n[2]<0)n=V.mul(n,-1);
+      const lam=Math.max(0,V.dot(n,L0)),s=Math.min(1,0.36+0.7*lam),sp=0.25*Math.pow(Math.max(0,2*lam*n[2]-L0[2]),28),
+        base=TB.mixh(col.wsoft,col.warm,Math.max(0,Math.min(1,(fm+1)/3))),fc=pal.shade(base,s,sp),grid=(i%6===0)||(j%5===0&&j>0);
+      pr.push({d:(q[0][2]+q[1][2]+q[2][2]+q[3][2])/4,f(){cx.beginPath();cx.moveTo(q[0][0],q[0][1]);for(let k=1;k<4;k++)cx.lineTo(q[k][0],q[k][1]);cx.closePath();
+        cx.fillStyle=fc;cx.fill();cx.strokeStyle=fc;cx.lineWidth=0.7;cx.stroke();
+        if(grid){cx.strokeStyle=TB.rgba(col.ink,0.1);cx.beginPath();if(i%6===0){cx.moveTo(q[0][0],q[0][1]);cx.lineTo(q[3][0],q[3][1]);}if(j%5===0){cx.moveTo(q[0][0],q[0][1]);cx.lineTo(q[1][0],q[1][1]);}cx.stroke();}}});}
+    for(const L of extra.lines){const P=L.pts.map(p=>cam.P(p));for(let k=0;k+1<P.length;k++){const A=P[k],B=P[k+1];
+      pr.push({d:(A[2]+B[2])/2+(L.bias||0.03),f(){cx.strokeStyle=L.col;cx.lineWidth=L.w;cx.lineCap='round';cx.setLineDash(L.dash||[]);cx.beginPath();cx.moveTo(A[0],A[1]);cx.lineTo(B[0],B[1]);cx.stroke();cx.setLineDash([]);cx.lineCap='butt';}});}}
+    for(const p of extra.pts){const A=cam.P(p.p);pr.push({d:A[2]+0.06,f(){cx.fillStyle=p.fill;cx.strokeStyle=p.stroke;cx.lineWidth=1.6;cx.beginPath();cx.arc(A[0],A[1],p.r,0,7);cx.fill();cx.stroke();}});}
+    pr.sort((u,v)=>u.d-v.d);for(const p of pr)p.f();}
+  function draw(){
+    st.pitch=Math.max(0.15,st.pitch);
+    const F=TB.fit(cv,W=>Math.round(W*(W<520?1.08:0.68))),cx=F.c,W=F.W,H=F.H,col=TB.cols(),sm=W<520,pal=V.palette(col);cx.clearRect(0,0,W,H);
+    const yb=TB.legend(cx,[{k:'fill',col:col.eth,a:0.35,t:[['вода, ','r'],['x','i'],['3','s'],[' = ','m'],['c','i']]},{k:'line',col:col.eth,t:[['срез и линия уровня ','r'],['f','i'],[' = ','m'],['c','i']]},
+      {k:'thin',col:col.ink,t:[['линия уровня через ','r'],['x','i']]}],sm?8:14,W-8,4,sm?12:13);
+    cam=V.camera(st,W,H,W*0.5,yb+(H-yb)*0.47,Math.min(W*(sm?0.235:0.2),(H-yb)*0.27));
+    const P=pt,fp=f(P[0],P[1]),gp=grad(P[0],P[1]),G=Math.hypot(gp[0],gp[1]),zc=LAM*c;
+    const sh=level(c),own=level(fp);
+    /* base plane: grid, axes, shadow of the slice, the point's level line, ∇f */
+    const base=[];for(let k=-3;k<=3;k++){const x=k*0.6;if(Math.abs(x)<=BX)base.push({t:'line',pts:[[x,-BY,ZB],[x,BY,ZB]],col:TB.rgba(col.ink,k?0.12:0.4),w:k?0.8:1.1,bias:0});}
+    for(let k=-2;k<=2;k++){const y=k*0.6;base.push({t:'line',pts:[[-BX,y,ZB],[BX,y,ZB]],col:TB.rgba(col.ink,k?0.12:0.4),w:k?0.8:1.1,bias:0});}
+    base.push({t:'line',pts:[[-BX,-BY,ZB],[BX,-BY,ZB],[BX,BY,ZB],[-BX,BY,ZB],[-BX,-BY,ZB]],col:TB.rgba(col.ink,0.35),w:1,bias:0});
+    /* curves in the base plane, each stroked as one path so that the dashes run on */
+    const curve=(L,colr,w,dash)=>{cx.strokeStyle=colr;cx.lineWidth=w;cx.setLineDash(dash||[]);cx.beginPath();L.forEach((q,k)=>{const Q=cam.P([q[0],q[1],ZB]);if(k)cx.lineTo(Q[0],Q[1]);else cx.moveTo(Q[0],Q[1]);});cx.stroke();cx.setLineDash([]);};
+    const marks=[];
+    if(G>1e-6){const ln=Math.min(0.5,0.2+0.05*G);marks.push({t:'arrow',p:[P[0],P[1],ZB],v:[gp[0]/G*ln,gp[1]/G*ln,0],col:col.warm,w:2},
+      {t:'label',p:[P[0]+gp[0]/G*(ln+0.1),P[1]+gp[1]/G*(ln+0.1),ZB],segs:[['∇','m'],['f','i']],col:col.warm,dx:-6,dy:5});}
+    marks.push({t:'pt',p:[P[0],P[1],ZB],r:5,fill:col.eth,stroke:col.ink,w:1.8},{t:'label',p:[P[0],P[1],ZB],segs:[['x','i']],col:col.ink,dx:8,dy:17});
+    base.push(
+      {t:'label',p:[BX+0.12,0,ZB],segs:[['x','i'],['1','s']],col:col.ink,dx:2,dy:5},{t:'label',p:[0,BY+0.12,ZB],segs:[['x','i'],['2','s']],col:col.ink,dx:2,dy:2});
+    cx.save();cx.beginPath();cx.rect(0,yb,W,H-yb);cx.clip();
+    V.render(cx,cam,base,col);
+    for(const L of sh)curve(L,col.eth,2.4,[7,5]);
+    for(const L of own)curve(L,TB.rgba(col.ink,0.8),1.2);
+    V.render(cx,cam,marks,col);
+    /* height scale at the far corner */
+    const ax=[-BX,-BY,ZB],axT=[-BX,-BY,LAM*2.3],A0=cam.P(ax),A1=cam.P(axT);cx.strokeStyle=TB.rgba(col.ink,0.6);cx.lineWidth=1;TB.ln(cx,A0[0],A0[1],A1[0],A1[1]);
+    for(const v of [-1,0,1,2]){const Q=cam.P([-BX,-BY,LAM*v]);TB.ln(cx,Q[0]-4,Q[1],Q[0]+4,Q[1]);TB.rich(cx,[[v<0?'−1':String(v),'m']],Q[0]-7,Q[1]+4,12,col.muted,'right');}
+    TB.rich(cx,[['x','i'],['3','s']],A1[0]+6,A1[1]+4,13,col.ink,'start');
+    /* plumb line from x to the graph point, seen through the terrain */
+    const top=[P[0],P[1],LAM*fp],B0=cam.P([P[0],P[1],ZB]),B1=cam.P(top);
+    const under={lines:[],pts:[]},over={lines:[],pts:[]},gpt={p:top,r:4.2,fill:col.ink,stroke:col.paper};(fp<c?under:over).pts.push(gpt);
+    for(const L of sh)over.lines.push({pts:L.map(q=>[q[0],q[1],zc]),col:col.eth,w:2.6,bias:0.05});
+    layer(cx,col,pal,true,under);
+    /* the water over {f ≤ c} */
+    if(sh.length){cx.globalAlpha=pal.dark?0.34:0.42;cx.fillStyle=col.eth;cx.beginPath();for(const L of sh){L.forEach((q,k)=>{const Q=cam.P([q[0],q[1],zc]);if(k)cx.lineTo(Q[0],Q[1]);else cx.moveTo(Q[0],Q[1]);});cx.closePath();}cx.fill();cx.globalAlpha=1;}
+    layer(cx,col,pal,false,over);
+    cx.strokeStyle=TB.rgba(col.ink,0.55);cx.lineWidth=1;cx.setLineDash([3,3]);TB.ln(cx,B0[0],B0[1],B1[0],B1[1]);cx.setLineDash([]);
+    cx.restore();
+    so.textContent=TB.fmt(c,2);
+    const lake=c<-0.005?'две лужи над ямами (±1, 0)':c>0.005?'одно озеро':'лужи касаются в седле 0';
+    fx.innerHTML=TB.rows([['уровень <i>c</i> = '+TB.fmt(c,2)+':',lake],['<i>f</i>(<i>x</i>) = '+TB.fmt(fp,2)+',','|∇<i>f</i>(<i>x</i>)| = '+TB.fmt(G,2)]]);
+  }
+  const scr=p=>cam.P(p);
+  const near=(x,y)=>{if(!cam)return false;const a=scr([pt[0],pt[1],ZB]),b=scr([pt[0],pt[1],LAM*f(pt[0],pt[1])]);
+    hold=Math.hypot(a[0]-x,a[1]-y)<26?'base':Math.hypot(b[0]-x,b[1]-y)<26?'graph':null;return !!hold;};
+  function move(x,y){const r=V.pick(cam,hold==='graph'?gm:bm,x,y,40);if(r){pt=clampIn(r[0],r[1]);draw();}}
+  function tap(x,y){const r=V.pick(cam,gm,x,y,14)||V.pick(cam,bm,x,y,14);if(r){pt=clampIn(r[0],r[1]);draw();}}
+  cv.style.touchAction='none';cv.style.cursor='grab';
+  V.interact(cv,st,{active:()=>true,grab:near,move:move,tap:tap,redraw:draw});
+  sl.addEventListener('input',()=>{c=+sl.value;draw();});
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);draw();
+  TB.whenSeen(cv,()=>V.intro(st,draw));
+})();
+</script>

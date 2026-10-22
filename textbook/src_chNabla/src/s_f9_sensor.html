@@ -1,0 +1,146 @@
+<script>
+(function(){
+  /* Fig. ∇.@sensor: a sensor touches the unit circle at its lowest point and reads noisy heights on a symmetric grid; the least-squares parabola, a haze of osculating circles from many touches and the histogram of the estimates. */
+  const TB=window.TB,cv=document.getElementById('sensor');if(!TB||!cv)return;
+  const $=id=>document.getElementById(id);
+  const sA=$('snA'),sS=$('snS'),sM=$('snM'),oA=$('snAOut'),oS=$('snSOut'),oM=$('snMOut'),bT=$('snTouch'),bM=$('snMany'),bR=$('snReset'),fx=$('snFx');
+  const gauge=TB.G('gSn');gauge.mark('one',1,'1');
+  const h=u=>1-Math.sqrt(1-u*u),NB=40,CAP=600;
+  const rnd=TB.lcg(20261020);let spare=[];
+  const gauss=()=>{if(!spare.length)spare=TB.normal2(rnd);return spare.pop();};
+  /* standard normal distribution function (Abramowitz–Stegun 7.1.26) */
+  const Phi=z=>{const t=1/(1+0.3275911*Math.abs(z)/Math.SQRT2),e=1-t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))))*Math.exp(-z*z/2);return z>=0?0.5*(1+e):0.5*(1-e);};
+  let P=null,est=[],last=null,shown=0,queue=0,raf=0,tPrev=0,G=null,haze=null,hazeKey='';
+  function design(){
+    const a=+sA.value,sg=+sS.value,m=+sM.value,u=[];
+    for(let j=0;j<m;j++)u.push(-a+2*a*j/(m-1));
+    let ub=0,U2=0,Q=0,E=0;for(const x of u){ub+=x*x/m;U2+=x*x;}
+    for(const x of u)Q+=(x*x-ub)*(x*x-ub);
+    const w=u.map(x=>(x*x-ub)/Q);for(let j=0;j<m;j++)E+=2*w[j]*h(u[j]);
+    P={a:a,sg:sg,m:m,u:u,ub:ub,U2:U2,Q:Q,w:w,E:E,sd:2*sg/Math.sqrt(Q),asy:Math.sqrt(45/m)*sg/(a*a)};
+  }
+  function touch(){
+    const y=P.u.map(x=>h(x)+P.sg*gauss());let c2=0,c1=0,yb=0;
+    for(let j=0;j<P.m;j++){c2+=P.w[j]*y[j];c1+=P.u[j]*y[j];yb+=y[j]/P.m;}
+    return {y:y,c0:yb-c2*P.ub,c1:c1/P.U2,c2:c2,k:2*c2};
+  }
+  /* layout: haze panel, sensor window and histogram, side by side on wide screens, stacked on phones */
+  const hOf=W=>W>=600?Math.round(W*0.64):Math.round(W*0.8)+Math.round(W*0.56)+Math.round(W*0.54)+24;
+  function layout(W,H){
+    if(W>=600){const lw=Math.round(W*0.5),rw=W-lw-14,th=Math.round((H-12)/2);
+      return {L:{x:0,y:0,w:lw,h:H},T:{x:lw+14,y:0,w:rw,h:th},B:{x:lw+14,y:th+12,w:rw,h:H-th-12}};}
+    const a=Math.round(W*0.8),b=Math.round(W*0.56);
+    return {L:{x:0,y:0,w:W,h:a},T:{x:0,y:a+12,w:W,h:b},B:{x:0,y:a+b+24,w:W,h:H-a-b-24}};
+  }
+  /* world → haze panel: x in [−1,55; 1,55], y in [−1,4; 1,3] below a legend row */
+  function hazeMap(L){const top=L.y+30,avail=L.h-34,s=Math.min((L.w-8)/3.1,avail/2.7);
+    return {s:s,X:x=>L.x+L.w/2+x*s,Y:y=>top+avail/2-(y+0.05)*s};}
+  function circlePath(c,M,k){
+    if(Math.abs(k)<0.02){c.moveTo(M.X(-3),M.Y(-1));c.lineTo(M.X(3),M.Y(-1));return;}
+    const R=1/Math.abs(k),yc=-1+1/k;c.moveTo(M.X(0)+R*M.s,M.Y(yc));c.arc(M.X(0),M.Y(yc),R*M.s,0,2*Math.PI);}
+  function hazeColor(k,col){return TB.mixh(col.eth,col.warm,Math.min(1,Math.abs(k-1)/0.6));}
+  function addCircle(k){
+    if(!haze)return;const b=haze.getContext('2d'),col=TB.cols(),M=hazeMap(G.L);
+    b.save();b.setTransform(G.r,0,0,G.r,0,0);b.beginPath();b.rect(G.L.x,G.L.y+26,G.L.w,G.L.h-26);b.clip();
+    b.strokeStyle=TB.rgba(hazeColor(k,col),0.2);b.lineWidth=1.1;b.beginPath();circlePath(b,M,k);b.stroke();b.restore();}
+  function ensureHaze(){
+    const col=TB.cols(),key=[G.W,G.H,G.r,col.eth,col.warm].join('|');
+    if(key===hazeKey&&haze)return;hazeKey=key;
+    haze=document.createElement('canvas');haze.width=Math.round(G.W*G.r);haze.height=Math.round(G.H*G.r);
+    for(const k of est.slice(-CAP))addCircle(k);}
+  function label(c,segs,x,y,s,colr,al){TB.rich(c,segs,x,y,s,colr,al);}
+  function drawHaze(c,col){
+    const L=G.L,M=hazeMap(L);
+    TB.legend(c,[{k:'line',col:col.ink,t:[['граница предмета','r']]},{k:'thin',col:col.eth,t:[['окружности по оценкам','r']]}],L.x+6,L.x+L.w-6,L.y,12);
+    c.save();c.beginPath();c.rect(L.x,L.y+26,L.w,L.h-26);c.clip();
+    c.fillStyle=TB.rgba(col.eth,0.06);c.beginPath();c.arc(M.X(0),M.Y(0),M.s,0,2*Math.PI);c.fill();
+    c.setTransform(1,0,0,1,0,0);c.drawImage(haze,0,0);c.setTransform(G.r,0,0,G.r,0,0);
+    c.strokeStyle=col.ink;c.lineWidth=1.7;c.beginPath();c.arc(M.X(0),M.Y(0),M.s,0,2*Math.PI);c.stroke();
+    /* sensor pad under the touch point */
+    const a=P.a,x0=M.X(-a),x1=M.X(a),yt=M.Y(-1)+3,ph=Math.max(7,0.07*M.s);
+    c.fillStyle=TB.rgba(col.warm,0.22);c.strokeStyle=col.warm;c.lineWidth=1.3;c.beginPath();c.rect(x0,yt,x1-x0,ph);c.fill();c.stroke();
+    c.fillStyle=col.warm;for(const u of P.u){const X=M.X(u);if(x1-x0>P.m*2.2)c.fillRect(X-0.6,yt,1.2,3);}
+    c.fillStyle=col.ink;c.beginPath();c.arc(M.X(0),M.Y(-1),2.6,0,7);c.fill();
+    label(c,[['p','i']],M.X(0)-8,M.Y(-1)-6,13,col.ink,'right');
+    label(c,[['сенсор','r']],x1+6,yt+ph-1,12,col.muted,'start');
+    c.restore();
+  }
+  function drawWindow(c,col){
+    const T=G.T,a=P.a,l=T.x+30,r=T.x+T.w-10,t=T.y+24,b=T.y+T.h-22;
+    let ylo=-0.075,yhi=h(Math.min(0.99,1.15*a))+0.075;const sx=(r-l)/(2.3*a);let sy=(b-t)/(yhi-ylo);
+    if(sy<sx){const mid=(ylo+yhi)/2,half=(b-t)/sx/2;ylo=mid-half;yhi=mid+half;sy=sx;}
+    const X=u=>l+(u+1.15*a)*sx,Y=y=>b-(y-ylo)*sy;
+    c.strokeStyle=col.rule;c.lineWidth=1;c.strokeRect(T.x+0.5,T.y+18.5,T.w-1,T.h-19);
+    label(c,[['окно сенсора','r']],T.x+6,T.y+13,12,col.muted,'start');
+    label(c,[['по вертикали ×'+TB.fmt(sy/sx,1),'r']],T.x+T.w-4,T.y+13,12,col.muted,'right');
+    c.save();c.beginPath();c.rect(T.x+1,T.y+19,T.w-2,T.h-20);c.clip();
+    c.strokeStyle=TB.rgba(col.ink,0.4);c.setLineDash([5,4]);TB.ln(c,T.x,Y(0),T.x+T.w,Y(0));c.setLineDash([]);
+    c.strokeStyle=col.rule;TB.ln(c,X(-a),t-4,X(-a),b);TB.ln(c,X(a),t-4,X(a),b);
+    c.strokeStyle=col.ink;c.lineWidth=1.3;c.beginPath();
+    for(let i=0;i<=120;i++){const u=-1.15*a+2.3*a*i/120,yy=Y(h(Math.min(0.999,Math.abs(u))));if(i)c.lineTo(X(u),yy);else c.moveTo(X(u),yy);}c.stroke();
+    if(last){
+      if(shown===P.m){c.strokeStyle=col.warm;c.lineWidth=2.2;c.beginPath();
+        for(let i=0;i<=120;i++){const u=-1.15*a+2.3*a*i/120,yy=Y(last.c0+last.c1*u+last.c2*u*u);if(i)c.lineTo(X(u),yy);else c.moveTo(X(u),yy);}c.stroke();}
+      for(let j=0;j<shown;j++){const u=P.u[j],X0=X(u),Y0=Y(last.y[j]);
+        c.strokeStyle=TB.rgba(col.eth,0.45);c.lineWidth=1;TB.ln(c,X0,Y(h(Math.abs(u))),X0,Y0);
+        c.fillStyle=col.eth;c.strokeStyle=col.paper;c.lineWidth=1.2;c.beginPath();c.arc(X0,Y0,3.1,0,7);c.fill();c.stroke();}
+    }
+    c.restore();
+    label(c,[['−','m'],['a','i']],X(-a),b+16,13,col.ink,'center');label(c,[['0','m']],X(0),b+16,13,col.ink,'center');label(c,[['a','i']],X(a),b+16,13,col.ink,'center');
+    label(c,[['u','i']],T.x+T.w-6,Y(0)-6,13,col.muted,'right');
+  }
+  function drawHist(c,col){
+    const B=G.B,l=B.x+12,r=B.x+B.w-12,t=B.y+22,b=B.y+B.h-30,X=k=>l+(k/2)*(r-l),bw=2/NB;
+    label(c,[['оценки кривизны по касаниям','r']],B.x+6,B.y+13,12,col.muted,'start');
+    const cnt=new Array(NB).fill(0);let lo=0,hi=0;
+    for(const k of est){if(k<0)lo++;else if(k>=2)hi++;else cnt[Math.min(NB-1,Math.floor(k/bw))]++;}
+    const N=Math.max(1,est.length),ex=[];let mx=1;
+    for(let i=0;i<NB;i++){const p=Phi((bw*(i+1)-P.E)/P.sd)-Phi((bw*i-P.E)/P.sd);ex.push(N*p);mx=Math.max(mx,N*p,cnt[i]);}
+    const Yc=v=>b-v/(mx*1.12)*(b-t);
+    c.fillStyle=TB.rgba(col.eth,0.55);
+    for(let i=0;i<NB;i++)if(cnt[i]){const x0=X(i*bw)+0.5,x1=X((i+1)*bw)-0.5;c.fillRect(x0,Yc(cnt[i]),Math.max(1,x1-x0),b-Yc(cnt[i]));}
+    c.strokeStyle=TB.rgba(col.ink,est.length?0.75:0.4);c.lineWidth=1.2;c.beginPath();c.moveTo(X(0),b);
+    for(let i=0;i<NB;i++){c.lineTo(X(i*bw),Yc(ex[i]));c.lineTo(X((i+1)*bw),Yc(ex[i]));}c.lineTo(X(2),b);c.stroke();
+    c.strokeStyle=col.ink;c.lineWidth=1;TB.ln(c,l,b+0.5,r,b+0.5);
+    c.lineWidth=1.3;TB.ln(c,X(1),t-2,X(1),b);label(c,[['κ','i'],[' = 1','m']],X(1)+5,t+10,13,col.ink,'start');
+    for(const v of [0,0.5,1,1.5,2]){c.strokeStyle=col.ink;c.lineWidth=1;TB.ln(c,X(v),b,X(v),b+4);label(c,[[TB.fmt(v,v%1?1:0),'m']],X(v),b+18,12,col.ink,'center');}
+    if(P.E>-0.2&&P.E<2.2){const xe=X(Math.max(0,Math.min(2,P.E)));c.fillStyle=col.warm;c.beginPath();c.moveTo(xe,b+1);c.lineTo(xe-5,b+9);c.lineTo(xe+5,b+9);c.closePath();c.fill();}
+    if(lo)label(c,[['← '+lo,'r']],l+2,t+10,12,col.muted,'start');
+    if(hi)label(c,[[hi+' →','r']],r-2,t+10,12,col.muted,'right');
+  }
+  function readout(){
+    oA.textContent=TB.fmt(P.a,2);oS.textContent=TB.fmt(P.sg,3);oM.textContent=P.m;
+    const N=est.length;let mean=0,sd=0;for(const k of est)mean+=k/N;
+    if(N>1){for(const k of est)sd+=(k-mean)*(k-mean);sd=Math.sqrt(sd/(N-1));}
+    const kh='<i class="hat hs">κ</i>';
+    fx.innerHTML=TB.rows([
+      ['<i>κ</i> = 1,','касаний: '+N+(last&&shown===P.m?',':''),last&&shown===P.m?'последняя оценка '+kh+' = '+TB.fmt(last.k,3):''].filter(Boolean),
+      ['среднее оценок: '+(N?TB.fmt(mean,3):'—')+',','ожидание по лемме ∇.24: '+TB.fmt(P.E,3)],
+      ['разброс по касаниям: '+(N>1?TB.fmt(sd,3):'—')+',','2<i>σ</i>/√<i>Q</i> = '+TB.fmt(P.sd,3)+',','√(45/<i>m</i>)·<i>σ</i>/<i>a</i><sup>2</sup> = '+TB.fmt(P.asy,3)]]);
+    if(N>1)gauge.set(sd/P.sd);else{gauge.set(0);if(gauge.out)gauge.out.textContent='—';}
+  }
+  const is3=()=>cv.dataset.dim==='3';
+  function draw(){
+    if(is3())return;
+    const f=TB.fit(cv,hOf),c=f.c,col=TB.cols();G=Object.assign({W:f.W,H:f.H,r:f.r},layout(f.W,f.H));
+    ensureHaze();c.clearRect(0,0,f.W,f.H);drawHaze(c,col);drawWindow(c,col);drawHist(c,col);readout();
+  }
+  function commit(){est.push(last.k);addCircle(last.k);}
+  const busy=()=>(last&&shown<P.m)||queue>0;
+  function run(){if(!raf)raf=requestAnimationFrame(step);}
+  function step(ts){raf=0;if(is3())return;
+    if(last&&shown<P.m){if(ts-tPrev>=Math.max(18,700/P.m)){shown++;tPrev=ts;if(shown===P.m)commit();draw();}run();return;}
+    if(queue>0){if(ts-tPrev>=30){queue--;last=touch();shown=P.m;commit();tPrev=ts;draw();}run();return;}}
+  function one(){if(is3()||busy())return;last=touch();
+    if(TB.reduced()){shown=P.m;commit();draw();return;}shown=0;tPrev=performance.now();draw();run();}
+  function many(n){if(is3())return;if(TB.reduced()){for(let i=0;i<n;i++){last=touch();shown=P.m;commit();}draw();return;}queue+=n;run();}
+  function reset(){est=[];last=null;shown=0;queue=0;hazeKey='';haze=null;}
+  bT.addEventListener('click',one);bM.addEventListener('click',()=>many(50));
+  bR.addEventListener('click',()=>{if(is3())return;reset();draw();});
+  TB.segs(cv,k=>{if(k!=='circ')return;if(TB.V3)TB.V3.dim(cv,false);hazeKey='';draw();if(busy())run();});
+  for(const s of [sA,sS,sM])s.addEventListener('input',()=>{design();reset();draw();});
+  design();
+  const redraw=()=>{hazeKey='';draw();};TB.onTheme(redraw);TB.onResize(cv,redraw);draw();
+  TB.whenSeen(cv,()=>{if(est.length||busy())return;one();if(TB.reduced())many(19);else queue+=19;});
+})();
+</script>

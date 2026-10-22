@@ -1,0 +1,88 @@
+<script>
+(function(){
+  /* Fig. ∇.normals: all normals from a draggable point c to an ellipse or the drop, minima and maxima of the distance, the evolute, and the distance as a function of arc length. */
+  const TB=window.TB,cv=document.getElementById('normals');if(!TB||!cv||!TB.fit)return;
+  const fx=document.getElementById('nmFx');
+  const blobR=t=>1+0.15*Math.cos(t)+0.18*Math.cos(2*t)+0.06*Math.sin(3*t);
+  /* World windows of the upper panel have the same aspect 2:1. */
+  const SH={
+    ell:{X:2.7,Y:1.35,ox:0,g:t=>[2*Math.cos(t),Math.sin(t)],c:[0.6,0.3]},
+    blob:{X:2.1,Y:1.05,ox:0.15,g:t=>{const r=blobR(t);return [r*Math.cos(t),r*Math.sin(t)];},c:[0.25,-0.15]}};
+  const N=1200,h=1e-4;
+  /* velocity, acceleration and curvature of the parametrisation by central differences */
+  function jet(S,t){const a=S.g(t-h),b=S.g(t),c=S.g(t+h);
+    const v=[(c[0]-a[0])/(2*h),(c[1]-a[1])/(2*h)],w=[(c[0]-2*b[0]+a[0])/(h*h),(c[1]-2*b[1]+a[1])/(h*h)],l=Math.hypot(v[0],v[1]);
+    return {p:b,v:v,k:(v[0]*w[1]-v[1]*w[0])/(l*l*l),l:l};}
+  function prep(S){if(S.P)return S;S.P=[];S.K=[];S.T=[];S.s=[0];
+    for(let i=0;i<N;i++){const t=i/N*2*Math.PI,j=jet(S,t);S.P.push(j.p);S.K.push(j.k);S.T.push([j.v[0]/j.l,j.v[1]/j.l]);}
+    for(let i=1;i<=N;i++){const A=S.P[i-1],B=S.P[i%N];S.s.push(S.s[i-1]+Math.hypot(B[0]-A[0],B[1]-A[1]));}
+    S.L=S.s[N];
+    /* a fixed range of the distance axis: the largest distance from a corner of the window to the curve */
+    let m=0;for(const q of [[-1,-1],[-1,1],[1,-1],[1,1]]){const x=S.ox+q[0]*S.X,y=q[1]*S.Y;for(const p of S.P)m=Math.max(m,Math.hypot(p[0]-x,p[1]-y));}
+    S.D=Math.ceil(m*2)/2;return S;}
+  let md=TB.segs(cv,k=>{if(!SH[k])return;md=k;if(TB.V3)TB.V3.dim(cv,false);draw();}),geo=null,drag=false;
+  const C={ell:SH.ell.c.slice(),blob:SH.blob.c.slice()};
+  const sm=()=>cv.parentNode.getBoundingClientRect().width<520;
+  const plural=(n,a,b,c)=>{const m=n%10,q=n%100;return (m===1&&q!==11)?a:(m>=2&&m<=4&&(q<12||q>14))?b:c;};
+  /* feet of the normals from c: zeros of ⟨γ−c, γ'⟩, refined by bisection; κr<1 is a minimum of the distance, κr>1 a maximum */
+  function feet(S,c){const g=t=>{const p=S.g(t),j=jet(S,t);return (p[0]-c[0])*j.v[0]+(p[1]-c[1])*j.v[1];};
+    const out=[];let t0=0,g0=g(0);
+    for(let i=1;i<=N;i++){const t1=i/N*2*Math.PI,g1=g(t1);
+      if((g0<0)!==(g1<0)){let a=t0,b=t1,ga=g0;for(let it=0;it<34;it++){const m=(a+b)/2,gm=g(m);if((gm<0)===(ga<0)){a=m;ga=gm;}else b=m;}
+        const t=(a+b)/2,j=jet(S,t),tn=[j.v[0]/j.l,j.v[1]/j.l],n=[tn[1],-tn[0]],r=(j.p[0]-c[0])*n[0]+(j.p[1]-c[1])*n[1];
+        const u=t/(2*Math.PI)*N,i0=Math.floor(u)%N,fr=u-Math.floor(u),s=S.s[i0]+(S.s[i0+1]-S.s[i0])*fr;
+        out.push({p:j.p,s:s,min:j.k*r<1,dist:Math.hypot(j.p[0]-c[0],j.p[1]-c[1])});}
+      t0=t1;g0=g1;}
+    return out;}
+  function draw(){
+    if(cv.dataset.dim==='3')return;
+    const S=prep(SH[md]),c0=C[md],s=sm()?12:13;
+    const f=TB.fit(cv,W=>Math.round(W/2)+(W<520?128:150)),c=f.c,W=f.W,H=f.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const th=Math.round(W/2),sc=W/(2*S.X),X=x=>W/2+(x-S.ox)*sc,Y=y=>th/2-y*sc;
+    geo={th:th,sc:sc,S:S,X:X,Y:Y};
+    /* upper panel */
+    c.save();c.beginPath();c.rect(0,0,W,th);c.clip();
+    const loop=()=>{c.beginPath();for(let i=0;i<=N;i++){const p=S.P[i%N];if(i)c.lineTo(X(p[0]),Y(p[1]));else c.moveTo(X(p[0]),Y(p[1]));}c.closePath();};
+    loop();c.fillStyle=TB.rgba(K.ink,0.045);c.fill();
+    c.strokeStyle=TB.rgba(K.ink,0.55);c.lineWidth=1.3;c.setLineDash([5,4]);c.beginPath();let pen=false;
+    for(let i=0;i<=N;i++){const q=i%N,k=S.K[q];if(Math.abs(k)<0.03||(i&&Math.sign(k)!==Math.sign(S.K[(i-1)%N]))){pen=false;continue;}
+      const zx=S.P[q][0]-S.T[q][1]/k,zy=S.P[q][1]+S.T[q][0]/k;if(Math.abs(zx)>40||Math.abs(zy)>40){pen=false;continue;}
+      if(pen)c.lineTo(X(zx),Y(zy));else{c.moveTo(X(zx),Y(zy));pen=true;}}
+    c.stroke();c.setLineDash([]);
+    loop();c.strokeStyle=K.ink;c.lineWidth=2.4;c.stroke();
+    const F=feet(S,c0),cx=X(c0[0]),cy=Y(c0[1]);
+    c.lineWidth=1.6;for(const q of F){c.strokeStyle=q.min?K.eth:K.warm;TB.ln(c,cx,cy,X(q.p[0]),Y(q.p[1]));}
+    for(const q of F){c.fillStyle=K.paper;c.beginPath();c.arc(X(q.p[0]),Y(q.p[1]),5.6,0,7);c.fill();c.fillStyle=q.min?K.eth:K.warm;c.beginPath();c.arc(X(q.p[0]),Y(q.p[1]),4,0,7);c.fill();}
+    c.fillStyle=K.paper;c.beginPath();c.arc(cx,cy,6,0,7);c.fill();c.strokeStyle=K.ink;c.lineWidth=1.8;c.beginPath();c.arc(cx,cy,6,0,7);c.stroke();
+    TB.rich(c,[['c','i']],cx+(c0[0]>S.ox+S.X-0.35?-10:10),cy-9,s+1,K.ink,c0[0]>S.ox+S.X-0.35?'right':'start');
+    c.restore();
+    c.strokeStyle=K.rule;c.lineWidth=1;TB.ln(c,0,th+0.5,W,th+0.5);
+    /* lower panel: the distance |γ(s)−c| over one loop */
+    const L=sm()?30:38,R=W-(sm()?8:14),T=th+(sm()?14:18),B=H-(sm()?24:28),u=v=>L+v/S.L*(R-L),v=y=>B-y/S.D*(B-T);
+    c.strokeStyle=TB.rgba(K.ink,0.35);c.lineWidth=1;TB.ln(c,L,B,R,B);TB.ln(c,L,B,L,T);
+    c.font=(s-1)+'px '+TB.ui;c.fillStyle=K.muted;c.textAlign='center';
+    const st=S.L>8?2:1;for(let q=0;q<=S.L;q+=st){c.fillRect(u(q)-0.5,B,1,4);c.fillText(String(q),u(q),B+s+3);}
+    c.textAlign='right';for(let q=1;q<=S.D;q++){c.fillRect(L-4,v(q)-0.5,4,1);c.fillText(String(q),L-6,v(q)+s*0.35);}
+    c.strokeStyle=TB.rgba(K.ink,0.08);for(let q=1;q<=S.D;q++)TB.ln(c,L,v(q),R,v(q));
+    c.textAlign='start';
+    TB.rich(c,[['s','i']],R,B+s+3,s,K.muted,'right');
+    TB.rich(c,[['|','m'],['γ','i'],['(','m'],['s','i'],[') − ','m'],['c','i'],['|','m']],L+8,T+s-2,s,K.muted);
+    c.strokeStyle=K.ink;c.lineWidth=1.7;c.beginPath();
+    for(let i=0;i<=N;i++){const p=S.P[i%N],y=Math.hypot(p[0]-c0[0],p[1]-c0[1]);if(i)c.lineTo(u(S.s[i]),v(y));else c.moveTo(u(S.s[i]),v(y));}
+    c.stroke();
+    for(const q of F){const x=u(q.s),y=v(q.dist);c.fillStyle=K.paper;c.beginPath();c.arc(x,y,5.2,0,7);c.fill();c.fillStyle=q.min?K.eth:K.warm;c.beginPath();c.arc(x,y,3.7,0,7);c.fill();}
+    /* readout */
+    const n=F.length,m=F.filter(q=>q.min).length;
+    fx.innerHTML=TB.rows([['из <i>c</i> проходит '+n+' '+plural(n,'нормаль','нормали','нормалей')+',','из них '+m+' '+plural(m,'минимум','минимума','минимумов')+' и '+(n-m)+' '+plural(n-m,'максимум','максимума','максимумов')+' расстояния']]);
+  }
+  function pick(e){if(!geo||cv.dataset.dim==='3')return false;const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;if(py>geo.th&&!drag)return false;
+    const S=geo.S,x=S.ox+(px-r.width/2)/geo.sc,y=(geo.th/2-py)/geo.sc;
+    C[md]=[Math.max(S.ox-S.X+0.02,Math.min(S.ox+S.X-0.02,x)),Math.max(-S.Y+0.02,Math.min(S.Y-0.02,y))];draw();return true;}
+  cv.style.touchAction='pan-y';
+  cv.addEventListener('pointerdown',e=>{if(pick(e)){drag=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}}});
+  cv.addEventListener('pointermove',e=>{if(drag)pick(e);else if(geo&&cv.dataset.dim!=='3'){const r=cv.getBoundingClientRect();cv.style.cursor=e.clientY-r.top<=geo.th?'crosshair':'default';}});
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{drag=false;}));
+  TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>

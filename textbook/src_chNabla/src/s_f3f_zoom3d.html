@@ -1,0 +1,77 @@
+<script>
+(function(){
+  /* Fig. ∇.@zoom, spatial shapes: the surface over a square window of half-width w in the tangent plane, in principal coordinates (x along e₁, y along e₂, z into the body) and under the parabolic magnification x/w, y/w, z/w²; it settles on the osculating paraboloid z = (κ₁x² + κ₂y²)/2. */
+  const TB=window.TB,cv=document.getElementById('zoom');if(!TB||!cv||!TB.V3)return;
+  const V=TB.V3,fx=document.getElementById('zmFx'),sw=document.getElementById('zmW'),so=document.getElementById('zmWOut');
+  const st={elld:{yaw:0.55,pitch:0.42},torus:{yaw:0.4,pitch:0.62},saddle:{yaw:0.75,pitch:0.5}},sl={yaw:0.65,pitch:0.42},ZS=0.5,NG=16;
+  let shape=null,uv={},Kv={},camA=null,camB=null,split=null;
+  const is3=()=>cv.dataset.dim==='3';
+  TB.segs(cv,k=>{if(!V.SURF[k])return;shape=k;V.dim(cv,true);draw();V.intro(st[k],draw);});
+  const wOf=()=>0.6*Math.pow(10,-(+sw.value));
+  function Kof(k){if(Kv[k])return Kv[k];const d=V.SURF[k],m=V.meshOf(k);
+    return Kv[k]=m.U.map((u,i)=>{const q=d.fix(u,m.V[i]);return V.geom(d.S,q[0],q[1],d.o).K;});}
+  /* the surface over the window: for each (X, Y) in [−1, 1]² solve ⟨S(u,v) − p, e₁⟩ = wX, ⟨S(u,v) − p, e₂⟩ = wY by Newton's method, starting from a neighbour */
+  function local(d,q,G,w){const P=[],ok=[];let row=[q[0],q[1]];
+    for(let j=0;j<=NG;j++){let cur=null;
+      for(let i=0;i<=NG;i++){const X=2*i/NG-1,Y=2*j/NG-1;let s=i?cur.slice():row.slice(),good=false;
+        for(let it=0;it<20;it++){const g=V.geom(d.S,s[0],s[1],d.o),r=V.sub(g.p,G.p),f1=V.dot(r,G.e1)-w*X,f2=V.dot(r,G.e2)-w*Y;
+          if(Math.abs(f1)+Math.abs(f2)<1e-9*Math.max(1,w)){good=true;break;}
+          const a=V.dot(g.Su,G.e1),b=V.dot(g.Sv,G.e1),c2=V.dot(g.Su,G.e2),dd=V.dot(g.Sv,G.e2),det=a*dd-b*c2;if(Math.abs(det)<1e-12)break;
+          s=[s[0]-(dd*f1-b*f2)/det,s[1]-(-c2*f1+a*f2)/det];}
+        const g=V.geom(d.S,s[0],s[1],d.o),z=-V.dot(V.sub(g.p,G.p),G.n)/(w*w);
+        P.push([X,Y,ZS*z]);ok.push(good&&Math.abs(z)<8);cur=s;if(i===0)row=s;}}
+    return {P:P,ok:ok};}
+  function draw(){
+    if(!is3()||!shape)return;
+    const f=TB.fit(cv,W=>Math.round(W*(W<520?1.3:0.5))),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,d=V.SURF[shape],m=V.meshOf(shape),fs=sm?12:13,w=wOf();
+    so.textContent=TB.fmt(w,w<0.1?3:2);c.clearRect(0,0,W,H);
+    const yb=TB.legend(c,[{k:'fill',col:col.eth,a:0.5,t:[['K','i'],[' > 0','r']]},{k:'fill',col:col.warm,a:0.5,t:[['K','i'],[' < 0','r']]},
+      {k:'dash',col:col.ink,t:[['соприкасающийся параболоид','r']]}],sm?8:14,W-8,4,fs);
+    split=sm?{y:yb+(H-yb)*0.48}:{x:W*0.46};
+    const s0=sm?Math.min(W*0.24,(H-yb)*0.15):Math.min(W*0.14,(H-yb)*0.3);
+    camA=V.camera(st[shape],W,H,sm?W/2:W*0.23,sm?yb+(H-yb)*0.25:yb+(H-yb)*0.52,s0);
+    camB=V.camera(sl,W,H,sm?W/2:W*0.73,sm?yb+(H-yb)*0.74:yb+(H-yb)*0.55,sm?Math.min(W*0.26,(H-yb)*0.17):Math.min(W*0.165,(H-yb)*0.32));
+    const K=Kof(shape),cols=K.map(k=>TB.mixh(col.eth,col.warm,0.5-0.5*Math.tanh(k/0.12)));
+    if(!uv[shape])uv[shape]=d.p0.slice();const q=uv[shape],G=V.geom(d.S,q[0],q[1],d.o),front=camA.rot(G.n)[2]>0,sg=G.K<0?col.warm:col.eth;
+    /* overview: the surface, the point and the window, a square of half-side w in the tangent plane */
+    const sq=[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]].map(([a,b])=>V.add(G.p,V.lin(G.e1,a*w,G.e2,b*w)));
+    const itA=[{t:'mesh',m:m,cols:cols,grid:4,gridA:0.12,amb:0.34},{t:'line',pts:sq,col:col.ink,w:1.6,top:front},
+      {t:'pt',p:G.p,r:4.5,fill:col.ink,top:front},{t:'arrow',p:G.p,v:V.mul(G.n,0.45),col:col.warm,w:2,top:front}];
+    c.save();c.beginPath();if(sm)c.rect(0,yb,W,split.y-yb);else c.rect(0,yb,split.x,H-yb);c.clip();V.render(c,camA,itA,col);
+    if(front&&w*s0<8){const P=camA.P(G.p);c.strokeStyle=TB.rgba(col.ink,0.6);c.lineWidth=1;c.beginPath();c.arc(P[0],P[1],12,0,7);c.stroke();}c.restore();
+    /* parabolic zoom: the surface piece as a mesh, the paraboloid as dashed grid lines, the tangent plane z = 0 as a frame */
+    const L=local(d,q,G,w),msh={P:L.P,U:L.P.map(p=>p[0]),V:L.P.map(p=>p[1]),nu:NG,nv:NG,o:{}};
+    const par=(X,Y)=>[X,Y,ZS*(G.k1*X*X+G.k2*Y*Y)/2],itB=[{t:'mesh',m:msh,col:sg,amb:0.45,alpha:0.92}];
+    for(let i=0;i<=8;i++){const a=2*i/8-1,l1=[],l2=[];for(let j=0;j<=24;j++){const b=2*j/24-1;l1.push(par(a,b));l2.push(par(b,a));}
+      itB.push({t:'line',pts:l1,col:col.ink,w:1.1,dash:[4,3],bias:0.02,alpha:0.85},{t:'line',pts:l2,col:col.ink,w:1.1,dash:[4,3],bias:0.02,alpha:0.85});}
+    itB.push({t:'line',pts:[[-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0],[-1,-1,0]],col:TB.rgba(col.ink,0.45),w:1,ghost:0.35},
+      {t:'pt',p:[0,0,0],r:3.5,fill:col.ink},
+      {t:'label',p:[1.15,-1,0],segs:[['x','i'],['/','m'],['w','i']],col:col.muted,size:12},{t:'label',p:[-1,1.2,0],segs:[['y','i'],['/','m'],['w','i']],col:col.muted,size:12},
+      {t:'line',pts:[[0,0,0],[0,0,0.9]],col:TB.rgba(col.ink,0.5),w:1},{t:'label',p:[0,0,1],segs:[['z','i'],['/','m'],['w','i'],['²','m']],col:col.muted,size:12,dx:4});
+    c.save();c.beginPath();if(sm)c.rect(0,split.y,W,H-split.y);else c.rect(split.x,yb,W-split.x,H-yb);c.clip();V.render(c,camB,itB,col);c.restore();
+    c.strokeStyle=col.rule;c.lineWidth=1;if(sm)TB.ln(c,16,split.y,W-16,split.y);else TB.ln(c,split.x,yb+10,split.x,H-10);
+    TB.rich(c,[['поверхность и окно','r']],sm?10:14,sm?yb+16:H-12,fs,col.muted,'start');
+    TB.rich(c,[['окно при параболическом увеличении','r']],sm?10:split.x+14,sm?split.y+18:H-12,fs,col.muted,'start');
+    /* largest gap between the rescaled surface and the paraboloid over the window */
+    let gap=0,bad=0;L.P.forEach((p,i)=>{if(!L.ok[i]){bad++;return;}gap=Math.max(gap,Math.abs(p[2]/ZS-(G.k1*p[0]*p[0]+G.k2*p[1]*p[1])/2));});
+    fx.innerHTML=TB.rows([['<i>w</i> = '+TB.fmt(w,w<0.1?3:2)+',','<i>κ</i><sub>1</sub> = '+TB.fmt(G.k1,2)+',','<i>κ</i><sub>2</sub> = '+TB.fmt(G.k2,2)],
+      [bad?'над частью окна поверхность не является графиком над касательной плоскостью; уменьшите <i>w</i>':'наибольшее расхождение с параболоидом в окне: '+TB.fmt(gap,3)]]);
+  }
+  /* pointer: the point and the view of the surface on one side, the view of the zoom on the other */
+  let mode=null,lx=0,ly=0,x0=0,y0=0,moved=0;
+  const xy=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+  const inA=(x,y)=>split&&(split.y!==undefined?y<split.y:x<split.x);
+  const near=(x,y)=>{const d=V.SURF[shape],q=uv[shape]||d.p0,P=camA.P(d.S(q[0],q[1]));return Math.hypot(P[0]-x,P[1]-y)<26;};
+  const place=(x,y,r0)=>{const d=V.SURF[shape],r=V.pick(camA,V.meshOf(shape),x,y,r0);if(r){uv[shape]=d.fix(r[0],r[1]);draw();}};
+  cv.addEventListener('pointerdown',e=>{if(!is3()||!camA)return;const [x,y]=xy(e);mode=inA(x,y)?(near(x,y)?'pt':'rotA'):'rotB';lx=x0=x;ly=y0=y;moved=0;
+    cv.setPointerCapture(e.pointerId);cv.style.cursor=mode==='pt'?'move':'grabbing';e.preventDefault();});
+  cv.addEventListener('pointermove',e=>{if(!is3()||!camA)return;const [x,y]=xy(e);
+    if(!mode){cv.style.cursor=inA(x,y)&&near(x,y)?'move':'grab';return;}
+    moved=Math.max(moved,Math.hypot(x-x0,y-y0));
+    if(mode==='pt')place(x,y,40);else{const S=mode==='rotA'?st[shape]:sl;S.yaw-=(x-lx)*0.009;S.pitch=Math.max(-1.2,Math.min(1.35,S.pitch+(y-ly)*0.008));draw();}lx=x;ly=y;});
+  const end=e=>{if(mode==='rotA'&&moved<5&&e.type==='pointerup'){const [x,y]=xy(e);place(x,y,14);}mode=null;if(is3())cv.style.cursor='grab';};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  sw.addEventListener('input',draw);
+  const redraw=()=>draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+})();
+</script>

@@ -1,0 +1,78 @@
+<script>
+(function(){
+  /* Fig. ∇.@tube: normal segments γ(s) + d·n(s), |d| < ε, of an ellipse or a peanut; segments that cross another one are warm. A draggable point shows how many of the segments pass through it, i.e. how many preimages it has under Φ(s, d) = γ(s) + d·n(s). */
+  const TB=window.TB,cv=document.getElementById('tube');if(!TB||!cv||!TB.fit)return;
+  const sl=document.getElementById('tbE'),so=document.getElementById('tbEOut'),fx=document.getElementById('tbFx');
+  const SH={
+    ell:{X:2.8,Y:1.75,g:t=>[2*Math.cos(t),Math.sin(t)],p0:[1.55,0.12]},
+    pea:{X:2.3,Y:2.3/1.6,g:t=>{const c=Math.cos(2*t),r=Math.sqrt(c+Math.sqrt(c*c+0.6));return [r*Math.cos(t),r*Math.sin(t)];},p0:[0.03,0.01]}};
+  const N=1440,NS=144;
+  /* samples of the curve with the outward normal n = −Jt and the curvature, by central differences; the reach bounds: 1/max|κ| and half of the narrowest neck */
+  function prep(S){if(S.P)return S;const h=1e-4,P=[],T=[],Nn=[],K=[];
+    for(let i=0;i<N;i++){const t=i/N*2*Math.PI,a=S.g(t-h),b=S.g(t),c=S.g(t+h);
+      const x1=(c[0]-a[0])/(2*h),y1=(c[1]-a[1])/(2*h),x2=(c[0]-2*b[0]+a[0])/(h*h),y2=(c[1]-2*b[1]+a[1])/(h*h),v=Math.hypot(x1,y1);
+      P.push(b);T.push([x1/v,y1/v]);Nn.push([y1/v,-x1/v]);K.push((x1*y2-y1*x2)/(v*v*v));}
+    S.P=P;S.T=T;S.Nn=Nn;S.K=K;S.R=1/Math.max(...K.map(Math.abs));
+    /* the narrowest neck: the shortest chord along a common normal, between points far apart on the curve */
+    let neck=1e9;for(let i=0;i<N;i+=4)for(let j=i+N/8;j<i+7*N/8;j+=4){const q=j%N,dx=P[q][0]-P[i][0],dy=P[q][1]-P[i][1],L=Math.hypot(dx,dy);
+      if(L<neck&&Math.abs(dx*T[i][0]+dy*T[i][1])<0.02*L&&Math.abs(dx*T[q][0]+dy*T[q][1])<0.02*L)neck=L;}
+    S.neck=neck/2;return S;}
+  /* do the segments i and j (as index pairs of the samples) cross? */
+  function cross(a,b,c,d){const o=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);
+    return o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0;}
+  let md=TB.segs(cv,k=>{if(!SH[k])return;md=k;draw();}),xy={},geo=null,drag=false;
+  const sm=()=>cv.parentNode.getBoundingClientRect().width<520,mctx=document.createElement('canvas').getContext('2d');
+  function items(K){return [{k:'line',col:K.ink,t:[['граница ','r'],['Γ','m']]},{k:'thin',col:K.eth,t:[['отрезки ','r'],['|','m'],['d','i'],['| < ','m'],['ε','i']]},
+    {k:'thin',col:K.warm,t:[['пересекают другие','r']]},{k:'dash',col:K.ink,t:[['через точку ','r'],['x','i']]}];}
+  function legH(W,s){const K=TB.cols(),L=sm()?4:10,R=W-(sm()?4:10);let x=L,rows=1;
+    for(const it of items(K)){const w=22+6+TB.richW(mctx,it.t,s);if(x>L&&x+w>R){x=L;rows++;}x+=w+18;}
+    return 6+s+(rows-1)*(s+9)+7+4;}
+  /* all s with x − γ(s) parallel to n(s) and |d| < ε: zeros of ⟨x − γ(s), t(s)⟩ along the curve */
+  function feet(S,x,y,e){const out=[];let prev=null;
+    for(let i=0;i<=N;i++){const q=i%N,h=(x-S.P[q][0])*S.T[q][0]+(y-S.P[q][1])*S.T[q][1];
+      if(prev!==null&&(prev<0)!==(h<0)){const l=prev/(prev-h),a=(i-1)%N,P=[S.P[a][0]+(S.P[q][0]-S.P[a][0])*l,S.P[a][1]+(S.P[q][1]-S.P[a][1])*l],
+        n=[S.Nn[a][0]+(S.Nn[q][0]-S.Nn[a][0])*l,S.Nn[a][1]+(S.Nn[q][1]-S.Nn[a][1])*l],d=(x-P[0])*n[0]+(y-P[1])*n[1];
+        if(Math.abs(d)<e)out.push({P:P,d:d});}
+      prev=h;}
+    return out;}
+  function draw(){
+    const S=prep(SH[md]),e=+sl.value;so.textContent=TB.fmt(e,2);
+    const s=sm()?12:13,f=TB.fit(cv,W=>Math.round(W/1.6)+legH(W,s)),c=f.c,W=f.W,H=f.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const top=TB.legend(c,items(K),sm()?4:10,W-(sm()?4:10),6,s)+4,ph=H-top,sc=Math.min(W/(2*S.X),ph/(2*S.Y)),ox=W/2,oy=top+ph/2;
+    geo={sc:sc,ox:ox,oy:oy,X:S.X,Y:S.Y};
+    const X=x=>ox+x*sc,Y=y=>oy-y*sc;
+    c.save();c.beginPath();c.rect(0,top,W,ph);c.clip();
+    /* the segments; a segment is warm when it crosses another one, that is, when Φ is not one-to-one on the strip */
+    const seg=[];for(let k=0;k<NS;k++){const q=k*N/NS,p=S.P[q],n=S.Nn[q];seg.push([[p[0]-e*n[0],p[1]-e*n[1]],[p[0]+e*n[0],p[1]+e*n[1]]]);}
+    const bad=new Uint8Array(NS);let nb=0;
+    for(let i=0;i<NS;i++)for(let j=i+1;j<NS;j++)if(cross(seg[i][0],seg[i][1],seg[j][0],seg[j][1])){if(!bad[i])nb++;if(!bad[j])nb++;bad[i]=bad[j]=1;}
+    c.lineWidth=1.1;
+    for(let i=0;i<NS;i++){const [a,b]=seg[i];c.strokeStyle=bad[i]?TB.rgba(K.warm,0.85):TB.rgba(K.eth,0.55);TB.ln(c,X(a[0]),Y(a[1]),X(b[0]),Y(b[1]));}
+    /* the boundary */
+    c.strokeStyle=K.ink;c.lineWidth=2.6;c.beginPath();for(let i=0;i<=N;i++){const p=S.P[i%N];if(i)c.lineTo(X(p[0]),Y(p[1]));else c.moveTo(X(p[0]),Y(p[1]));}c.stroke();
+    /* the chosen point and the segments through it */
+    if(!xy[md])xy[md]=S.p0.slice();const [x,y]=xy[md],F=feet(S,x,y,e);
+    c.strokeStyle=K.ink;c.lineWidth=2.2;c.setLineDash([5,4]);for(const q of F){TB.ln(c,X(q.P[0]),Y(q.P[1]),X(x),Y(y));}c.setLineDash([]);
+    for(const q of F){c.fillStyle=K.paper;c.strokeStyle=K.ink;c.lineWidth=1.6;c.beginPath();c.arc(X(q.P[0]),Y(q.P[1]),3.6,0,7);c.fill();c.stroke();}
+    c.lineWidth=2.5;c.strokeStyle=K.paper;c.beginPath();c.arc(X(x),Y(y),5.5,0,7);c.stroke();
+    c.lineWidth=1.8;c.strokeStyle=K.ink;c.fillStyle=F.length>1?K.warm:K.eth;c.beginPath();c.arc(X(x),Y(y),5,0,7);c.fill();c.stroke();
+    TB.rich(c,[['x','i']],X(x)+8,Y(y)-8,s+1,K.ink,'start');
+    c.restore();
+    /* unit bar */
+    const x0=12,y0=H-12;c.strokeStyle=K.ink;c.lineWidth=1.4;TB.ln(c,x0,y0,x0+sc,y0);TB.ln(c,x0,y0-4,x0,y0+4);TB.ln(c,x0+sc,y0-4,x0+sc,y0+4);
+    TB.rich(c,[['1','m']],x0+sc/2,y0-6,s,K.ink,'center');
+    /* readout */
+    const nm=['','один отрезок','два отрезка','три отрезка','четыре отрезка'],k=F.length;
+    const r1=['1/max|<i>κ</i>| = '+TB.fmt(S.R,2)+','];if(md==='pea')r1.push('половина ширины перешейка = '+TB.fmt(S.neck,2)+',');
+    if(nb)r1.push('отрезки пересекаются:','<i>Φ</i> не взаимно однозначно');else r1.push('отрезки не пересекаются');
+    fx.innerHTML=TB.rows([r1,k?(k>1?['через точку <i>x</i> проходит '+(nm[k]||k+' отрезков')+':','у неё несколько прообразов']:['через точку <i>x</i> проходит один отрезок']):['через точку <i>x</i>','не проходит ни одного отрезка:','она вне полосы']]);
+  }
+  function at(ev){const r=cv.getBoundingClientRect(),g=geo;xy[md]=[Math.max(-g.X,Math.min(g.X,(ev.clientX-r.left-g.ox)/g.sc)),Math.max(-g.Y,Math.min(g.Y,(g.oy-(ev.clientY-r.top))/g.sc))];draw();}
+  cv.style.touchAction='pan-y';
+  cv.addEventListener('pointerdown',ev=>{drag=true;cv.setPointerCapture(ev.pointerId);at(ev);});
+  cv.addEventListener('pointermove',ev=>{if(drag)at(ev);});
+  cv.addEventListener('pointerup',()=>{drag=false;});cv.addEventListener('pointercancel',()=>{drag=false;});
+  sl.addEventListener('input',draw);TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>
