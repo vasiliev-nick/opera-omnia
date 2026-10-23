@@ -1,84 +1,162 @@
 <script>
 (function(){
-  /* §∅.10, canvas rv3: random variables on three equally likely outcomes as vectors of ℝ³ in the usual axes. The constants lie on the diagonal (c,c,c); the means slide the arrows along it, and the deviations lie in the plane of zero mean perpendicular to it. */
-  const TB=window.TB,cv=document.getElementById('rv3');if(!TB||!cv||!TB.V3||!TB.fit)return;
-  const V=TB.V3,$=id=>document.getElementById(id),fx=$('rvFx'),sA=$('rvA'),sB=$('rvB'),sP=$('rvP'),oA=$('rvAOut'),oB=$('rvBOut'),oP=$('rvPOut');
-  const gC=new TB.Gauge('gRvC'),gR=new TB.Gauge('gRvR'),PI=Math.PI,S2=Math.SQRT2,S3=Math.sqrt(3),S6=Math.sqrt(6),AX=3.4,DG=2.55;
-  /* unit vectors of the plane of zero mean: u = (−1,0,1)/√2, w = (1,−2,1)/√6; the diagonal direction is (1,1,1) */
-  const U=[-1/S2,0,1/S2],Wv=[1/S6,-2/S6,1/S6],ONE=[1,1,1],D1=[1/S3,1/S3,1/S3];
-  const st={yaw:-1.0,pitch:0.52,dist:18};
-  /* radius of the disc drawn in the plane of zero mean */
-  const RD=1.85;
-  let cam=null,tips=null;
-  function vals(){const a=+sA.value,b=+sB.value,p=+sP.value*PI/180,du=V.mul(U,S2),dv=V.add(V.mul(U,S2*Math.cos(p)),V.mul(Wv,S2*Math.sin(p)));
-    return {a:a,b:b,p:p,du:du,dv:dv,x:V.add(V.mul(ONE,a),du),y:V.add(V.mul(ONE,b),dv)};}
-  const E=v=>(v[0]+v[1]+v[2])/3,ip=(u,v)=>V.dot(u,v)/3;
+  /* §∅.10, canvas rvp: random variables on three outcomes, seen along the line of constants. The disc is the plane of zero mean with the true lengths and angles of L²(P);
+     the means sit on two scales beside it, and a triangle sets the probabilities of the outcomes. */
+  const TB=window.TB,cv=document.getElementById('rvp');if(!TB||!cv||!TB.fit||!TB.cols)return;
+  const fx=document.getElementById('rvFx'),gC=new TB.Gauge('gRvC'),gR=new TB.Gauge('gRvR');
+  /* RS: radius of the disc in units of length of L²(P); deviations stay between RMIN and RIN; means stay in [−MM, MM]; every probability is at least PMIN */
+  const PI=Math.PI,RS=1.6,RIN=RS*0.97,RMIN=0.12,MM=3,PMIN=0.05,SNAP=2.5*PI/180;
+  /* the state: values of ξ and η at the outcomes 1, 2, 3 and the probabilities of the outcomes */
+  let XB=[1,2,3],YB=[3,2,1],p=[1/3,1/3,1/3];
+  const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const E=v=>dot(p,v),mul=(a,b)=>a.map((v,i)=>v*b[i]);
+  /* In the coordinates x_ω = √p_ω·ξ(ω) the scalar product is the usual one. The plane of zero mean is orthogonal to q = (√p_ω);
+     F1 is the projection of the axis of outcome 1 onto it (it points up), F0 = F1 × q. */
+  function frame(){const q=p.map(Math.sqrt),n=[1-p[0],-q[0]*q[1],-q[0]*q[2]],l=Math.sqrt(dot(n,n)),F1=n.map(v=>v/l);return {q:q,F1:F1,F0:cross(F1,q)};}
+  const toZ=(d,f)=>{const y=mul(d,f.q);return [dot(y,f.F0),dot(y,f.F1)];};
+  const fromZ=(z,f)=>[0,1,2].map(i=>(z[0]*f.F0[i]+z[1]*f.F1[i])/f.q[i]);
+  /* The shown variable: the stored values; if a change of probabilities pushed the deviation out of the disc or the mean off its scale, they are brought back to the edge. */
+  function shown(B){const m=E(B),d=B.map(v=>v-m),s=Math.sqrt(E(d.map(v=>v*v))),l=s>RIN?RIN/s:1,mc=Math.max(-MM,Math.min(MM,m));
+    return {m:mc,d:d.map(v=>v*l),v:d.map(v=>mc+v*l)};}
+  /* layout: the disc, the two scales of means and the triangle of probabilities; side by side on a wide column, the scales and the triangle under the disc on a narrow one */
+  function lay(W){const sm=W<520,yb=26;let o;
+    if(!sm){const hm=Math.round(Math.min(W*0.56,430)),Wp=Math.round(W*0.58),x0=Wp+4,tl=x0+84,tr=W-6,side=Math.min(tr-tl-44,190),h=side*Math.sqrt(3)/2,tx=(tl+tr)/2,cy=yb+hm/2,ty=cy-h/2+10;
+      o={H:yb+hm+6,cx:Wp/2,cy:cy,R:Math.min(Wp,hm)/2-34,sc:{xa:x0+16,xn:x0+34,xb:x0+52,top:yb+50,bot:yb+hm-24},A:[tx,ty],B:[tx-side/2,ty+h],C:[tx+side/2,ty+h]};}
+    else{const R=W/2-40,cy=yb+R+36,rt=cy+R+16,side=Math.min(W*0.58-40,160),h=side*Math.sqrt(3)/2,rh=Math.round(h+84),tx=W*0.31,ty=rt+52,xc=W*0.81;
+      o={H:rt+rh,cx:W/2,cy:cy,R:R,sc:{xa:xc-18,xn:xc,xb:xc+18,top:rt+52,bot:rt+rh-14},A:[tx,ty],B:[tx-side/2,ty+h],C:[tx+side/2,ty+h]};}
+    o.sm=sm;o.k=o.R/RS;return o;}
+  let G=null,drag=null,tap=null;
+  const bary=(x,y)=>{const A=G.A,B=G.B,C=G.C,d=(B[1]-C[1])*(A[0]-C[0])+(C[0]-B[0])*(A[1]-C[1]),
+    a=((B[1]-C[1])*(x-C[0])+(C[0]-B[0])*(y-C[1]))/d,b=((C[1]-A[1])*(x-C[0])+(A[0]-C[0])*(y-C[1]))/d;return [a,b,1-a-b];};
+  const atB=b=>[b[0]*G.A[0]+b[1]*G.B[0]+b[2]*G.C[0],b[0]*G.A[1]+b[1]*G.B[1]+b[2]*G.C[1]];
+  const segNear=(P,U,V)=>{const dx=V[0]-U[0],dy=V[1]-U[1],t=Math.max(0,Math.min(1,((P[0]-U[0])*dx+(P[1]-U[1])*dy)/(dx*dx+dy*dy)));return [U[0]+t*dx,U[1]+t*dy];};
+  function triDist(x,y){const b=bary(x,y);if(Math.min(b[0],b[1],b[2])>=0)return 0;
+    return Math.min(...[[G.A,G.B],[G.B,G.C],[G.C,G.A]].map(s=>{const q=segNear([x,y],s[0],s[1]);return Math.hypot(q[0]-x,q[1]-y);}));}
+  /* a point of the triangle gives the probabilities: its barycentric coordinates, kept inside {P(ω) ≥ PMIN}, rounded to hundredths; near the centre they snap to 1/3 */
+  function setP(x,y){const ctr=atB([1/3,1/3,1/3]);if(Math.hypot(x-ctr[0],y-ctr[1])<9){p=[1/3,1/3,1/3];return;}
+    let b=bary(x,y);
+    if(Math.min(b[0],b[1],b[2])<PMIN){const e=PMIN,I=[atB([1-2*e,e,e]),atB([e,1-2*e,e]),atB([e,e,1-2*e])];let best=null,bd=1e9;
+      for(const s of [[I[0],I[1]],[I[1],I[2]],[I[2],I[0]]]){const q=segNear([x,y],s[0],s[1]),dd=Math.hypot(q[0]-x,q[1]-y);if(dd<bd){bd=dd;best=q;}}
+      b=bary(best[0],best[1]);}
+    const c=b.map(v=>Math.max(PMIN,v)*100+1e-9),fl=c.map(Math.floor);let r=100-fl[0]-fl[1]-fl[2];
+    const ord=[0,1,2].sort((i,j)=>(c[j]-fl[j])-(c[i]-fl[i]));for(let t=0;r>0&&t<3;t++,r--)fl[ord[t]]++;
+    for(let t=0;r<0&&t<3;t++)if(fl[ord[2-t]]>5){fl[ord[2-t]]--;r++;}
+    p=fl.map(v=>v/100);}
+  /* a tip pulled to the model point z: the length stays in [RMIN, RIN], and the angle ψ snaps to 0°, 90°, 180° when it is close */
+  function setTip(i,z){const fr=frame(),S=[shown(XB),shown(YB)],o=toZ(S[1-i].d,fr);let r=Math.hypot(z[0],z[1]);
+    let th=r>1e-9?Math.atan2(z[1],z[0]):Math.atan2(o[1],o[0]);r=Math.max(RMIN,Math.min(RIN,r));
+    const to=Math.atan2(o[1],o[0]);let dl=th-to;while(dl>PI)dl-=2*PI;while(dl<=-PI)dl+=2*PI;
+    for(const t of [0,PI/2,-PI/2,PI,-PI])if(Math.abs(dl-t)<SNAP){dl=t;break;}
+    th=to+dl;const d=fromZ([r*Math.cos(th),r*Math.sin(th)],fr),v=d.map(u=>S[i].m+u);if(i)YB=v;else XB=v;}
+  function setMean(i,y){const s=G.sc;let m=MM-(y-s.top)/(s.bot-s.top)*2*MM;m=Math.max(-MM,Math.min(MM,Math.round(m*20)/20));
+    const S=shown(i?YB:XB),v=S.d.map(u=>m+u);if(i)YB=v;else XB=v;}
+  const f2=v=>TB.fmt(v,2),f3=v=>TB.fmt(v,3),tr=v=>'('+v.map(f2).join('; ')+')';
   function draw(){
-    const f=TB.fit(cv,W=>Math.round(W*(W<520?1.1:0.64))),c=f.c,W=f.W,H=f.H,col=TB.cols(),sm=W<520,fs=sm?12:13;
+    const F=TB.fit(cv,W=>lay(W).H),c=F.c,W=F.W,H=F.H,col=TB.cols(),L=lay(W),sm=L.sm,fs=sm?12:13;G=L;
     c.clearRect(0,0,W,H);
-    const yb=TB.legend(c,[{k:'line',col:col.eth,t:[['ξ','i']]},{k:'line',col:col.warm,t:[['η','i']]},
-      {k:'dash',col:col.ink,t:[['перпендикуляр на прямую постоянных','r']]}],sm?8:14,W-8,4,fs);
-    const s0=Math.min(W*(sm?0.132:0.1),(H-yb)/7.3);
-    cam=V.camera(st,W,H,W*(sm?0.43:0.44),yb+(H-yb)*0.56,s0);
-    const q=vals(),X=q.x,Y=q.y,fX=V.mul(ONE,q.a),fY=V.mul(ONE,q.b);
-    oA.textContent=TB.fmt(q.a,2);oB.textContent=TB.fmt(q.b,2);oP.textContent=Math.round(+sP.value)+'°';
-    const items=[];
-    /* the coordinate axes: the value at outcome 1, 2, 3, with marks at the integers */
-    for(let i=0;i<3;i++){const e=[0,0,0];e[i]=1;const neg=V.mul(e,-AX*0.75),pos=V.mul(e,AX);
-      items.push({t:'line',pts:[neg,[0,0,0]],col:TB.rgba(col.ink,0.32),w:1,dash:[3,4]},{t:'arrow',p:[0,0,0],v:pos,col:TB.rgba(col.ink,0.55),w:1.1});
-      const o=[0,0,0];o[(i+1)%3]=0.07;const o2=[0,0,0];o2[(i+2)%3]=0.07;
-      for(let k=-2;k<=3;k++)if(k)items.push({t:'segs',s:[[V.add(V.mul(e,k),o),V.sub(V.mul(e,k),o)],[V.add(V.mul(e,k),o2),V.sub(V.mul(e,k),o2)]],col:TB.rgba(col.ink,0.55),w:1});
-      items.push({t:'label',p:V.mul(e,AX+0.25),segs:[['ω','i'],[' = '+(i+1),'m']],dx:i===1?2:8,dy:i===1?19:5,size:fs,col:col.muted});}
-    /* the plane of zero mean */
-    const rim=[];for(let i=0;i<=72;i++){const t=2*PI*i/72;rim.push(V.add(V.mul(U,RD*Math.cos(t)),V.mul(Wv,RD*Math.sin(t))));}
-    items.push({t:'line',pts:rim,col:TB.rgba(col.eth,0.45),w:1,bias:0.01});
-    /* the line of constants with its marks c = −2…2 */
-    items.push({t:'line',pts:[V.mul(ONE,-DG),V.mul(ONE,DG)],col:TB.rgba(col.ink,0.8),w:1.4,ghost:0.35});
-    for(let k=-2;k<=2;k++){if(!k)continue;const p=V.mul(ONE,k),o=V.mul(U,0.09);
-      items.push({t:'segs',s:[[V.add(p,o),V.sub(p,o)]],col:TB.rgba(col.ink,0.8),w:1.3},{t:'label',p:p,segs:[['c','i'],[' = '+TB.fmt(k,0),'m']],dx:5,dy:16,size:fs-2,col:col.muted});}
-    items.push({t:'label',p:V.mul(ONE,DG),segs:[['постоянные','r']],dx:-4,dy:-10,size:fs-1,col:col.muted,al:'right'});
-    /* perpendiculars from the tips to the constants, with right-angle marks */
-    const corner=(foot,d,m,cl)=>{const n=V.norm(d);if(n<1e-6)return;const h=V.mul(d,0.2/n),v=V.mul(D1,m>0.03?-0.2:0.2);
-      items.push({t:'line',pts:[V.add(foot,h),V.add(V.add(foot,h),v),V.add(foot,v)],col:cl,w:1,alpha:0.85,bias:0.02});};
-    items.push({t:'line',pts:[fX,X],col:col.eth,w:1.5,dash:[5,4],bias:0.02},{t:'line',pts:[fY,Y],col:col.warm,w:1.5,dash:[5,4],bias:0.02});
-    corner(fX,q.du,q.a,col.eth);corner(fY,q.dv,q.b,col.warm);
-    items.push({t:'pt',p:fX,r:3.6,fill:col.eth,stroke:col.paper,w:1.2},{t:'pt',p:fY,r:3.6,fill:col.warm,stroke:col.paper,w:1.2});
-    /* deviations in the plane and the angle ψ between them */
-    items.push({t:'arrow',p:[0,0,0],v:q.du,col:TB.rgba(col.eth,0.75),w:1.4},{t:'arrow',p:[0,0,0],v:q.dv,col:TB.rgba(col.warm,0.8),w:1.4});
-    const arcPs=[];for(let i=0;i<=40;i++){const t=q.p*i/40;arcPs.push(V.add(V.mul(U,0.5*Math.cos(t)),V.mul(Wv,0.5*Math.sin(t))));}
-    if(q.p>0.02)items.push({t:'line',pts:arcPs,col:col.ink,w:1.2,alpha:0.8,bias:0.03});
-    items.push({t:'label',p:V.add(V.mul(U,0.75*Math.cos(q.p/2)),V.mul(Wv,0.75*Math.sin(q.p/2))),segs:[['ψ','i']],dx:-4,dy:5,size:fs+1,col:col.ink});
-    /* the vectors ξ, η and the angle φ between them */
-    items.push({t:'arrow',p:[0,0,0],v:X,col:col.eth,w:2.6},{t:'arrow',p:[0,0,0],v:Y,col:col.warm,w:2.6});
-    const xh=V.unit(X),yp=V.sub(Y,V.mul(xh,V.dot(Y,xh))),phi=Math.acos(Math.max(-1,Math.min(1,V.dot(xh,V.unit(Y)))));
-    if(V.norm(yp)>1e-6&&phi>0.02){const e2=V.unit(yp),R=0.95,ps=[];for(let i=0;i<=40;i++){const t=phi*i/40;ps.push(V.add(V.mul(xh,R*Math.cos(t)),V.mul(e2,R*Math.sin(t))));}
-      items.push({t:'line',pts:ps,col:col.ink,w:1.2,alpha:0.55,dash:[3,3],bias:0.03});
-      items.push({t:'label',p:V.add(V.mul(xh,1.25*Math.cos(phi/2)),V.mul(e2,1.25*Math.sin(phi/2))),segs:[['φ','i']],dx:-4,dy:5,size:fs+1,col:col.ink});}
-    const lab=(P,t,cl)=>{const n=V.norm(P)||1;items.push({t:'label',p:V.add(P,V.mul(P,0.22/n)),segs:t,dx:-4,dy:5,size:fs+2,col:cl});};
-    lab(X,[['ξ','i']],col.eth);lab(Y,[['η','i']],col.warm);
-    c.save();c.beginPath();c.rect(0,yb,W,H-yb);c.clip();
-    /* the disc is a single translucent fill under the scene: everything stays visible through it */
-    c.globalAlpha=0.13;c.fillStyle=col.eth;c.beginPath();rim.forEach((p,i)=>{const P=cam.P(p);i?c.lineTo(P[0],P[1]):c.moveTo(P[0],P[1]);});c.closePath();c.fill();c.globalAlpha=1;
-    V.render(c,cam,items,col);c.restore();
-    tips=[cam.P(X),cam.P(Y)];
+    TB.legend(c,[{k:'line',col:col.eth,t:[['отклонение ','r'],['ξ','i']]},{k:'line',col:col.warm,t:[['отклонение ','r'],['η','i']]}],sm?8:14,W-8,4,fs);
+    const fr=frame(),SX=shown(XB),SY=shown(YB),zX=toZ(SX.d,fr),zY=toZ(SY.d,fr),k=L.k,cx=L.cx,cy=L.cy,R=L.R;
+    const P=z=>[cx+z[0]*k,cy-z[1]*k];
+    /* labels on a soft patch of paper, so that the grid does not cross them */
+    const rl=(segs,x,y,s,cl,al)=>{const w=TB.richW(c,segs,s),x0=al==='center'?x-w/2:al==='right'?x-w:x;
+      c.fillStyle=TB.rgba(col.paper,0.82);c.fillRect(x0-2,y-s-1,w+4,s+5);TB.rich(c,segs,x0,y,s,cl);return w;};
+    const arrow=(x0,y0,x1,y1,cl,lw,hs)=>{const dx=x1-x0,dy=y1-y0,l=Math.hypot(dx,dy);if(l<1)return;const ux=dx/l,uy=dy/l,h=Math.min(hs,l*0.6);
+      c.strokeStyle=cl;c.lineWidth=lw;c.lineCap='round';c.setLineDash([]);c.beginPath();c.moveTo(x0,y0);c.lineTo(x1-ux*h*0.7,y1-uy*h*0.7);c.stroke();
+      c.fillStyle=cl;c.beginPath();c.moveTo(x1,y1);c.lineTo(x1-ux*h-uy*h*0.42,y1-uy*h+ux*h*0.42);c.lineTo(x1-ux*h+uy*h*0.42,y1-uy*h-ux*h*0.42);c.closePath();c.fill();c.lineCap='butt';};
+    /* the disc: a piece of the plane of zero mean */
+    c.fillStyle=TB.rgba(col.eth,0.06);c.beginPath();c.arc(cx,cy,R,0,2*PI);c.fill();
+    c.strokeStyle=TB.rgba(col.eth,0.35);c.lineWidth=1;c.beginPath();c.arc(cx,cy,R,0,2*PI);c.stroke();
+    /* the axis of outcome ω: the direction a_ω in which the deviation at ω grows fastest; lines across it: the deviation at ω is an integer (step h_ω = √(p/(1−p))) */
+    const ax=[0,1,2].map(i=>{const s=Math.sqrt(1-p[i]);return {a:[fr.F0[i]/s,fr.F1[i]/s],h:Math.sqrt(p[i]/(1-p[i]))};});
+    c.save();c.beginPath();c.arc(cx,cy,R,0,2*PI);c.clip();c.strokeStyle=TB.rgba(col.ink,0.13);c.lineWidth=1;c.beginPath();
+    for(const A of ax){const n=[-A.a[1],A.a[0]];for(let j=-Math.floor(RS/A.h);j*A.h<RS;j++){const o=j*A.h,hw=Math.sqrt(Math.max(0,RS*RS-o*o));
+      const U=P([o*A.a[0]+hw*n[0],o*A.a[1]+hw*n[1]]),V=P([o*A.a[0]-hw*n[0],o*A.a[1]-hw*n[1]]);c.moveTo(U[0],U[1]);c.lineTo(V[0],V[1]);}}
+    c.stroke();c.restore();
+    /* the angle ψ between the deviations, and where the labels near the centre go: ψ, the names of the arrows, «постоянные»; the numbers on the axes keep clear of them */
+    const sX=[zX[0],-zX[1]],sY=[zY[0],-zY[1]],lX=Math.hypot(sX[0],sX[1]),lY=Math.hypot(sY[0],sY[1]);
+    const tX=Math.atan2(sX[1],sX[0]);let dl=Math.atan2(sY[1],sY[0])-tX;while(dl>PI)dl-=2*PI;while(dl<=-PI)dl+=2*PI;
+    const psi=Math.abs(dl),rA=Math.max(14,Math.min(30,0.45*Math.min(lX,lY)*k)),dirs=[sX,sY,...ax.map(A=>[A.a[0],-A.a[1]])];
+    const cosPsi=(zX[0]*zY[0]+zX[1]*zY[1])/(Math.hypot(zX[0],zX[1])*Math.hypot(zY[0],zY[1])),right=Math.abs(cosPsi)<1e-9;
+    const TX=P(zX),TY=P(zY),keep=[[TX[0],TX[1],15],[TY[0],TY[1],15]];let psiL=null;
+    if(psi>0.06){const mid=tX+dl/2,mu=[Math.cos(mid),Math.sin(mid)],rr=right?31:rA+11;dirs.push(mu);psiL=[cx+mu[0]*rr,cy+mu[1]*rr];keep.push([psiL[0],psiL[1],12]);}
+    const nameAt=(T,s,o)=>{const l=Math.hypot(s[0],s[1])||1,u=[s[0]/l,s[1]/l];let n=[-u[1],u[0]];if(n[0]*o[0]+n[1]*o[1]>0)n=[-n[0],-n[1]];return [T[0]+u[0]*17+n[0]*7,T[1]+u[1]*17+n[1]*7];};
+    const nX=nameAt(TX,sX,sY),nY=nameAt(TY,sY,sX);keep.push([nX[0],nX[1],11],[nY[0],nY[1],11]);
+    c.font=(fs-1)+'px '+TB.ui;const cw=c.measureText('постоянные').width,ch=fs-1;let best=null,bs=-1;
+    for(let j=0;j<12;j++){const t=j*PI/6,u=[Math.cos(t),Math.sin(t)];let sc=PI;for(const d of dirs){const l=Math.hypot(d[0],d[1]);if(l<1e-9)continue;sc=Math.min(sc,Math.acos(Math.max(-1,Math.min(1,(u[0]*d[0]+u[1]*d[1])/l))));}
+      if(sc>bs+1e-6){bs=sc;best=u;}}
+    const dd=14+Math.abs(best[0])*cw/2+Math.abs(best[1])*ch/2,lc=[cx+best[0]*dd,cy+best[1]*dd];
+    const clear=(x,y)=>keep.every(q=>Math.hypot(x-q[0],y-q[1])>q[2]+5)&&!(Math.abs(x-lc[0])<cw/2+7&&Math.abs(y-lc[1])<ch/2+7);
+    /* the axes with marks at the integer deviations; the label of an axis that would leave the canvas goes beside its arrowhead */
+    ax.forEach((A,i)=>{const u=[A.a[0],-A.a[1]],e=[cx+u[0]*(R+9),cy+u[1]*(R+9)];arrow(cx,cy,e[0],e[1],TB.rgba(col.ink,0.5),1.1,8);
+      c.strokeStyle=TB.rgba(col.ink,0.5);c.lineWidth=1;c.beginPath();const sp=A.h*k,nt=[-u[1],u[0]];
+      for(let j=1;j*A.h<RS-0.04;j++){const t=[cx+u[0]*j*sp,cy+u[1]*j*sp];c.moveTo(t[0]-nt[0]*4,t[1]-nt[1]*4);c.lineTo(t[0]+nt[0]*4,t[1]+nt[1]*4);}c.stroke();
+      if(sp>=16){c.font=(fs-3)+'px '+TB.ui;c.fillStyle=col.muted;c.textAlign='center';
+        for(let j=1;j*A.h<RS-0.04;j++){const t=[cx+u[0]*j*sp+nt[0]*10,cy+u[1]*j*sp+nt[1]*10];if(clear(t[0],t[1]))c.fillText(String(j),t[0],t[1]+(fs-3)*0.35);}c.textAlign='start';}
+      const segs=[['ω','i'],[' = '+(i+1),'m']],w=TB.richW(c,segs,fs),lp=[cx+u[0]*(R+18)+u[0]*w/2,cy+u[1]*(R+18)+u[1]*fs*0.5+fs*0.35];
+      const xl=Math.max(w/2+3,Math.min((sm?W:L.sc.xa-22)-w/2-3,lp[0])),yl=Math.abs(xl-lp[0])>2?e[1]+(u[1]>=0?fs+7:-8):lp[1];
+      rl(segs,xl,yl,fs,col.muted,'center');});
+    if(psiL){c.strokeStyle=col.ink;c.lineWidth=1.2;c.globalAlpha=0.8;c.beginPath();
+      if(right){const a=[sX[0]/lX*14,sX[1]/lX*14],b=[sY[0]/lY*14,sY[1]/lY*14];c.moveTo(cx+a[0],cy+a[1]);c.lineTo(cx+a[0]+b[0],cy+a[1]+b[1]);c.lineTo(cx+b[0],cy+b[1]);}
+      else c.arc(cx,cy,rA,tX,tX+dl,dl<0);
+      c.stroke();c.globalAlpha=1;rl([['ψ','i']],psiL[0],psiL[1]+fs*0.4,fs+1,col.ink,'center');}
+    /* the line of constants looks at the reader: it is the point ⊙ in the centre */
+    c.font=(fs-1)+'px '+TB.ui;c.fillStyle=TB.rgba(col.paper,0.82);c.fillRect(lc[0]-cw/2-2,lc[1]-ch/2-2,cw+4,ch+4);c.fillStyle=col.muted;c.textAlign='center';c.fillText('постоянные',lc[0],lc[1]+ch*0.36);c.textAlign='start';
+    /* the deviations: handles, arrows, names */
+    [[TX,col.eth],[TY,col.warm]].forEach(q=>{c.fillStyle=TB.rgba(q[1],0.16);c.beginPath();c.arc(q[0][0],q[0][1],13,0,2*PI);c.fill();});
+    arrow(cx,cy,TY[0],TY[1],col.warm,2.6,12);arrow(cx,cy,TX[0],TX[1],col.eth,2.6,12);
+    c.fillStyle=col.paper;c.strokeStyle=col.ink;c.lineWidth=1.3;c.beginPath();c.arc(cx,cy,5.5,0,2*PI);c.fill();c.stroke();
+    c.fillStyle=col.ink;c.beginPath();c.arc(cx,cy,1.8,0,2*PI);c.fill();
+    rl([['ξ','i']],nX[0],nX[1]+fs*0.45,fs+3,col.eth,'center');rl([['η','i']],nY[0],nY[1]+fs*0.45,fs+3,col.warm,'center');
+    /* the scales of the means: shifts along the line of constants, towards the reader */
+    const S=L.sc,Ym=m=>S.top+(MM-m)/(2*MM)*(S.bot-S.top);
+    c.font=(fs-1)+'px '+TB.ui;c.fillStyle=col.muted;c.textAlign='center';c.fillText('средние',S.xn,S.top-30);c.textAlign='start';
+    TB.rich(c,[['ξ','i']],S.xa,S.top-11,fs+1,col.eth,'center');TB.rich(c,[['η','i']],S.xb,S.top-11,fs+1,col.warm,'center');
+    c.strokeStyle=TB.rgba(col.ink,0.5);c.lineWidth=1;c.beginPath();
+    for(const x of [S.xa,S.xb]){c.moveTo(x,S.top);c.lineTo(x,S.bot);for(let m=-MM;m<=MM;m++){const y=Ym(m),w=m?4:7;c.moveTo(x-w,y);c.lineTo(x+w,y);}}c.stroke();
+    c.font=(fs-2)+'px '+TB.ui;c.fillStyle=col.muted;c.textAlign='center';for(let m=-MM;m<=MM;m++)c.fillText(TB.fmt(m,0),S.xn,Ym(m)+(fs-2)*0.36);c.textAlign='start';
+    [[S.xa,SX.m,col.eth],[S.xb,SY.m,col.warm]].forEach(q=>{c.fillStyle=q[2];c.strokeStyle=col.paper;c.lineWidth=1.5;c.beginPath();c.arc(q[0],Ym(q[1]),6.5,0,2*PI);c.fill();c.stroke();});
+    /* the triangle of probabilities: the distance from the point to the side opposite the corner ω is proportional to P(ω) */
+    const A=L.A,B=L.B,C=L.C,Q=atB(p),ctr=atB([1/3,1/3,1/3]);
+    c.fillStyle=TB.rgba(col.eth,0.07);c.strokeStyle=TB.rgba(col.ink,0.45);c.lineWidth=1;c.beginPath();c.moveTo(A[0],A[1]);c.lineTo(B[0],B[1]);c.lineTo(C[0],C[1]);c.closePath();c.fill();c.stroke();
+    c.font=(fs-1)+'px '+TB.ui;c.fillStyle=col.muted;c.textAlign='center';c.fillText('вероятности исходов',A[0],A[1]-30);c.textAlign='start';
+    TB.rich(c,[['ω','i'],[' = 1','m']],A[0],A[1]-9,fs,col.muted,'center');
+    TB.rich(c,[['ω','i'],[' = 2','m']],B[0]+6,B[1]+fs+7,fs,col.muted,'center');TB.rich(c,[['ω','i'],[' = 3','m']],C[0]-6,C[1]+fs+7,fs,col.muted,'center');
+    c.strokeStyle=TB.rgba(col.ink,0.4);c.lineWidth=1;c.setLineDash([3,3]);c.beginPath();
+    for(const s of [[B,C],[C,A],[A,B]]){const f=segNear(Q,s[0],s[1]);c.moveTo(Q[0],Q[1]);c.lineTo(f[0],f[1]);}c.stroke();c.setLineDash([]);
+    c.fillStyle=col.muted;c.beginPath();c.arc(ctr[0],ctr[1],2.2,0,2*PI);c.fill();
+    c.fillStyle=TB.rgba(col.ink,0.14);c.beginPath();c.arc(Q[0],Q[1],11,0,2*PI);c.fill();
+    c.fillStyle=col.ink;c.strokeStyle=col.paper;c.lineWidth=1.5;c.beginPath();c.arc(Q[0],Q[1],5.5,0,2*PI);c.fill();c.stroke();
+    G.tips=[TX,TY];
     /* readouts */
-    const exy=ip(X,Y),cov=exy-E(X)*E(Y),dx=ip(q.du,q.du),dy=ip(q.dv,q.dv),cphi=exy/Math.sqrt(ip(X,X)*ip(Y,Y)),rho=cov/Math.sqrt(dx*dy);
-    gC.set(cphi);gR.set(rho);
-    const tr=v=>'('+v.map(z=>TB.fmt(z,2)).join('; ')+')';
-    fx.innerHTML=TB.rows([['<i>ξ</i> = '+tr(X)+',','<i>η</i> = '+tr(Y)],
-      ['𝔼<i>ξη</i> = '+TB.fmt(exy,3)+',','𝔼<i>ξ</i>·𝔼<i>η</i> = '+TB.fmt(E(X)*E(Y),3)],
-      ['Cov(<i>ξ</i>, <i>η</i>) = 𝔼<i>ξη</i> − 𝔼<i>ξ</i>·𝔼<i>η</i> = '+TB.fmt(cov,3)]]);
+    const X=SX.v,Y=SY.v,vX=E(SX.d.map(v=>v*v)),vY=E(SY.d.map(v=>v*v)),cov=E(mul(SX.d,SY.d)),exy=E(mul(X,Y));
+    gC.set(exy/Math.sqrt(E(mul(X,X))*E(mul(Y,Y))));gR.set(cov/Math.sqrt(vX*vY));
+    fx.innerHTML=TB.rows([['(<i>P</i>(1); <i>P</i>(2); <i>P</i>(3)) = '+tr(p)],['<i>ξ</i> = '+tr(X)+',','<i>η</i> = '+tr(Y)],
+      ['𝔼<i>ξ</i> = '+f2(SX.m)+',','𝔼<i>η</i> = '+f2(SY.m)+',','𝔻<i>ξ</i> = '+f3(vX)+',','𝔻<i>η</i> = '+f3(vY)],
+      ['Cov(<i>ξ</i>, <i>η</i>) = '+f3(cov)+',','𝔼<i>ξη</i> = Cov(<i>ξ</i>, <i>η</i>) + 𝔼<i>ξ</i>·𝔼<i>η</i> = '+f3(exy)]]);
   }
-  /* a tip of an arrow can be pulled along the diagonal: that changes the mean of its variable */
-  let drag=null;
-  V.interact(cv,st,{active:()=>true,state:()=>st,
-    grab(x,y){if(!tips)return false;for(let i=0;i<2;i++)if(Math.hypot(tips[i][0]-x,tips[i][1]-y)<24){const sl=i?sB:sA;drag={sl:sl,x0:x,y0:y,m0:+sl.value};return true;}drag=null;return false;},
-    move(x,y){if(!drag)return;const A=cam.P([0,0,0]),B=cam.P(ONE),dx=B[0]-A[0],dy=B[1]-A[1],n2=dx*dx+dy*dy;if(n2<1)return;
-      const m=drag.m0+((x-drag.x0)*dx+(y-drag.y0)*dy)/n2,sl=drag.sl;
-      sl.value=String(Math.max(+sl.min,Math.min(+sl.max,Math.round(m/0.05)*0.05)));draw();},
-    redraw:draw});
-  cv.style.touchAction='none';cv.style.cursor='grab';
-  [sA,sB,sP].forEach(s=>s.addEventListener('input',draw));TB.onTheme(draw);TB.onResize(cv,draw);draw();
-  if(window.IntersectionObserver){const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();V.intro(st,draw);}},{threshold:0.4});io.observe(cv);}
+  /* pointer: a tip, a mean marker or the triangle point is dragged; a click on the disc brings the nearest tip there (with a finger: a tap, so that the page still scrolls over the disc) */
+  const loc=e=>{const b=cv.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top];};
+  function zone(x,y,touch){if(!G||!G.tips)return null;const T=G.tips,dT=T.map(t=>Math.hypot(t[0]-x,t[1]-y)),i=dT[1]<dT[0]?1:0;
+    if(dT[i]<(touch?34:22))return {k:'tip',i:i,dx:T[i][0]-x,dy:T[i][1]-y};
+    if(Math.hypot(x-G.cx,y-G.cy)<G.R+6)return {k:'disc',i:i};
+    const s=G.sc;if(x>s.xa-18&&x<s.xb+18&&y>s.top-14&&y<s.bot+14)return {k:'mean',i:x<s.xn?0:1};
+    if(triDist(x,y)<16)return {k:'tri'};return null;}
+  function apply(x,y){if(!drag)return;
+    if(drag.k==='tip')setTip(drag.i,[(x+drag.dx-G.cx)/G.k,-(y+drag.dy-G.cy)/G.k]);
+    else if(drag.k==='mean')setMean(drag.i,y);else if(drag.k==='tri')setP(x,y);draw();}
+  cv.addEventListener('pointerdown',e=>{const q=loc(e),z=zone(q[0],q[1],e.pointerType!=='mouse');if(!z)return;
+    if(z.k==='disc'){if(e.pointerType!=='mouse'){tap={x:q[0],y:q[1],i:z.i};return;}drag={k:'tip',i:z.i,dx:0,dy:0};}else drag=z;
+    try{cv.setPointerCapture(e.pointerId);}catch(_){}cv.style.cursor='grabbing';apply(q[0],q[1]);e.preventDefault();});
+  cv.addEventListener('pointermove',e=>{const q=loc(e);if(drag){apply(q[0],q[1]);return;}
+    if(tap){if(Math.hypot(q[0]-tap.x,q[1]-tap.y)>10)tap=null;return;}
+    if(e.pointerType==='mouse'){const z=zone(q[0],q[1],false);cv.style.cursor=!z?'default':z.k==='disc'?'pointer':'grab';}});
+  cv.addEventListener('pointerup',e=>{if(tap){const t=tap;tap=null;drag={k:'tip',i:t.i,dx:0,dy:0};apply(t.x,t.y);}
+    drag=null;const q=loc(e),z=e.pointerType==='mouse'?zone(q[0],q[1],false):null;cv.style.cursor=!z?'default':z.k==='disc'?'pointer':'grab';});
+  cv.addEventListener('pointercancel',()=>{drag=null;tap=null;});
+  /* a finger on a handle, a scale or the triangle must not scroll the page */
+  cv.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const b=cv.getBoundingClientRect(),t=e.touches[0],z=zone(t.clientX-b.left,t.clientY-b.top,true);
+    if(z&&z.k!=='disc')e.preventDefault();},{passive:false});
+  cv.style.touchAction='pan-y';
+  TB.onTheme(draw);TB.onResize(cv,draw);draw();
 })();
 </script>
