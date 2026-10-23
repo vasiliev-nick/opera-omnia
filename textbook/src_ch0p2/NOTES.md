@@ -106,3 +106,4 @@ To run: from SP, `python3 p2/tools/build.py`, then `node p2/tools/chk.cjs`, then
 - Dense paragraphs rewritten as prose (Nick's rule, FORMAT.md «Текст»): after Def. ∅.40, «Функции, равные почти всюду» (#lpclasses, now three paragraphs), after Def. ∅.43 (also explains the names «в среднем», «в среднем квадратичном»), the covariance-derivative example (now assumes 𝔼Y_t = 0, K is the covariance function), «нет предела в V», the remark after Riesz–Fischer.
 - Glossary: Cov(ξ,η) and 𝔻ξ now link to #covdef. Part 3 b18: uncorrelated now refers to §∅.10.
 - Figures renumbered: part 2 ∅.18–∅.36, part 3 ∅.37–∅.48. Backup of pre-edit sources: SP/bak_1022/.
+- 2026-10-23: Рис. ∅.26 redrawn at Nick's request in the usual axes (ω = 1, 2, 3 as x, y, z, view yaw −1.0, pitch 0.52); the line of constants is the diagonal, the zero-mean plane a translucent disc; tips drag along the diagonal. Old vertical-diagonal version: SP/bak_1022/s_fig_rv_vertical.html.
