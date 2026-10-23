@@ -28,6 +28,11 @@ def apply(html, sym):
     # Technical proofs (class "tech") start folded, like solutions.
     html = html.replace("if(sol){p.classList.add('folded');body.inert=true;}\n    lbl.setAttribute('aria-expanded',sol?'false':'true');",
                         "var f0=sol||p.classList.contains('tech');\n    if(f0){p.classList.add('folded');body.inert=true;}\n    lbl.setAttribute('aria-expanded',f0?'false':'true');", 1)
+    # Figure captions start folded after their first sentence (Nick, 2026-10-23).
+    if 'cap-tog' not in html:
+        i = html.rfind('</article>')
+        i = i + len('</article>') if i >= 0 else html.rindex('</body>')
+        html = html[:i] + '\n' + rd('capfold.html').rstrip('\n') + html[i:]
     html = re.sub(r'<h2([^>]*)>(?=%s\.)' % re.escape(sym), r'<h2\1>§', html)
     html = re.sub(r'(<li><a href="#[^"]+">)(?=%s\.\d)' % re.escape(sym), r'\1§', html)
     return html

@@ -68,7 +68,7 @@
   cv.addEventListener('pointermove',e=>{if(!is3()||!camA)return;const [x,y]=xy(e);
     if(!mode){cv.style.cursor=inA(x,y)&&near(x,y)?'move':'grab';return;}
     moved=Math.max(moved,Math.hypot(x-x0,y-y0));
-    if(mode==='pt')place(x,y,40);else{const S=mode==='rotA'?st[shape]:sl;S.yaw-=(x-lx)*0.009;S.pitch=Math.max(-1.2,Math.min(1.35,S.pitch+(y-ly)*0.008));draw();}lx=x;ly=y;});
+    if(mode==='pt')place(x,y,40);else{const S=mode==='rotA'?st[shape]:sl;S.yaw+=(x-lx)*0.009;S.pitch=Math.max(-1.2,Math.min(1.35,S.pitch+(y-ly)*0.008));draw();}lx=x;ly=y;});
   const end=e=>{if(mode==='rotA'&&moved<5&&e.type==='pointerup'){const [x,y]=xy(e);place(x,y,14);}mode=null;if(is3())cv.style.cursor='grab';};
   cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
   sw.addEventListener('input',draw);

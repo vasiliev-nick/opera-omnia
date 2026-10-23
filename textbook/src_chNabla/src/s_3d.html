@@ -116,7 +116,7 @@
       out.push(run);}
     return out[1].reverse().concat(out[0].slice(1));
   };
-  /* Pointer handling: a press near the point drags it over the surface, a tap on the surface puts it there, a drag anywhere else turns the view. */
+  /* Pointer handling: a press near the point drags it over the surface, a tap on the surface puts it there, a drag anywhere else turns the view the way the finger moves (the near side follows it). */
   V.interact=function(cv,st,o){let mode=null,lx=0,ly=0,x0=0,y0=0,moved=0;
     const xy=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
     cv.addEventListener('pointerdown',e=>{if(!o.active())return;const [x,y]=xy(e);mode=o.grab(x,y)?'pt':'rot';lx=x0=x;ly=y0=y;moved=0;cv.setPointerCapture(e.pointerId);
@@ -124,7 +124,7 @@
     cv.addEventListener('pointermove',e=>{const [x,y]=xy(e);
       if(!mode){if(o.active())cv.style.cursor=o.grab(x,y)?'move':'grab';return;}
       moved=Math.max(moved,Math.hypot(x-x0,y-y0));
-      if(mode==='pt')o.move(x,y);else{const S=o.state?o.state():st;S.yaw-=(x-lx)*0.009;S.pitch=Math.max(-1.2,Math.min(1.35,S.pitch+(y-ly)*0.008));o.redraw();}lx=x;ly=y;});
+      if(mode==='pt')o.move(x,y);else{const S=o.state?o.state():st;S.yaw+=(x-lx)*0.009;S.pitch=Math.max(-1.2,Math.min(1.35,S.pitch+(y-ly)*0.008));o.redraw();}lx=x;ly=y;});
     const end=e=>{if(mode==='rot'&&moved<5&&o.tap&&e.type==='pointerup'){const [x,y]=xy(e);o.tap(x,y);}mode=null;if(o.active())cv.style.cursor='grab';};
     cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);};
   /* The curve where the tangent plane at p cuts the surface, near p: marching squares on the mesh for the height ⟨S − p, n⟩ above the plane. */

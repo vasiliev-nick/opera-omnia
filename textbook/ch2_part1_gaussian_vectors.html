@@ -690,6 +690,45 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 </div>
 </section>
 </article>
+<style>
+/* Folded figure captions (FORMAT.md): the number and the first sentence stay, the rest opens with a button. */
+figcaption .cap-more{display:none}
+figcaption.cap-open .cap-more{display:inline}
+.cap-tog{font-family:var(--font-ui);font-size:.78rem;line-height:1.2;color:var(--ether);background:color-mix(in srgb,var(--ether) 9%,transparent);border:none;border-radius:999px;padding:.12rem .6rem .16rem;margin-left:.4rem;cursor:pointer;white-space:nowrap;vertical-align:baseline}
+.cap-tog:hover{background:color-mix(in srgb,var(--ether) 17%,transparent)}
+.cap-tog:focus-visible{outline:2px solid var(--ether);outline-offset:1px}
+.cap-tog::after{content:'';display:inline-block;width:.36em;height:.36em;margin-left:.45em;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-.22em) rotate(45deg);transition:transform .2s}
+figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
+@media print{figcaption .cap-more{display:inline}.cap-tog{display:none}}
+</style>
+<script>
+(function(){
+  /* Each figure caption is cut after its first sentence before MathJax typesets the page; the rest is folded behind a button.
+     The cut is made only outside formulas and outside any open element, after «Рис. N.», and not after abbreviations such as «рис.» or «т. е.». */
+  const AB=/(?:^|[\s(«>;])(рис|т|е|см|гл|п|ср|напр|др|им|стр|ок|упр|разд|ч|вып|ед)$/i,VOID=/^<(wbr|br|img|hr|input)\b/i;
+  function cut(s){
+    const pre=s.match(/^\s*Рис\.(?:\s|&nbsp;)*[^\s<]+?\.(?=\s|&nbsp;)/);let i=pre?pre[0].length:0,math=0,depth=0;
+    for(;i<s.length;i++){const c=s[i];
+      if(math){if(c==='\\')i++;else if(c==='$'){if(math===2){if(s[i+1]==='$'){math=0;i++;}}else math=0;}continue;}
+      if(c==='<'){const k=s.indexOf('>',i);if(k<0)return -1;const t=s.slice(i,k+1);
+        if(t[1]==='/')depth--;else if(!VOID.test(t)&&!/\/>$/.test(t))depth++;i=k;continue;}
+      if(c==='$'){if(s[i+1]==='$'){math=2;i++;}else math=1;continue;}
+      if(c!=='.'&&c!=='!'&&c!=='?')continue;
+      if(c==='.'&&AB.test(s.slice(Math.max(0,i-9),i)))continue;
+      let j=i+1,d=depth,m;while((m=s.slice(j).match(/^<\/[a-z0-9]+>/i))){j+=m[0].length;d--;}
+      if(d!==0)continue;
+      const sp=s.slice(j).match(/^(?:\s|&nbsp;)+/);if(!sp)continue;
+      if(/^(?:[А-ЯЁA-Z«(\d$]|<(?!\/))/.test(s.slice(j+sp[0].length)))return j;}
+    return -1;}
+  const plain=h=>h.replace(/<[^>]*>/g,'').replace(/\$[^$]*\$/g,'x').replace(/\s+/g,' ').trim();
+  document.querySelectorAll('figure>figcaption').forEach(fc=>{
+    if(fc.querySelector('.cap-tog, mjx-container'))return;
+    const s=fc.innerHTML,j=cut(s);if(j<0||plain(s.slice(j)).length<60)return;
+    fc.innerHTML=s.slice(0,j)+'<span class="cap-more"> '+s.slice(j).replace(/^(?:\s|&nbsp;)+/,'')+'</span>';
+    const b=document.createElement('button');b.type='button';b.className='cap-tog';b.textContent='пояснение';b.setAttribute('aria-expanded','false');fc.appendChild(b);
+    b.addEventListener('click',()=>{const o=fc.classList.toggle('cap-open');b.textContent=o?'свернуть':'пояснение';b.setAttribute('aria-expanded',o?'true':'false');});});
+})();
+</script>
 <script>
 (function(){
   /* Shared helpers for the figures: theme tokens, number format with a decimal comma, read-only gauges. */

@@ -8,3 +8,5 @@
 - Рисунки в исходниках подписаны «Рис. ∇.@key»; build.py нумерует их по порядку подписей. Сейчас: pivot=1 cusp=2 poly=3 speed=4 zoom=5 comb=6 draw=7 gauss=8 exgear=9 relief=10 cassini=11 roof=12 fronts=13 tube=14 normals=15 gap=16 sensor=17.
 - Нумерация утверждений: ∇.1–∇.25, упражнения ∇.1–∇.6, вопросы ∇.1–∇.6 (ручная, v2 её не меняла). «Капля» в рис. comb и normals: r(φ)=1+0,15cos φ+0,18cos 2φ+0,06 sin 3φ (κ от −0,86 до 1,75).
 - Проверки (из корня scratchpad): node nb/tools/chk.cjs (ошибки и переполнение на 820 и 390); node kit/chk.cjs nb/ch_nabla.html shots_k/n; node nb/t_inter.cjs (все холсты × все режимы кнопок, копия в tools/).
+
+- 2026-10-23: drag-to-rotate in TB.V3 (`s_3d.html`, also `s_f3f_zoom3d.html` in ∇) turned the wrong way left-right; now `S.yaw+=dx*0.009`, the near side follows the finger (Nick). Figure captions fold after the first sentence via `kit/capfold.html` (FORMAT.md «Рисунки»).
