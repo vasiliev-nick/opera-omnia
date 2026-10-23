@@ -1366,7 +1366,10 @@ figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
 .xpop .xlbl{display:block;font-family:var(--font-ui);font-weight:700;font-size:.86rem;color:var(--xlc);margin-bottom:.3rem}
 .xpop .xwhere{font-weight:400;color:var(--muted);margin-left:.45em;white-space:nowrap}
 .xpop .xbody p,.xpop .xbody ol,.xpop .xbody ul{margin:.35rem 0}
-.xpop .xbody img{display:block;max-width:100%;height:auto;margin:.2rem auto .5rem;border-radius:6px}
+.xpop.k-sec{--xbg:color-mix(in srgb,var(--ether) 6%,var(--paper));--xlc:var(--ether)}
+.xpop .ximgs{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.5rem;margin:.2rem 0 .45rem}
+.xpop .ximgs img,.xpop .ximgs svg{display:block;max-width:100%;max-height:min(42vh,22rem);width:auto;height:auto;border-radius:6px}
+.xpop .xcap{color:var(--muted);font-size:.92em;margin:.2rem 0 .1rem;text-align:center}
 .xpop .xbody .math-wrap{overflow-x:auto}
 .xpop .xfoot{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:flex-end;align-items:center;padding:.5rem .7rem;border-top:1px solid var(--rule);font-family:var(--font-ui);font-size:.85rem}
 .xpop .xfoot a.go{text-decoration:none}
@@ -1394,6 +1397,9 @@ figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
   const RA=new RegExp('(?<![А-Яа-яЁё])('+WORD+')([\\s\\u00a0]+)('+NUM+')((?:'+SEP+NUM+')*)','gu');
   const RB=new RegExp('(?<![§\\w.\\d])('+SYM+'\\.\\d+(?:\\([а-яё]\\))*)','gu');
   const RN=new RegExp(NUM,'gu');
+  /* sections: «§∅.10», «§5–§7», «§∅.7–∅.9»; the number is not followed by a further «.digit» (a subsection) */
+  const SNUM='(?:'+SYM+'\\.)?\\d+(?![.,]\\d)';
+  const RS=new RegExp('§§?[\\s\\u00a0]*('+SNUM+')((?:'+SEP+'§?[\\s\\u00a0]*'+SNUM+')*)','gu'),RSN=new RegExp(SNUM,'gu');
   const kindOf=w=>/^[Уу]пр/.test(w)?'ex':/^[Вв]опрос/.test(w)?'q':/^[Рр]ис/.test(w)?'fig':'st';
   const base=n=>n.replace(/\(.*$/,'');
   const SKIP='h1,h2,h3,h4,.lbl,.toc,.eyebrow,.gloss,.navm,.xpop,.xback,a,button,script,style,mjx-container,svg,canvas,output,label,.controls,.fx,.ro,.cap-tog';
@@ -1403,7 +1409,9 @@ figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
     document.querySelectorAll('.stmt>.lbl,.ex>.lbl').forEach(l=>{const m=l.textContent.trim().match(LBL);if(!m)return;
       const k=(m[1]==='Упражнение'?'ex':m[1]==='Вопрос'?'q':'st')+':'+m[2];if(!loc[k])loc[k]=l.parentNode;});
     const FIG=new RegExp('^Рис\\.\\s*((?:'+SYM+'\\.)?\\d+)','u');
-    document.querySelectorAll('figure>figcaption').forEach(c=>{const m=c.textContent.trim().match(FIG);if(m&&!loc['fig:'+m[1]])loc['fig:'+m[1]]=c.parentNode;});}
+    document.querySelectorAll('figure>figcaption').forEach(c=>{const m=c.textContent.trim().match(FIG);if(m&&!loc['fig:'+m[1]])loc['fig:'+m[1]]=c.parentNode;});
+    const SEC=new RegExp('^§\\s*((?:'+SYM+'\\.)?\\d+)\\.','u');
+    document.querySelectorAll('h2').forEach(h=>{const m=h.textContent.trim().match(SEC);if(m&&!loc['sec:'+m[1]])loc['sec:'+m[1]]=h;});}
   const known=k=>!!(loc[k]||DATA.items[k]);
   function span(text,key){const s=document.createElement('span');s.className='xref';s.dataset.k=key;s.tabIndex=0;s.setAttribute('role','button');s.textContent=text;return s;}
   /* wrap the mentions inside one text node */
@@ -1415,6 +1423,10 @@ figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
       const off=at+m[1].length+m[2].length+m[3].length;let q;RN.lastIndex=0;
       while((q=RN.exec(m[4]))){const k=kind+':'+base(q[0]);if(known(k))cuts.push([off+q.index,off+q.index+q[0].length,k]);}}
     const taken=(a,b)=>cuts.some(c=>a<c[1]&&b>c[0]);
+    RS.lastIndex=0;
+    while((m=RS.exec(s))){const off=m.index+m[0].length-m[2].length,a=m.index,k0='sec:'+m[1];
+      if(!taken(a,off)&&known(k0))cuts.push([a,a+m[0].length-m[2].length,k0]);
+      let q;RSN.lastIndex=0;while((q=RSN.exec(m[2]))){const k='sec:'+q[0],b0=off+q.index;if(!taken(b0,b0+q[0].length)&&known(k))cuts.push([b0,b0+q[0].length,k]);}}
     RB.lastIndex=0;
     while((m=RB.exec(s))){const a=m.index,b=a+m[0].length,k='st:'+base(m[1]);if(!taken(a,b)&&known(k))cuts.push([a,b,k]);}
     if(!cuts.length)return;
@@ -1444,12 +1456,22 @@ figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
   function localContent(k,el,body,lbl){
     const kind=k.split(':')[0];
     if(kind==='fig'){
+      /* the figure itself as it is drawn now, in miniature, and only the first sentence of its caption */
       lbl.textContent='Рисунок '+k.slice(4);
-      el.querySelectorAll('canvas').forEach(cv=>{try{const im=new Image();im.src=cv.toDataURL();im.alt='';body.appendChild(im);}catch(e){}});
-      const cap=cleanClone(el.querySelector('figcaption').cloneNode(true)),d=document.createElement('p');
-      d.innerHTML=cap.innerHTML;const t=d.firstChild;
-      if(t&&t.nodeType===3)t.nodeValue=t.nodeValue.replace(/^\s*Рис\.\s*\S+?\.\s*/,'');
+      const box=document.createElement('div');box.className='ximgs';
+      el.querySelectorAll('canvas').forEach(cv=>{if(!cv.getClientRects().length||!cv.width)return;
+        try{const im=new Image();im.src=cv.toDataURL();im.alt='';box.appendChild(im);}catch(e){}});
+      if(!box.children.length)el.querySelectorAll(':scope>svg,:scope>div svg').forEach(g=>{if(!g.closest('mjx-container')&&g.getClientRects().length)box.appendChild(cleanClone(g.cloneNode(true)));});
+      if(box.children.length)body.appendChild(box);
+      const cap=el.querySelector('figcaption').cloneNode(true);cap.querySelectorAll('.cap-more,.cap-tog').forEach(x=>x.remove());
+      const d=document.createElement('p');d.className='xcap';d.innerHTML=cleanClone(cap).innerHTML;const t=d.firstChild;
+      if(t&&t.nodeType===3)t.nodeValue=t.nodeValue.replace(new RegExp('^\\s*Рис\\.[\\s\\u00a0]*(?:'+SYM+'\\.)?\\d+\\.\\s*','u'),'');
       body.appendChild(d);return;}
+    if(kind==='sec'){
+      /* a section: its heading and its opening paragraph */
+      lbl.innerHTML=cleanClone(el.cloneNode(true)).innerHTML;
+      let n=el.nextElementSibling;while(n&&n.tagName!=='P')n=n.nextElementSibling;
+      if(n)body.appendChild(cleanClone(n.cloneNode(true)));return;}
     const c=cleanClone(el.cloneNode(true)),l=c.querySelector(':scope>.lbl');
     if(l){lbl.innerHTML=l.innerHTML;l.remove();}
     c.querySelectorAll('figure').forEach(x=>x.remove());
@@ -1474,7 +1496,12 @@ figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
     const arr=document.createElement('span');arr.className='xarr';
     if(el){localContent(k,el,body,lbl);go.textContent='Перейти';go.onclick=()=>jump(el,ref);}
     else{const pg=DATA.pages[it.p]||{};lbl.innerHTML=it.lab+'<span class="xwhere">· '+(pg.name||'')+'</span>';
-      const d=document.createElement('div');d.innerHTML=it.html;d.querySelectorAll('figure,canvas,.controls,.fx,.ro').forEach(x=>x.remove());while(d.firstChild)body.appendChild(d.firstChild);
+      if(kind==='fig'&&it.img){
+        /* a figure of another part: its thumbnail in the current theme and the first sentence of its caption */
+        const th=document.documentElement.getAttribute('data-theme'),dk=th?th==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+        const box=document.createElement('div');box.className='ximgs';const im=new Image();im.src=dk?it.img.d:it.img.l;im.alt='';box.appendChild(im);body.appendChild(box);
+        const d=document.createElement('p');d.className='xcap';d.innerHTML=it.title||'';body.appendChild(d);}
+      else{const d=document.createElement('div');d.innerHTML=it.html;d.querySelectorAll('figure,canvas,.controls,.fx,.ro').forEach(x=>x.remove());while(d.firstChild)body.appendChild(d.firstChild);}
       /* a plain link, so that it opens the other part the same way as the links in the chapter leads */
       const u=location.protocol==='file:'?pg.file:pg.url;go=document.createElement('a');go.className='go';go.target='_blank';go.rel='noopener';
       go.href=(u||'#')+'#ref='+encodeURIComponent(k);go.textContent='Открыть: '+(pg.name||'другая часть')+' ↗';go.onclick=()=>setTimeout(close,0);}

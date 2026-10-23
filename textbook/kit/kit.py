@@ -21,13 +21,26 @@ def xref_data(html):
         local.add(('ex' if m.group(2) == 'Упражнение' else 'q' if m.group(2) == 'Вопрос' else 'st') + ':' + m.group(3))
     for m in re.finditer(r'<figcaption>\s*Рис\.\s*(%s\.\d+)' % sym, html):
         local.add('fig:' + m.group(1))
+    for m in re.finditer(r'<h2[^>]*>\s*§?\s*(%s\.\d+)\.' % sym, html):
+        local.add('sec:' + m.group(1))
     items, pages = {}, {}
+    # figures and sections are taken only where they are mentioned as such, after «рис.» or «§»: a thumbnail is heavy
+    lst = r'(%s\.\d+(?:\s*(?:,|и|или|–|—)\s*§?\s*%s\.\d+)*)' % (sym, sym)
+    near = {'fig': r'[Рр]ис(?:\.|ун[а-яё]*)\s*(?:<[^>]+>\s*)*' + lst, 'sec': r'§§?\s*' + lst}
+    named = {kind: set(t for m in re.finditer(rx, html) for t in re.findall(r'%s\.\d+' % sym, m.group(1))) for kind, rx in near.items()}
     for t in set(re.findall(r'%s\.\d+' % sym, html)):
-        for kind in ('st', 'ex', 'q', 'fig'):
+        for kind in ('st', 'ex', 'q', 'fig', 'sec'):
+            if kind in named and t not in named[kind]:
+                continue
             k = kind + ':' + t
             if k in idx['items'] and k not in local:
-                items[k] = idx['items'][k]
+                items[k] = dict(idx['items'][k])
                 pages[items[k]['p']] = idx['pages'][items[k]['p']]
+                # a figure of another part travels as its thumbnails, light and dark
+                if 'img' in items[k]:
+                    import base64
+                    items[k]['img'] = {t[0]: 'data:image/webp;base64,' + base64.b64encode(open(os.path.join(KIT, f), 'rb').read()).decode()
+                                       for t, f in items[k]['img'].items()}
     return json.dumps({'pages': pages, 'items': items}, ensure_ascii=False).replace('<', '\\u003c')
 
 
