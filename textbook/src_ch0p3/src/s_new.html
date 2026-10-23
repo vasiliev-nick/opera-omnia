@@ -650,3 +650,225 @@
   })();
 })();
 </script>
+<script>
+(function(){
+  /* Fig. ∅.37 (§∅.14): observations fall into a strip, a histogram with bar height (share in the bin)/h grows under it, and its outline approaches the density. */
+  const cv=document.getElementById('dhist');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('dhH'),so=document.getElementById('dhHOut'),fx=document.getElementById('dhFx'),b0=document.getElementById('dh0');
+  const g1=new TB.Gauge('gDh1'),g2=new TB.Gauge('gDh2');
+  const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+  const erf=x=>{const t=1/(1+0.3275911*Math.abs(x)),y=1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return x<0?-y:y;};
+  const Phi=z=>0.5*(1+erf(z/Math.SQRT2)),nd=(x,m,s)=>Math.exp(-(x-m)*(x-m)/(2*s*s))/(s*Math.sqrt(2*Math.PI));
+  const U=()=>1-Math.random(),gau=()=>Math.sqrt(-2*Math.log(U()))*Math.cos(2*Math.PI*Math.random());
+  const LAW={
+    G:{p:x=>x<0?0:x*x*Math.exp(-1.25*x)/1.024,F:x=>{if(x<=0)return 0;const u=1.25*x;return 1-Math.exp(-u)*(1+u+u*u/2);},draw:()=>-0.8*Math.log(U()*U()*U()),ym:0.5},
+    E:{p:x=>x<0?0:0.7*Math.exp(-0.7*x),F:x=>x<=0?0:1-Math.exp(-0.7*x),draw:()=>-Math.log(U())/0.7,ym:0.9},
+    M:{p:x=>0.4*nd(x,1.6,0.5)+0.6*nd(x,4.6,0.9),F:x=>0.4*Phi((x-1.6)/0.5)+0.6*Phi((x-4.6)/0.9),draw:()=>Math.random()<0.4?1.6+0.5*gau():4.6+0.9*gau(),ym:0.5}};
+  /* Counts live in cells of width 0.05 on [0, 10): every bin [kh, (k+1)h) with h a multiple of 0.05 is a union of cells, and so is [a, b). */
+  const XM=8,CW=0.05,NC=200,RING=2000,FALL=420,GLOW=900,CAP=100000;
+  let cells,n,ring,ri,fly,pend,rate,acc,last=0,raf=0,a=1.5,b=3.5,geo=null;
+  function reset(){cells=new Uint32Array(NC);n=0;ring=[];ri=0;fly=[];pend=0;rate=0;acc=0;}
+  reset();
+  let md=TB.segs(cv,k=>{md=k;reset();if(raf){cancelAnimationFrame(raf);raf=0;}draw();start(100);});
+  function land(v,t){if(v>=0&&v<NC*CW)cells[Math.min(NC-1,Math.floor(v/CW))]++;n++;
+    const it={x:v,j:Math.random(),t:t};if(ring.length<RING)ring.push(it);else{ring[ri]=it;ri=(ri+1)%RING;}}
+  function start(k){k=Math.min(k,CAP-n-pend-fly.length);if(k<=0)return;b0.hidden=false;
+    if(reduced()){for(let i=0;i<k;i++)land(LAW[md].draw(),-1e9);draw();return;}
+    pend+=k;const T=k===1?1:k===10?700:k===100?1700:2800;rate=Math.max(rate,pend/T);
+    if(!raf){last=performance.now();acc=1;raf=requestAnimationFrame(tick);}}
+  function tick(t){raf=0;const dt=Math.min(64,Math.max(0,t-last));last=t;
+    if(pend>0){acc+=rate*dt;const m=Math.min(pend,Math.max(1,Math.floor(acc)));if(acc>=1){acc-=m;pend-=m;
+      for(let i=0;i<m;i++)fly.push({x:LAW[md].draw(),j:Math.random(),t:t-Math.random()*dt});}if(!pend)rate=0;}
+    const keep=[];for(const f of fly){if(t-f.t>=FALL){if(f.x>=0&&f.x<NC*CW)cells[Math.min(NC-1,Math.floor(f.x/CW))]++;n++;
+      if(ring.length<RING)ring.push(f);else{ring[ri]=f;ri=(ri+1)%RING;}}else keep.push(f);}fly=keep;
+    draw(t);
+    let glow=false;for(const it of ring)if(t-it.t<FALL+GLOW){glow=true;break;}
+    if(pend>0||fly.length||glow)raf=requestAnimationFrame(tick);}
+  function draw(t){
+    t=t||performance.now();const LW=LAW[md],h=+sl.value;so.textContent=TB.fmt(h,2);
+    const F=TB.fit(cv,W=>W<520?Math.max(340,Math.round(W*1.0)):Math.max(370,Math.min(470,Math.round(W*0.6)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,L=sm?34:42,R=W-(sm?10:16);
+    const top=TB.legend(c,[{k:'fill',col:K.eth,a:0.32,t:[['гистограмма','r']]},{k:'line',col:K.warm,t:[['плотность ','r'],['p','i']]},
+      {k:'fill',col:K.warm,a:0.3,t:[['площадь под ','r'],['p','i'],[' над [','r'],['a','i'],[', ','r'],['b','i'],[']','r']]}],L,R,4,s)+8;
+    const B=H-(sm?24:28),S1=top,S2=top+Math.round((B-top)*(sm?0.22:0.2)),T2=S2+(sm?20:22),ym=LW.ym;
+    const X=v=>L+v/XM*(R-L),Y=v=>B-v/ym*(B-T2);
+    geo={L:L,R:R,S1:S1,B:B};
+    // the strip of observations
+    c.fillStyle=TB.rgba(K.eth,0.05);c.fillRect(L,S1,R-L,S2-S1);
+    c.fillStyle=TB.rgba(K.warm,0.08);c.fillRect(X(a),S1,X(b)-X(a),S2-S1);
+    const yj=j=>S1+4+j*(S2-S1-8),rd=sm?1.5:1.7;
+    c.fillStyle=TB.rgba(K.ink,0.42);c.beginPath();
+    for(const it of ring){if(it.x<0||it.x>XM||(it.x>=a&&it.x<b))continue;const px=X(it.x),py=yj(it.j);c.moveTo(px+rd,py);c.arc(px,py,rd,0,7);}c.fill();
+    c.fillStyle=TB.rgba(K.warm,0.9);c.beginPath();
+    for(const it of ring){if(!(it.x>=a&&it.x<b))continue;const px=X(it.x),py=yj(it.j);c.moveTo(px+rd,py);c.arc(px,py,rd,0,7);}c.fill();
+    for(const it of ring){const g=(t-it.t-FALL)/GLOW;if(g<0||g>=1||it.x<0||it.x>XM)continue;
+      c.fillStyle=TB.rgba(K.warm,0.45*(1-g));c.beginPath();c.arc(X(it.x),yj(it.j),rd+1+5*g,0,7);c.fill();}
+    for(const f of fly){if(f.x<0||f.x>XM)continue;const q=Math.min(1,(t-f.t)/FALL),e=1-(1-q)*(1-q),py=S1+(yj(f.j)-S1)*e,px=X(f.x);
+      const gr=c.createLinearGradient(px,py-14,px,py);gr.addColorStop(0,TB.rgba(K.warm,0));gr.addColorStop(1,TB.rgba(K.warm,0.7));
+      c.strokeStyle=gr;c.lineWidth=1.6;c.beginPath();c.moveTo(px,Math.max(S1,py-14));c.lineTo(px,py);c.stroke();
+      c.fillStyle=K.warm;c.beginPath();c.arc(px,py,rd+0.8,0,7);c.fill();}
+    c.fillStyle=K.paper;c.globalAlpha=0.82;c.font=(s-1)+'px '+TB.ui;const tl='наблюдения';const tw=c.measureText(tl).width;
+    c.fillRect(L+3,S1+3,tw+8,s+4);c.globalAlpha=1;c.fillStyle=K.muted;c.fillText(tl,L+7,S1+s+1);
+    // histogram and density
+    c.fillStyle=TB.rgba(K.warm,0.3);c.beginPath();c.moveTo(X(a),B);
+    for(let i=0;i<=80;i++){const x=a+(b-a)*i/80;c.lineTo(X(x),Math.max(T2,Y(LW.p(x))));}c.lineTo(X(b),B);c.closePath();c.fill();
+    const per=Math.round(h/CW),nb=Math.ceil(XM/h-1e-9);let clip=false,harea=0;
+    for(let k=0;k<nb;k++){let cnt=0;const i0=k*per,i1=Math.min(NC,(k+1)*per);for(let i=i0;i<i1;i++)cnt+=cells[i];
+      const v=n?cnt/(n*h):0,x0=k*h,x1=(k+1)*h;harea+=v*Math.max(0,Math.min(b,x1)-Math.max(a,x0));if(v<=0)continue;
+      const p0=X(x0),p1=X(Math.min(XM,x1)),yt=Math.max(T2,Y(v));if(Y(v)<T2)clip=true;
+      c.fillStyle=TB.rgba(K.eth,0.32);c.fillRect(p0,yt,p1-p0,B-yt);
+      if(p1-p0>=4){c.strokeStyle=TB.rgba(K.eth,0.85);c.lineWidth=1;c.beginPath();c.moveTo(p0+0.5,B);c.lineTo(p0+0.5,yt+0.5);c.lineTo(p1-0.5,yt+0.5);c.lineTo(p1-0.5,B);c.stroke();}}
+    c.save();c.beginPath();c.rect(L,T2-2,R-L,B-T2+2);c.clip();
+    c.strokeStyle=K.warm;c.lineWidth=2.4;c.beginPath();
+    for(let i=0;i<=400;i++){const x=XM*i/400,y=Y(LW.p(x));i?c.lineTo(X(x),y):c.moveTo(X(x),y);}c.stroke();c.restore();
+    if(clip){c.strokeStyle=K.ink;c.globalAlpha=0.7;c.lineWidth=1;c.setLineDash([3,3]);c.beginPath();c.moveTo(L,T2+0.5);c.lineTo(R,T2+0.5);c.stroke();c.setLineDash([]);c.globalAlpha=1;}
+    // axes
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T2-4);c.lineTo(L,B);c.lineTo(R,B);
+    for(let v=0;v<=XM;v++){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}
+    for(let v=0;v<=ym+1e-9;v+=0.2){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}c.stroke();
+    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='center';for(let v=0;v<=XM;v++)c.fillText(String(v),X(v),B+s+5);
+    c.textAlign='right';for(let v=0;v<=ym+1e-9;v+=0.2)c.fillText(TB.tickLabel(Math.round(v*10)/10),L-7,Y(v)+s*0.35);c.textAlign='start';
+    // the interval [a, b]
+    c.strokeStyle=TB.rgba(K.warm,0.95);c.lineWidth=1.4;c.beginPath();for(const v of [a,b]){c.moveTo(X(v),S1);c.lineTo(X(v),B);}c.stroke();
+    for(const [v,nm] of [[a,'a'],[b,'b']]){const px=X(v);c.fillStyle=K.paper;c.fillRect(px-8,S2+2,16,T2-S2-4);
+      TB.rich(c,[[nm,'i']],px,S2+(T2-S2)/2+s*0.38,s,K.warm,'center');
+      c.fillStyle=K.warm;c.strokeStyle=K.paper;c.lineWidth=2;c.beginPath();c.arc(px,B,5.5,0,7);c.fill();c.stroke();}
+    // numbers
+    let ka=0;const i0=Math.round(a/CW),i1=Math.round(b/CW);for(let i=i0;i<i1;i++)ka+=cells[i];
+    const fr=n?ka/n:0,ip=LW.F(b)-LW.F(a),ab='[<i>a</i>, <i>b</i>]';
+    g1.set(fr);g1.mark('i',ip,'∫ <i>p</i>');g2.set(ip);
+    const head=['<i>n</i> = '+n+',','<i>h</i> = '+TB.fmt(h,2)+',',ab+' = ['+TB.fmt(a,2)+'; '+TB.fmt(b,2)+']'];
+    fx.innerHTML=TB.rows(n?[head,['доля в '+ab+' = '+ka+' / '+n+' = '+TB.fmt(fr,3)+',','площадь столбиков над '+ab+' = '+TB.fmt(harea,3)+','],
+      ['∫<sub><i>a</i></sub><sup><i>b</i></sup> <i>p</i>(<i>x</i>) <i>dx</i> = '+TB.fmt(ip,3)]]
+      :[head,['наблюдений пока нет,','∫<sub><i>a</i></sub><sup><i>b</i></sup> <i>p</i>(<i>x</i>) <i>dx</i> = '+TB.fmt(ip,3)]]);
+  }
+  for(const k of [1,10,100,1000]){const e=document.getElementById('dh'+k);if(e)e.addEventListener('click',()=>start(k));}
+  b0.addEventListener('click',()=>{reset();if(raf){cancelAnimationFrame(raf);raf=0;}b0.hidden=true;draw();});
+  // dragging moves the nearer end of [a, b]; the ends stay on the 0.05 grid of the cells
+  cv.style.touchAction='pan-y';let drag=null;
+  const px=e=>e.clientX-cv.getBoundingClientRect().left,py=e=>e.clientY-cv.getBoundingClientRect().top;
+  function move(x){let v=Math.round((x-geo.L)/(geo.R-geo.L)*XM/CW)*CW;v=Math.max(0,Math.min(XM,v));
+    if(drag==='a')a=Math.max(0,Math.min(v,b-0.1));else b=Math.min(XM,Math.max(v,a+0.1));a=Math.round(a/CW)*CW;b=Math.round(b/CW)*CW;if(!raf)draw();}
+  cv.addEventListener('pointerdown',e=>{if(!geo)return;const x=px(e),y=py(e);if(x<geo.L-14||x>geo.R+14||y<geo.S1-6||y>geo.B+16)return;
+    const v=(x-geo.L)/(geo.R-geo.L)*XM;drag=Math.abs(v-a)<=Math.abs(v-b)?'a':'b';move(x);try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+  cv.addEventListener('pointermove',e=>{if(drag)move(px(e));});
+  ['pointerup','pointercancel'].forEach(k=>cv.addEventListener(k,()=>{drag=null;}));
+  sl.addEventListener('input',()=>{if(!raf)draw();});
+  const redraw=()=>{if(!raf)draw();};draw();TB.onTheme(redraw);TB.onResize(cv,redraw);
+  if(reduced()||!window.IntersectionObserver)start(100);
+  else{const io=new IntersectionObserver(es=>{if(es.some(q=>q.isIntersecting)){io.disconnect();if(!n&&!pend&&!fly.length)start(100);}},{threshold:0.4});io.observe(cv);}
+})();
+</script>
+<script>
+(function(){
+  /* Fig. ∅.38 (§∅.14): the density as probability per unit length; windows on both sides of x, chords of F and a magnifier on [x − 2h, x + 2h]. */
+  const cv=document.getElementById('dwin');if(!cv||!window.TB||!TB.fit)return;
+  const sx=document.getElementById('dwX'),sxo=document.getElementById('dwXOut'),sh=document.getElementById('dwH'),sho=document.getElementById('dwHOut'),fx=document.getElementById('dwFx');
+  const gR=new TB.Gauge('gDwR'),gL=new TB.Gauge('gDwL');
+  const ps=x=>x<=0||x>=4?0:3*x*x*(4-x)/64,Fs=x=>x<=0?0:x>=4?1:x*x*x/16-3*x*x*x*x/256;
+  const pj=x=>x<0||x>=4?0:x<2?0.1+0.05*x:0.35,Fj=x=>x<=0?0:x<2?0.1*x+0.025*x*x:x<4?0.3+0.35*(x-2):1;
+  const A=2.5,WA=0.3,eq=(u,v)=>Math.abs(u-v)<1e-9;
+  /* p is the drawn curve, F(t) = P(ξ ≤ t), Fm(t) = P(ξ < t); pl and pr are the limits of the ratio from the left and from the right. */
+  const LAW={
+    S:{p:ps,F:Fs,Fm:Fs,pl:ps,pr:ps},
+    J:{p:pj,F:Fj,Fm:Fj,pl:x=>x>0&&x<=2?0.1+0.05*x:x>2&&x<=4?0.35:0,pr:pj},
+    T:{p:x=>0.7*ps(x),F:x=>0.7*Fs(x)+(x>A-1e-9?WA:0),Fm:x=>0.7*Fs(x)+(x>A+1e-9?WA:0),pl:x=>0.7*ps(x),pr:x=>0.7*ps(x)}};
+  const ym=0.6,xa=-0.2,xb=4.2;let geo=null;
+  let md=TB.segs(cv,k=>{md=k;draw();});
+  function arrow(c,x,y0,y1,col,w){c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w;c.beginPath();c.moveTo(x,y0);c.lineTo(x,y1+7);c.stroke();
+    c.beginPath();c.moveTo(x,y1);c.lineTo(x-5,y1+9);c.lineTo(x+5,y1+9);c.closePath();c.fill();}
+  function draw(){
+    const x=+sx.value,h=Math.pow(10,+sh.value),LW=LAW[md],K=TB.cols();sxo.textContent=TB.fmt(x,2);sho.textContent=TB.fmt(h,h<0.01?4:3);
+    const atom=md==='T'&&eq(x,A);
+    const rR=(LW.F(x+h)-LW.Fm(x))/h,rL=(LW.F(x)-LW.Fm(x-h))/h,lR=atom?Infinity:LW.pr(x),lL=atom?Infinity:LW.pl(x);
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.62):Math.max(390,Math.min(480,Math.round(W*0.62)))),c=F.c,W=F.W,H=F.H;
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:14;
+    const it=[{k:'line',col:K.warm,t:md==='T'?[['0,7 × гладкая плотность','r']]:[['плотность ','r'],['p','i']]},{k:'line',col:K.ink,t:[['F','i']]},
+      {k:'fill',col:K.warm,a:0.32,t:[['[','r'],['x','i'],[', ','r'],['x','i'],[' + ','r'],['h','i'],[']','r']]},{k:'fill',col:K.eth,a:0.32,t:[['[','r'],['x','i'],[' − ','r'],['h','i'],[', ','r'],['x','i'],[']','r']]}];
+    const top=TB.legend(c,it,sm?10:16,W-(sm?10:16),4,s)+10;
+    let P1,P2,LP;
+    if(!sm){const l=40,r=Math.round(W*0.58),bot=H-28,mid=top+Math.round((bot-top)*0.54);
+      P1={l:l,r:r,t:top,b:mid};P2={l:l,r:r,t:mid+24,b:bot};LP={l:r+52,r:W-16,t:top,b:bot};}
+    else{const l=34,r=W-10,h1=Math.round(W*0.44),h2=Math.round(W*0.34);
+      P1={l:l,r:r,t:top,b:top+h1};P2={l:l,r:r,t:top+h1+20,b:top+h1+20+h2};LP={l:l,r:r,t:P2.b+34,b:H-28};}
+    geo={l:P1.l,r:P1.r,t:P1.t,b:P2.b+20};
+    const X=v=>P1.l+(v-xa)/(xb-xa)*(P1.r-P1.l),Y1=v=>P1.b-Math.min(v,ym)/ym*(P1.b-P1.t-6),Y2=v=>P2.b-v*(P2.b-P2.t-6);
+    const la=x-2*h,lb=x+2*h,LT=LP.t+s+10,XL=v=>LP.l+(v-la)/(lb-la)*(LP.r-LP.l),YL=v=>LP.b-Math.min(v,ym)/ym*(LP.b-LT-8);
+    const curve=(X_,Y_,u0,u1,N)=>{c.beginPath();for(let i=0;i<=N;i++){const u=u0+(u1-u0)*i/N;i?c.lineTo(X_(u),Y_(LW.p(u))):c.moveTo(X_(u),Y_(LW.p(u)));}};
+    const strip=(X_,Y_,u0,u1,col)=>{c.fillStyle=TB.rgba(col,0.32);c.beginPath();c.moveTo(X_(u0),Y_(0));for(let i=0;i<=60;i++){const u=u0+(u1-u0)*i/60;c.lineTo(X_(u),Y_(LW.p(u)));}
+      c.lineTo(X_(u1),Y_(0));c.closePath();c.fill();if(X_(u1)-X_(u0)<2){c.strokeStyle=TB.rgba(col,0.9);c.lineWidth=1.5;c.beginPath();c.moveTo(X_(u0),Y_(0));c.lineTo(X_(u0),Y_(LW.p(u0)));c.stroke();}};
+    // upper left: the density, the two windows, the magnified region
+    strip(X,Y1,x,x+h,K.warm);strip(X,Y1,x-h,x,K.eth);
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(P1.l,P1.t);c.lineTo(P1.l,P1.b);c.lineTo(P1.r,P1.b);
+    for(const v of [0,1,2,3,4]){c.moveTo(X(v),P1.b);c.lineTo(X(v),P1.b+4);}for(const v of [0.2,0.4,0.6]){c.moveTo(P1.l-4,Y1(v));c.lineTo(P1.l,Y1(v));}c.stroke();
+    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of [0,0.2,0.4,0.6])c.fillText(TB.tickLabel(v),P1.l-7,Y1(v)+s*0.35);c.textAlign='start';
+    c.strokeStyle=K.warm;c.lineWidth=2.2;curve(X,Y1,xa,xb,700);c.stroke();
+    if(md==='T'){arrow(c,X(A),P1.b,P1.t+2,K.warm,2.4);TB.rich(c,[['0,3','r']],X(A)-8,P1.t+s+2,s,K.warm,'right');}
+    c.strokeStyle=TB.rgba(K.muted,0.8);c.lineWidth=1;c.setLineDash([4,3]);c.strokeRect(X(la),P1.t+2,Math.max(1,X(lb)-X(la)),P1.b-P1.t-2);c.setLineDash([]);
+    TB.rich(c,[['лупа','r']],Math.min(X(lb)+4,P1.r-30),P1.t+s,s-2,K.muted);
+    // lower left: the distribution function, the chords and the one-sided tangents
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(P2.l,P2.t);c.lineTo(P2.l,P2.b);c.lineTo(P2.r,P2.b);
+    for(const v of [0,1,2,3,4]){c.moveTo(X(v),P2.b);c.lineTo(X(v),P2.b+4);}for(const v of [0.5,1]){c.moveTo(P2.l-4,Y2(v));c.lineTo(P2.l,Y2(v));}c.stroke();
+    c.fillStyle=K.muted;c.textAlign='right';for(const v of [0,0.5,1])c.fillText(TB.tickLabel(v),P2.l-7,Y2(v)+s*0.35);
+    c.textAlign='center';for(const v of [0,1,2,3,4])c.fillText(String(v),X(v),P2.b+s+5);c.textAlign='start';
+    c.strokeStyle=TB.rgba(K.muted,0.7);c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();c.moveTo(X(x),P1.t);c.lineTo(X(x),P2.b);c.stroke();c.setLineDash([]);
+    c.strokeStyle=K.ink;c.lineWidth=2;
+    const Fpath=(u0,u1,N)=>{c.beginPath();for(let i=0;i<=N;i++){const u=u0+(u1-u0)*i/N,v=u>=u1-1e-12&&u1===A&&md==='T'?LW.Fm(A):LW.F(u);i?c.lineTo(X(u),Y2(v)):c.moveTo(X(u),Y2(v));}c.stroke();};
+    if(md==='T'){Fpath(xa,A,400);Fpath(A,xb,400);
+      c.strokeStyle=TB.rgba(K.ink,0.6);c.lineWidth=1;c.setLineDash([2,3]);c.beginPath();c.moveTo(X(A),Y2(LW.Fm(A)));c.lineTo(X(A),Y2(LW.F(A)));c.stroke();c.setLineDash([]);
+      c.fillStyle=K.paper;c.strokeStyle=K.ink;c.lineWidth=1.5;c.beginPath();c.arc(X(A),Y2(LW.Fm(A)),3.5,0,7);c.fill();c.stroke();
+      c.fillStyle=K.ink;c.beginPath();c.arc(X(A),Y2(LW.F(A)),3.5,0,7);c.fill();}
+    else Fpath(xa,xb,800);
+    TB.rich(c,[['F','i']],X(4.05),Y2(1)+s+4,s,K.ink);
+    if(!atom){const d=0.55,F0=LW.F(x);c.strokeStyle=TB.rgba(K.ink,0.75);c.lineWidth=1.3;c.setLineDash([6,4]);c.beginPath();
+      c.moveTo(X(x-d),Y2(F0-d*lL));c.lineTo(X(x),Y2(F0));c.lineTo(X(x+d),Y2(F0+d*lR));c.stroke();c.setLineDash([]);}
+    const chord=(u0,u1,v0,v1,col)=>{c.strokeStyle=col;c.lineWidth=2.4;c.beginPath();c.moveTo(X(u0),Y2(v0));c.lineTo(X(u1),Y2(v1));c.stroke();
+      c.fillStyle=col;for(const [u,v] of [[u0,v0],[u1,v1]]){c.beginPath();c.arc(X(u),Y2(v),2.8,0,7);c.fill();}};
+    chord(x,x+h,LW.Fm(x),LW.F(x+h),K.warm);chord(x-h,x,LW.Fm(x-h),LW.F(x),K.eth);
+    // right (or below on a phone): the magnifier
+    c.fillStyle=TB.rgba(K.eth,0.035);c.fillRect(LP.l,LT,LP.r-LP.l,LP.b-LT);
+    c.strokeStyle=K.rule;c.lineWidth=1;c.strokeRect(LP.l+0.5,LT+0.5,LP.r-LP.l-1,LP.b-LT-1);
+    c.save();c.beginPath();c.rect(LP.l,LT,LP.r-LP.l,LP.b-LT);c.clip();
+    strip(XL,YL,x,x+h,K.warm);strip(XL,YL,x-h,x,K.eth);
+    c.strokeStyle=K.warm;c.lineWidth=2.4;curve(XL,YL,la,lb,500);c.stroke();
+    if(md==='T'&&A>la&&A<lb){arrow(c,XL(A),LP.b,LT+4,K.warm,2.6);}
+    const box=(u0,u1,r,col)=>{const y=Math.max(LT+2,YL(r));c.strokeStyle=col;c.lineWidth=1.8;c.setLineDash([5,4]);c.beginPath();
+      c.moveTo(XL(u0),LP.b);c.lineTo(XL(u0),y);if(r<=ym)c.lineTo(XL(u1),y);else c.moveTo(XL(u1),y);c.lineTo(XL(u1),LP.b);c.stroke();c.setLineDash([]);};
+    box(x-h,x,rL,K.eth);box(x,x+h,rR,K.warm);
+    c.strokeStyle=TB.rgba(K.muted,0.7);c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();c.moveTo(XL(x),LT);c.lineTo(XL(x),LP.b);c.stroke();c.setLineDash([]);
+    c.restore();
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();for(const v of [0.2,0.4,0.6]){c.moveTo(LP.l-4,YL(v));c.lineTo(LP.l,YL(v));}
+    for(const k of [-2,-1,0,1,2]){c.moveTo(XL(x+k*h),LP.b);c.lineTo(XL(x+k*h),LP.b+4);}c.stroke();
+    c.fillStyle=K.muted;c.textAlign='right';for(const v of [0,0.2,0.4,0.6])c.fillText(TB.tickLabel(v),LP.l-7,YL(v)+s*0.35);c.textAlign='start';
+    const tk=[[-1,[['x','i'],[' − ','r'],['h','i']]],[0,[['x','i']]],[1,[['x','i'],[' + ','r'],['h','i']]]];
+    for(const [k,lb_] of tk)TB.rich(c,lb_,XL(x+k*h),LP.b+s+5,s,K.muted,'center');
+    TB.rich(c,[['лупа: [','r'],['x','i'],[' − 2','r'],['h','i'],[', ','r'],['x','i'],[' + 2','r'],['h','i'],[']','r']],LP.l+2,LP.t+s,s-1,K.muted);
+    const over=(r,u0,u1,col)=>{if(r<=ym)return;const tx='↑ '+TB.fmt(r,1),xm=XL((u0+u1)/2),y=LT+2*s+16;c.font=(s-1)+'px '+TB.ui;const tw=c.measureText(tx).width;
+      c.fillStyle=K.paper;c.globalAlpha=0.85;c.fillRect(xm-tw/2-3,y-s,tw+6,s+5);c.globalAlpha=1;TB.rich(c,[[tx,'r']],xm,y,s-1,col,'center');};
+    over(rL,x-h,x,K.eth);over(rR,x,x+h,K.warm);
+    if(md==='T'&&A>la&&A<lb)TB.rich(c,[['0,3','r']],Math.min(XL(A)+7,LP.r-26),LT+s+6,s,K.warm);
+    // gauges and numbers
+    gR.set(rR);gL.set(rL);
+    for(const [g,l] of [[gR,lR],[gL,lL]]){if(isFinite(l)){g.mark('l',l,'предел');g.m.l.style.display='';}else if(g.m.l)g.m.l.style.display='none';}
+    const xs='<i>x</i>',hs='<i>h</i>',P=(u,v)=>'<i>P</i>(<i>ξ</i> ∈ ['+u+', '+v+']) / '+hs;
+    const rows=[[xs+' = '+TB.fmt(x,2)+',',hs+' = '+TB.fmt(h,h<0.01?4:3)],[P(xs,xs+' + '+hs)+' = '+TB.fmt(rR,3)+',',P(xs+' − '+hs,xs)+' = '+TB.fmt(rL,3)]];
+    if(atom)rows.push(['оба отрезка содержат атом:','отношения ≥ 0,3 / '+hs+' = '+TB.fmt(0.3/h,1)]);
+    else if(Math.abs(lL-lR)<1e-12)rows.push(['предел при '+hs+' → 0: '+TB.fmt(lR,3)]);
+    else rows.push(['пределы при '+hs+' → 0:','слева '+TB.fmt(lL,3)+',','справа '+TB.fmt(lR,3)]);
+    fx.innerHTML=TB.rows(rows);
+  }
+  [sx,sh].forEach(e=>e.addEventListener('input',draw));
+  // dragging over the left panels moves x; it sticks to the jump 2 and to the atom 2.5
+  cv.style.touchAction='pan-y';let drag=false;
+  function pick(e){if(!geo)return false;const b=cv.getBoundingClientRect(),px=e.clientX-b.left,py=e.clientY-b.top;
+    if(px<geo.l-8||px>geo.r+8||py<geo.t-6||py>geo.b)return false;
+    let v=xa+(px-geo.l)/(geo.r-geo.l)*(xb-xa);for(const q of [2,2.5])if(Math.abs(v-q)<0.035)v=q;
+    sx.value=Math.max(+sx.min,Math.min(+sx.max,v)).toFixed(2);draw();return true;}
+  cv.addEventListener('pointerdown',e=>{if(pick(e)){drag=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}}});
+  cv.addEventListener('pointermove',e=>{if(drag)pick(e);});
+  ['pointerup','pointercancel'].forEach(k=>cv.addEventListener(k,()=>{drag=false;}));
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
