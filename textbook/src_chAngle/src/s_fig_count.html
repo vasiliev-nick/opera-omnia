@@ -1,0 +1,46 @@
+<script>
+(function(){
+  /* Fig. ∠.3, canvas cnt: countably many outcomes with P({k}) = 2^-k and ξ(k) = 2^(αk).
+     Bars: the contributions p_k ξ(k)² and p_k ξ(k); curves: their running sums, levelling off at the dashed sum when the series converges. */
+  const TB=window.TB,cv=document.getElementById('cnt');if(!TB||!cv||!TB.fit||!TB.cols)return;
+  const sl=document.getElementById('cntA'),out=document.getElementById('cntAOut'),fx=document.getElementById('cntFx');
+  const YM=6;
+  function lay(W){const sm=W<520;return {sm:sm,H:Math.round(sm?W*0.85:Math.max(300,W*0.42)),L:sm?30:38,R:12,B:28,K:sm?10:14};}
+  function draw(){
+    const F=TB.fit(cv,W=>lay(W).H),c=F.c,W=F.W,H=F.H,col=TB.cols(),Ly=lay(W),fs=Ly.sm?12:13,al=+sl.value,K=Ly.K;
+    c.clearRect(0,0,W,H);out.textContent=TB.fmt(al,2);
+    const yb=TB.legend(c,[{k:'fill',col:col.eth,a:0.7,t:[['p','i'],['k','s'],['ξ','i'],['(','m'],['k','i'],[')²','m']]},
+      {k:'fill',col:col.warm,a:0.7,t:[['p','i'],['k','s'],['ξ','i'],['(','m'],['k','i'],[')','m']]},
+      {k:'line',col:col.eth,t:[['суммы для ','r'],['𝔼','m'],['ξ','i'],['²','m']]},{k:'line',col:col.warm,t:[['суммы для ','r'],['𝔼','m'],['ξ','i']]}],Ly.L,W-8,4,fs);
+    const x0=Ly.L,x1=W-Ly.R,y0=yb+14,y1=H-Ly.B,cw=(x1-x0)/K,X=k=>x0+cw*(k-0.5),Y=v=>y1-(y1-y0)*Math.min(v,YM*1.02)/YM;
+    /* axes */
+    c.font=fs+'px '+TB.ui;c.textAlign='right';
+    for(let v=0;v<=YM;v++){c.fillStyle=col.muted;c.fillText(TB.fmt(v,0),x0-6,Y(v)+4);c.strokeStyle=TB.rgba(col.ink,v?0.1:0.35);c.lineWidth=1;TB.ln(c,x0,Y(v),x1,Y(v));}
+    c.textAlign='center';c.fillStyle=col.muted;for(let k=1;k<=K;k++)c.fillText(String(k),X(k),y1+17);
+    c.textAlign='start';
+    /* bars and running sums */
+    const r2=Math.pow(2,2*al-1),r1=Math.pow(2,al-1),b2=[],b1=[];let s2=0,s1=0;const S2=[],S1=[];
+    for(let k=1;k<=K;k++){b2.push(Math.pow(r2,k));b1.push(Math.pow(r1,k));s2+=b2[k-1];s1+=b1[k-1];S2.push(s2);S1.push(s1);}
+    const bw=Math.min(14,cw*0.3);
+    c.save();c.beginPath();c.rect(x0,y0-6,x1-x0,y1-y0+6);c.clip();
+    for(let k=1;k<=K;k++){c.fillStyle=TB.rgba(col.eth,0.7);c.fillRect(X(k)-bw-1,Y(b2[k-1]),bw,y1-Y(b2[k-1]));
+      c.fillStyle=TB.rgba(col.warm,0.7);c.fillRect(X(k)+1,Y(b1[k-1]),bw,y1-Y(b1[k-1]));}
+    const lim2=r2<1?r2/(1-r2):Infinity,lim1=r1<1?r1/(1-r1):Infinity;
+    c.setLineDash([5,4]);c.lineWidth=1.2;
+    if(lim2<=YM){c.strokeStyle=col.eth;TB.ln(c,x0,Y(lim2),x1,Y(lim2));}
+    if(lim1<=YM){c.strokeStyle=col.warm;TB.ln(c,x0,Y(lim1),x1,Y(lim1));}
+    c.setLineDash([]);
+    [[S2,col.eth],[S1,col.warm]].forEach(q=>{c.strokeStyle=q[1];c.lineWidth=2;c.beginPath();q[0].forEach((v,i)=>{const p=[X(i+1),Y(v)];i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]);});c.stroke();
+      c.fillStyle=q[1];q[0].forEach((v,i)=>{if(v<=YM){c.beginPath();c.arc(X(i+1),Y(v),3,0,2*Math.PI);c.fill();}});});
+    c.restore();
+    /* values above the top are marked by small arrows */
+    c.fillStyle=col.muted;
+    for(let k=1;k<=K;k++)[[b2[k-1],X(k)-bw/2-1],[b1[k-1],X(k)+bw/2+1]].forEach(q=>{if(q[0]>YM){c.beginPath();c.moveTo(q[1]-4,y0-1);c.lineTo(q[1]+4,y0-1);c.lineTo(q[1],y0-8);c.closePath();c.fill();}});
+    const f=v=>isFinite(v)?TB.fmt(v,3):'+∞';
+    fx.innerHTML=TB.rows([['<i>α</i> = '+TB.fmt(al,2)+':','𝔼<i>ξ</i> = '+f(lim1)+',','𝔼<i>ξ</i>² = '+f(lim2)],
+      isFinite(lim2)?['<i>ξ</i> ∈ <i>L</i>²(<i>P</i>):','вклады в 𝔼<i>ξ</i>²','убывают в '+TB.fmt(1/r2,2)+' раза за шаг']:
+        isFinite(lim1)?['<i>ξ</i> ∉ <i>L</i>²(<i>P</i>):','среднее есть,','дисперсии нет']:['у <i>ξ</i> нет','ни конечного среднего,','ни дисперсии']]);
+  }
+  sl.addEventListener('input',draw);TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>

@@ -21,4 +21,11 @@
 .nlist a.npill.p-ex{background:var(--warm-soft)}
 .nlist a.npill.p-fg{background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)}
 .nlist a.npill:hover{outline:1px solid var(--ether);background-image:none}
+/* Comparison tables (FORMAT.md): thin rules, row headers in the interface font, a scroll box on narrow screens instead of a wide page. */
+.tbl{overflow-x:auto;margin:1.3rem 0;-webkit-overflow-scrolling:touch}
+table.cmp{border-collapse:collapse;width:100%;min-width:30rem;font-size:.93em;line-height:1.45}
+table.cmp th,table.cmp td{padding:.5rem .65rem;border-bottom:1px solid var(--rule);vertical-align:top;text-align:left}
+table.cmp thead th{font-family:var(--font-ui);font-weight:600;color:var(--ink);border-bottom:1.5px solid var(--muted)}
+table.cmp tbody th{font-family:var(--font-ui);font-weight:500;color:var(--muted);font-size:.92em;width:24%}
+table.cmp tbody tr:last-child th,table.cmp tbody tr:last-child td{border-bottom:none}
 @media (max-width:600px){header.ch{padding-top:100px}}

@@ -1,51 +1,51 @@
 
 (function(){
-  /* Fig. ∅.26: the area under a graph collected by vertical strips or by horizontal layers; on the right, t ↦ λ{f > t} on the same t-axis. */
-  const cv=document.getElementById('layer');if(!cv||!window.TB||!TB.fit)return;
-  const sl=document.getElementById('lyN'),so=document.getElementById('lyNOut'),fx=document.getElementById('lyFx'),g=new TB.Gauge('gLy');
-  const bump=(x,c,wl,wr)=>{const w=x<c?wl:wr;return Math.exp(-(x-c)*(x-c)/(2*w*w));};
-  const f=x=>0.12+0.05*x+0.78*bump(x,0.28,0.09,0.16)+0.42*bump(x,0.76,0.07,0.05);
-  const NM=4000,FV=new Float64Array(NM);let If=0;for(let i=0;i<NM;i++){FV[i]=f((i+0.5)/NM);If+=FV[i]/NM;}
-  const mt=t=>{let k=0;for(let i=0;i<NM;i++)if(FV[i]>t)k++;return k/NM;};
-  const MT=[];for(let i=0;i<=400;i++)MT.push(mt(i/400));
-  const segsAbove=t=>{const out=[];let on=-1;for(let i=0;i<=NM;i++){const inb=i<NM&&FV[i]>t;if(inb&&on<0)on=i/NM;if(!inb&&on>=0){out.push([on,i/NM]);on=-1;}}return out;};
-  let md=TB.segs(cv,k=>{md=k;draw();});
-  g.mark('i',If,'∫<i>f</i> <i>dλ</i><sub>1</sub>');
+  /* Fig. ∅.25: the standard Gaussian density on the plane and its image under a lower-triangular A; circles go to ellipses, the unit square to a parallelogram. */
+  const cv=document.getElementById('gauss2');if(!cv||!window.TB||!TB.fit)return;
+  const sa=document.getElementById('g2A'),sb=document.getElementById('g2B'),sd=document.getElementById('g2D'),fx=document.getElementById('g2Fx');
+  const oa=document.getElementById('g2AOut'),ob=document.getElementById('g2BOut'),od=document.getElementById('g2DOut');
+  const g1=new TB.Gauge('gG21'),g2=new TB.Gauge('gG22');
+  const P0=1-Math.exp(-0.5);g2.mark('a',P0,'1 − <i>e</i><sup>−1/2</sup>');
+  const phi2=(u,v)=>Math.exp(-(u*u+v*v)/2)/(2*Math.PI),R0=4,NP=170;
+  const tone=p=>1-Math.exp(-p/0.12);
+  let imgL=null,keyL='';
   function draw(){
-    const n=+sl.value;so.textContent=n;const N=Math.pow(2,n);
-    const F=TB.fit(cv,W=>Math.max(260,Math.min(400,Math.round(W*0.52)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    const a=+sa.value,b=+sb.value,d=+sd.value;oa.textContent=TB.fmt(a,2);ob.textContent=TB.fmt(b,2);od.textContent=TB.fmt(d,2);
+    const det=a*d,inv=(x,y)=>{const u=x/a;return [u,(y-b*u)/d];};
+    const F=TB.fit(cv,W=>{const sm=W<520,P=(W-(sm?16:28)-(sm?40:56)-(sm?14:24))/2;return Math.max(220,Math.round(P+(sm?96:82)));}),c=F.c,W=F.W,H=F.H,K=TB.cols();
     c.fillStyle=K.paper;c.fillRect(0,0,W,H);
-    const sm=W<520,s=sm?12:14,L=sm?30:40,R=W-(sm?8:14);
-    const top=TB.legend(c,[{k:'line',col:K.ink,t:[['f','i']]},{k:'line',col:K.eth,t:[['t','i'],[' ↦ ','m'],['λ','i'],['1','s'],['({','m'],['f','i'],[' > ','m'],['t','i'],['})','m']]},
-      {k:'fill',col:K.warm,a:0.4,t:[[md==='V'?'полоски':'слои','r']]}],L,R,4,s)+8;
-    const B=H-(sm?24:28),XL=L+(R-L)*0.56,RX=XL+(sm?22:40),RR=R-8;
-    const X=x=>L+x*(XL-L),Y=t=>B-t*(B-top),RXv=m=>RX+m*(RR-RX);
-    let sum=0;
-    c.fillStyle=TB.rgba(K.warm,0.4);
-    if(md==='V'){c.strokeStyle=TB.rgba(K.warm,0.95);c.lineWidth=1;
-      for(let k=0;k<N;k++){let mn=Infinity;const a=k/N,b=(k+1)/N;for(let i=0;i<=60;i++)mn=Math.min(mn,f(a+(b-a)*i/60));sum+=mn/N;
-        c.fillRect(X(a),Y(mn),X(b)-X(a),B-Y(mn));if(N<=32)c.strokeRect(X(a),Y(mn),X(b)-X(a),B-Y(mn));}
-    }else{const dt=1/N,lw=Math.max(0.8,Math.min(2,(Y(0)-Y(dt))/4));
-      for(let k=0;k<N;k++){const t0=k*dt,t1=t0+dt,sg=segsAbove(t1);let len=0;
-        for(const p of sg){len+=p[1]-p[0];c.fillRect(X(p[0]),Y(t1),X(p[1])-X(p[0]),Y(t0)-Y(t1));}
-        sum+=dt*len;if(len>0)c.fillRect(RX,Y(t1),RXv(len)-RX,Y(t0)-Y(t1));
-        c.strokeStyle=K.warm;c.lineWidth=lw;c.beginPath();for(const p of sg){c.moveTo(X(p[0]),Y(t0)+lw/2);c.lineTo(X(p[1]),Y(t0)+lw/2);}c.stroke();
-        if(N<=32&&len>0){c.strokeStyle=TB.rgba(K.warm,0.95);c.lineWidth=1;c.strokeRect(RX,Y(t1),RXv(len)-RX,Y(t0)-Y(t1));}}
-    }
-    // axes
-    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(L,top);c.lineTo(L,B);c.lineTo(XL,B);c.moveTo(RX,top);c.lineTo(RX,B);c.lineTo(R,B);
-    for(const v of [0,0.5,1]){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));c.moveTo(X(v),B);c.lineTo(X(v),B+4);c.moveTo(RXv(v),B);c.lineTo(RXv(v),B+4);c.moveTo(RX-4,Y(v));c.lineTo(RX,Y(v));}c.stroke();
-    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of [0,0.5,1])c.fillText(TB.tickLabel(v),L-7,Y(v)+s*0.35);
-    c.textAlign='center';for(const v of [0,0.5,1]){c.fillText(TB.tickLabel(v),X(v),B+s+5);c.fillText(TB.tickLabel(v),RXv(v),B+s+5);}c.textAlign='start';
-    TB.rich(c,[['x','i']],XL-10,B-6,s,K.muted);TB.rich(c,[['t','i']],L+6,top+s,s,K.muted);TB.rich(c,[['t','i']],RX-12,top+s,s,K.muted);
-    // curves
-    c.strokeStyle=K.ink;c.lineWidth=2.2;c.beginPath();for(let i=0;i<=400;i++){const x=i/400;i?c.lineTo(X(x),Y(f(x))):c.moveTo(X(x),Y(f(x)));}c.stroke();
-    if(md==='V'){c.fillStyle=TB.rgba(K.eth,0.16);c.beginPath();c.moveTo(RX,Y(0));for(let i=0;i<=400;i++)c.lineTo(RXv(MT[i]),Y(i/400));c.lineTo(RX,Y(1));c.closePath();c.fill();}
-    c.strokeStyle=K.eth;c.lineWidth=2.2;c.beginPath();for(let i=0;i<=400;i++){i?c.lineTo(RXv(MT[i]),Y(i/400)):c.moveTo(RXv(MT[i]),Y(i/400));}c.stroke();
-    // readouts
-    g.set(sum);
-    if(md==='V')fx.innerHTML=TB.rows([['2<sup>'+n+'</sup> = '+N+' частей,','∑ <i>λ</i><sub>1</sub>(часть) · min <i>f</i> = '+TB.fmt(sum,3)+','],['∫<sub>0</sub><sup>1</sup> <i>f</i> <i>dλ</i><sub>1</sub> = '+TB.fmt(If,3)]]);
-    else fx.innerHTML=TB.rows([['Δ<i>t</i> = 2<sup>−'+n+'</sup>,','∑<sub><i>k</i></sub> Δ<i>t</i> · <i>λ</i><sub>1</sub>({<i>f</i> &gt; <i>t</i><sub><i>k</i>+1</sub>}) = '+TB.fmt(sum,3)+','],['∫<sub>0</sub><sup>∞</sup> <i>λ</i><sub>1</sub>({<i>f</i> &gt; <i>t</i>}) <i>dt</i> = ∫<sub>0</sub><sup>1</sup> <i>f</i> <i>dλ</i><sub>1</sub> = '+TB.fmt(If,3)]]);
+    const sm=W<520,s=sm?12:14,L=sm?20:28,R=W-(sm?8:14),gp=sm?20:28;
+    const top=TB.legend(c,[{k:'line',col:K.ink,t:[['|','m'],['z','i'],['| = 1, 2 и эллипсы ','r'],['E','i'],['1','s'],[', ','r'],['E','i'],['2','s']]},{k:'line',col:K.warm,t:[['[0, 1)²','m'],[' и ','r'],['A','i'],['[0, 1)²','m']]}],L,R,4,s)+8;
+    const B=H-(sm?24:28),P=Math.min(B-top,(R-L-gp)/2),XA=L,XB=L+P+gp;
+    const tr=(X0,x,y)=>[X0+(x+R0)/(2*R0)*P,B-(y+R0)/(2*R0)*P];
+    const key=K.paper+K.eth;if(!imgL||keyL!==key){keyL=key;imgL=TB.heat(NP,(i,j)=>{const x=-R0+2*R0*(i+0.5)/NP,y=-R0+2*R0*(j+0.5)/NP;return TB.mixa(K.paper,K.eth,tone(phi2(x,y))*0.92);});}
+    const imgR=TB.heat(NP,(i,j)=>{const x=-R0+2*R0*(i+0.5)/NP,y=-R0+2*R0*(j+0.5)/NP,z=inv(x,y);return TB.mixa(K.paper,K.eth,tone(phi2(z[0],z[1])/det)*0.92);});
+    c.imageSmoothingEnabled=true;c.drawImage(imgL,XA,B-P,P,P);c.drawImage(imgR,XB,B-P,P,P);
+    for(const X0 of [XA,XB]){
+      c.strokeStyle=K.rule;c.lineWidth=1;c.strokeRect(X0,B-P,P,P);c.beginPath();
+      for(let v=-R0+1;v<R0;v++){const p=tr(X0,v,-R0),q=tr(X0,-R0,v);c.moveTo(p[0],B);c.lineTo(p[0],B+4);c.moveTo(X0-4,q[1]);c.lineTo(X0,q[1]);}
+      c.stroke();c.strokeStyle=TB.rgba(K.muted,0.35);c.beginPath();const o=tr(X0,0,0);c.moveTo(X0,o[1]);c.lineTo(X0+P,o[1]);c.moveTo(o[0],B-P);c.lineTo(o[0],B);c.stroke();
+      c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='center';for(const v of [-2,0,2])c.fillText(TB.fmt(v,0),tr(X0,v,0)[0],B+s+5);
+      if(X0===XA){c.textAlign='right';for(const v of [-2,0,2])c.fillText(TB.fmt(v,0),X0-6,tr(X0,0,v)[1]+s*0.35);}c.textAlign='start';}
+    const curve=(X0,map)=>{c.beginPath();for(let i=0;i<=160;i++){const t=2*Math.PI*i/160,p=map(Math.cos(t),Math.sin(t)),q=tr(X0,p[0],p[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);}c.closePath();c.stroke();};
+    const poly=(X0,pts)=>{c.beginPath();pts.forEach((p,i)=>{const q=tr(X0,p[0],p[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});c.closePath();};
+    const Am=(u,v)=>[a*u,b*u+d*v],sq=[[0,0],[1,0],[1,1],[0,1]];
+    c.save();c.beginPath();c.rect(XA,B-P,P,P);c.rect(XB,B-P,P,P);c.clip();
+    c.strokeStyle=K.ink;c.lineWidth=1.6;for(const r of [1,2]){curve(XA,(u,v)=>[r*u,r*v]);curve(XB,(u,v)=>Am(r*u,r*v));}
+    c.fillStyle=TB.rgba(K.warm,0.3);c.strokeStyle=K.warm;c.lineWidth=2;poly(XA,sq);c.fill();c.stroke();poly(XB,sq.map(p=>Am(p[0],p[1])));c.fill();c.stroke();
+    c.restore();
+    TB.rich(c,[['ζ','i']],XA+8,B-P+s+6,s,K.ink);TB.rich(c,[['X','i'],[' = ','m'],['A','i'],['ζ','i']],XB+8,B-P+s+6,s,K.ink);
+    // area of A[0,1)² by counting grid points, and P(X ∈ E_1) by a grid sum
+    const dlt=0.01,xs0=Math.min(0,a),xs1=Math.max(0,a),ys0=Math.min(0,b,b+d,d),ys1=Math.max(0,b,b+d,d);let cnt=0;
+    for(let x=xs0+dlt/2;x<xs1;x+=dlt)for(let y=ys0+dlt/2;y<ys1;y+=dlt){const z=inv(x,y);if(z[0]>=0&&z[0]<1&&z[1]>=0&&z[1]<1)cnt++;}
+    const area=cnt*dlt*dlt;
+    const ex=a,ey=Math.hypot(b,d),M=240,hx=2*ex/M,hy=2*ey/M;let pr=0;
+    for(let i=0;i<M;i++)for(let j=0;j<M;j++){const x=-ex+(i+0.5)*hx,y=-ey+(j+0.5)*hy,z=inv(x,y);if(z[0]*z[0]+z[1]*z[1]<=1)pr+=phi2(z[0],z[1])/det*hx*hy;}
+    g1.mark('d',det,'|det <i>A</i>|').set(area);g2.set(pr);
+    const s11=a*a,s12=a*b,s22=b*b+d*d;
+    fx.innerHTML=TB.rows([['det <i>A</i> = <i>a</i><sub>11</sub><i>a</i><sub>22</sub> = '+TB.fmt(det,3)+',','√det <i>Σ</i> = |det <i>A</i>| = '+TB.fmt(det,3)+','],
+      ['<i>Σ</i> = <i>AA</i><sup>⊤</sup>: <i>σ</i><sub>11</sub> = '+TB.fmt(s11,3)+',','<i>σ</i><sub>12</sub> = '+TB.fmt(s12,3)+',','<i>σ</i><sub>22</sub> = '+TB.fmt(s22,3)+','],
+      ['max <i>p</i><sub><i>X</i></sub> = 1/(2π √det <i>Σ</i>) = '+TB.fmt(1/(2*Math.PI*det),3)]]);
   }
-  sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+  [sa,sb,sd].forEach(e=>e.addEventListener('input',draw));draw();TB.onTheme(draw);TB.onResize(cv,draw);
 })();

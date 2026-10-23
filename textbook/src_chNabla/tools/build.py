@@ -60,13 +60,15 @@ tail = '\n'.join(lines[418:472]) + '\n'
 scripts = helper + rd(os.path.join(SRC, 's_help.html')) + rd(os.path.join(SRC, 's_3d.html')) + ''.join(rd(os.path.join(SRC, f)) for f in FIGS) + tail
 head = rd(os.path.join(SRC, 'head.part'))
 sys.path.insert(0, os.path.join(SP, 'kit')); import kit
-html = kit.apply(head + body + scripts, '∇')
-# Figures carry placeholders 'Рис. ∇.@key' in the sources; number them in the order of their captions.
+html = head + body + scripts
+# Figures carry placeholders 'Рис. ∇.@key' in the sources; number them in the order of their captions
+# (before the kit, so that the cross-reference cards see the real numbers).
 order = re.findall(r'<figcaption>\s*Рис\.\s*∇\.@(\w+)\.', html)
 dup = sorted({k for k in order if order.count(k) > 1})
 num = {k: str(i + 1) for i, k in enumerate(order)}
 miss = sorted({k for k in re.findall(r'∇\.@(\w+)', html) if k not in num})
 html = re.sub(r'∇\.@(\w+)', lambda m: '∇.' + num.get(m.group(1), '@' + m.group(1)), html)
+html = kit.apply(html, '∇')
 out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(NB, 'ch_nabla.html')
 open(out, 'w', encoding='utf-8').write(html)
 print('ok', len(body), len(scripts), len(html), FIGS)

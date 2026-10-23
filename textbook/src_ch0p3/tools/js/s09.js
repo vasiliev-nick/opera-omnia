@@ -1,51 +1,40 @@
 
 (function(){
-  /* Fig. ∅.25: the standard Gaussian density on the plane and its image under a lower-triangular A; circles go to ellipses, the unit square to a parallelogram. */
-  const cv=document.getElementById('gauss2');if(!cv||!window.TB||!TB.fit)return;
-  const sa=document.getElementById('g2A'),sb=document.getElementById('g2B'),sd=document.getElementById('g2D'),fx=document.getElementById('g2Fx');
-  const oa=document.getElementById('g2AOut'),ob=document.getElementById('g2BOut'),od=document.getElementById('g2DOut');
-  const g1=new TB.Gauge('gG21'),g2=new TB.Gauge('gG22');
-  const P0=1-Math.exp(-0.5);g2.mark('a',P0,'1 − <i>e</i><sup>−1/2</sup>');
-  const phi2=(u,v)=>Math.exp(-(u*u+v*v)/2)/(2*Math.PI),R0=4,NP=170;
-  const tone=p=>1-Math.exp(-p/0.12);
-  let imgL=null,keyL='';
+  /* Fig. ∅.24: (x²−y²)/(x²+y²)² on the unit square; the corner where both infinite masses live, and the strips of the two iterated integrals. */
+  const cv=document.getElementById('fcounter');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('fcE'),so=document.getElementById('fcEOut'),fx=document.getElementById('fcFx');
+  const g1=new TB.Gauge('gFc1'),g2=new TB.Gauge('gFc2'),g3=new TB.Gauge('gFc3');
+  const f=(x,y)=>{const r=x*x+y*y;return (x*x-y*y)/(r*r);};
+  const q=Math.PI/4;g1.mark('a',q,'<sup>π</sup>⁄<sub>4</sub>');g2.mark('a',-q,'−<sup>π</sup>⁄<sub>4</sub>');
+  let md=TB.segs(cv,k=>{md=k;draw();}),img=null,imgKey='';
+  function heat(K){const key=K.paper+K.eth+K.warm;if(img&&imgKey===key)return img;imgKey=key;const N=260;
+    return img=TB.heat(N,(i,j)=>{const v=f((i+0.5)/N,(j+0.5)/N),a=1-Math.exp(-Math.abs(v)/1.5);return TB.mixa(K.paper,v>0?K.warm:K.eth,a*0.95);});}
   function draw(){
-    const a=+sa.value,b=+sb.value,d=+sd.value;oa.textContent=TB.fmt(a,2);ob.textContent=TB.fmt(b,2);od.textContent=TB.fmt(d,2);
-    const det=a*d,inv=(x,y)=>{const u=x/a;return [u,(y-b*u)/d];};
-    const F=TB.fit(cv,W=>{const sm=W<520,P=(W-(sm?16:28)-(sm?40:56)-(sm?14:24))/2;return Math.max(220,Math.round(P+(sm?96:82)));}),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    const u=+sl.value,e=Math.pow(10,-u);so.textContent=e.toPrecision(2).replace('.',',');
+    const F=TB.fit(cv,W=>Math.max(330,Math.min(440,Math.round(W*0.58)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
     c.fillStyle=K.paper;c.fillRect(0,0,W,H);
-    const sm=W<520,s=sm?12:14,L=sm?20:28,R=W-(sm?8:14),gp=sm?20:28;
-    const top=TB.legend(c,[{k:'line',col:K.ink,t:[['|','m'],['z','i'],['| = 1, 2 и эллипсы ','r'],['E','i'],['1','s'],[', ','r'],['E','i'],['2','s']]},{k:'line',col:K.warm,t:[['[0, 1)²','m'],[' и ','r'],['A','i'],['[0, 1)²','m']]}],L,R,4,s)+8;
-    const B=H-(sm?24:28),P=Math.min(B-top,(R-L-gp)/2),XA=L,XB=L+P+gp;
-    const tr=(X0,x,y)=>[X0+(x+R0)/(2*R0)*P,B-(y+R0)/(2*R0)*P];
-    const key=K.paper+K.eth;if(!imgL||keyL!==key){keyL=key;imgL=TB.heat(NP,(i,j)=>{const x=-R0+2*R0*(i+0.5)/NP,y=-R0+2*R0*(j+0.5)/NP;return TB.mixa(K.paper,K.eth,tone(phi2(x,y))*0.92);});}
-    const imgR=TB.heat(NP,(i,j)=>{const x=-R0+2*R0*(i+0.5)/NP,y=-R0+2*R0*(j+0.5)/NP,z=inv(x,y);return TB.mixa(K.paper,K.eth,tone(phi2(z[0],z[1])/det)*0.92);});
-    c.imageSmoothingEnabled=true;c.drawImage(imgL,XA,B-P,P,P);c.drawImage(imgR,XB,B-P,P,P);
-    for(const X0 of [XA,XB]){
-      c.strokeStyle=K.rule;c.lineWidth=1;c.strokeRect(X0,B-P,P,P);c.beginPath();
-      for(let v=-R0+1;v<R0;v++){const p=tr(X0,v,-R0),q=tr(X0,-R0,v);c.moveTo(p[0],B);c.lineTo(p[0],B+4);c.moveTo(X0-4,q[1]);c.lineTo(X0,q[1]);}
-      c.stroke();c.strokeStyle=TB.rgba(K.muted,0.35);c.beginPath();const o=tr(X0,0,0);c.moveTo(X0,o[1]);c.lineTo(X0+P,o[1]);c.moveTo(o[0],B-P);c.lineTo(o[0],B);c.stroke();
-      c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='center';for(const v of [-2,0,2])c.fillText(TB.fmt(v,0),tr(X0,v,0)[0],B+s+5);
-      if(X0===XA){c.textAlign='right';for(const v of [-2,0,2])c.fillText(TB.fmt(v,0),X0-6,tr(X0,0,v)[1]+s*0.35);}c.textAlign='start';}
-    const curve=(X0,map)=>{c.beginPath();for(let i=0;i<=160;i++){const t=2*Math.PI*i/160,p=map(Math.cos(t),Math.sin(t)),q=tr(X0,p[0],p[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);}c.closePath();c.stroke();};
-    const poly=(X0,pts)=>{c.beginPath();pts.forEach((p,i)=>{const q=tr(X0,p[0],p[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});c.closePath();};
-    const Am=(u,v)=>[a*u,b*u+d*v],sq=[[0,0],[1,0],[1,1],[0,1]];
-    c.save();c.beginPath();c.rect(XA,B-P,P,P);c.rect(XB,B-P,P,P);c.clip();
-    c.strokeStyle=K.ink;c.lineWidth=1.6;for(const r of [1,2]){curve(XA,(u,v)=>[r*u,r*v]);curve(XB,(u,v)=>Am(r*u,r*v));}
-    c.fillStyle=TB.rgba(K.warm,0.3);c.strokeStyle=K.warm;c.lineWidth=2;poly(XA,sq);c.fill();c.stroke();poly(XB,sq.map(p=>Am(p[0],p[1])));c.fill();c.stroke();
-    c.restore();
-    TB.rich(c,[['ζ','i']],XA+8,B-P+s+6,s,K.ink);TB.rich(c,[['X','i'],[' = ','m'],['A','i'],['ζ','i']],XB+8,B-P+s+6,s,K.ink);
-    // area of A[0,1)² by counting grid points, and P(X ∈ E_1) by a grid sum
-    const dlt=0.01,xs0=Math.min(0,a),xs1=Math.max(0,a),ys0=Math.min(0,b,b+d,d),ys1=Math.max(0,b,b+d,d);let cnt=0;
-    for(let x=xs0+dlt/2;x<xs1;x+=dlt)for(let y=ys0+dlt/2;y<ys1;y+=dlt){const z=inv(x,y);if(z[0]>=0&&z[0]<1&&z[1]>=0&&z[1]<1)cnt++;}
-    const area=cnt*dlt*dlt;
-    const ex=a,ey=Math.hypot(b,d),M=240,hx=2*ex/M,hy=2*ey/M;let pr=0;
-    for(let i=0;i<M;i++)for(let j=0;j<M;j++){const x=-ex+(i+0.5)*hx,y=-ey+(j+0.5)*hy,z=inv(x,y);if(z[0]*z[0]+z[1]*z[1]<=1)pr+=phi2(z[0],z[1])/det*hx*hy;}
-    g1.mark('d',det,'|det <i>A</i>|').set(area);g2.set(pr);
-    const s11=a*a,s12=a*b,s22=b*b+d*d;
-    fx.innerHTML=TB.rows([['det <i>A</i> = <i>a</i><sub>11</sub><i>a</i><sub>22</sub> = '+TB.fmt(det,3)+',','√det <i>Σ</i> = |det <i>A</i>| = '+TB.fmt(det,3)+','],
-      ['<i>Σ</i> = <i>AA</i><sup>⊤</sup>: <i>σ</i><sub>11</sub> = '+TB.fmt(s11,3)+',','<i>σ</i><sub>12</sub> = '+TB.fmt(s12,3)+',','<i>σ</i><sub>22</sub> = '+TB.fmt(s22,3)+','],
-      ['max <i>p</i><sub><i>X</i></sub> = 1/(2π √det <i>Σ</i>) = '+TB.fmt(1/(2*Math.PI*det),3)]]);
+    const sm=W<520,s=sm?12:14,L=sm?26:34,R=W-(sm?8:14);
+    const top=TB.legend(c,[{k:'fill',col:K.warm,a:0.7,t:[['f','i'],[' > 0','m']]},{k:'fill',col:K.eth,a:0.7,t:[['f','i'],[' < 0','m']]},
+      {k:'dash',col:K.ink,t:[['[0, ','m'],['ε','i'],[')²','m']]},{k:'line',col:K.ink,t:[['полоса','r']]}],L,R,4,s)+s+8;
+    const B=H-(sm?24:28),S=Math.min(B-top,R-L-30),X0=L+Math.max(0,((R-L)-S)/2),hx=x=>X0+x*S,hy=y=>B-y*S;
+    c.imageSmoothingEnabled=true;c.drawImage(heat(K),X0,B-S,S,S);
+    // dim everything outside the strip
+    c.fillStyle=TB.rgba(K.paper,0.62);
+    if(md==='X')c.fillRect(X0,B-S,hx(e)-X0,S);else c.fillRect(X0,hy(e),S,B-hy(e));
+    c.strokeStyle=TB.rgba(K.muted,0.7);c.lineWidth=1;c.setLineDash([2,4]);c.beginPath();c.moveTo(hx(0),hy(0));c.lineTo(hx(1),hy(1));c.stroke();c.setLineDash([]);
+    c.strokeStyle=K.rule;c.lineWidth=1;c.strokeRect(X0,B-S,S,S);
+    c.strokeStyle=K.ink;c.lineWidth=2;if(md==='X')c.strokeRect(hx(e),B-S,hx(1)-hx(e),S);else c.strokeRect(X0,B-S,S,hy(e)-(B-S));
+    c.lineWidth=1.4;c.setLineDash([4,3]);c.strokeRect(X0,hy(e),hx(e)-X0,B-hy(e));c.setLineDash([]);
+    c.beginPath();for(const v of [0,0.5,1]){c.moveTo(hx(v),B);c.lineTo(hx(v),B+4);c.moveTo(X0-4,hy(v));c.lineTo(X0,hy(v));}c.strokeStyle=K.rule;c.stroke();
+    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='center';for(const v of [0,0.5,1])c.fillText(TB.tickLabel(v),hx(v),B+s+5);
+    c.textAlign='right';for(const v of [0.5,1])c.fillText(TB.tickLabel(v),X0-6,hy(v)+s*0.35);c.textAlign='start';
+    TB.rich(c,[['x','i']],hx(1)+5,B-4,s,K.muted);TB.rich(c,[['y','i']],X0+4,hy(1)-7,s,K.muted);
+    const v=q-Math.atan(e),pm=0.5*Math.log(1/e)-Math.atan(1/e)+q;
+    g1.set(v);g2.set(-v);g3.set(pm);
+    const ar='π/4 − arctg <i>ε</i>';
+    fx.innerHTML=TB.rows([md==='X'?['∫<sub>0</sub><sup>1</sup> <i>f</i>(<i>x</i>, <i>y</i>) <i>dy</i> = 1/(1 + <i>x</i><sup>2</sup>),','∫<sub><i>ε</i></sub><sup>1</sup> <i>dx</i>/(1 + <i>x</i><sup>2</sup>) = '+ar+' = '+TB.fmt(v,3)]
+      :['∫<sub>0</sub><sup>1</sup> <i>f</i>(<i>x</i>, <i>y</i>) <i>dx</i> = −1/(1 + <i>y</i><sup>2</sup>),','∫<sub><i>ε</i></sub><sup>1</sup> (−1/(1 + <i>y</i><sup>2</sup>)) <i>dy</i> = '+TB.fmt(-v,3)],
+      ['положительная масса на [<i>ε</i>, 1]<sup>2</sup>: '+TB.fmt(pm,3)]]);
   }
-  [sa,sb,sd].forEach(e=>e.addEventListener('input',draw));draw();TB.onTheme(draw);TB.onResize(cv,draw);
+  sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
 })();

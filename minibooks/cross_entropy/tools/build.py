@@ -5,7 +5,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'cross_entropy.html')
 BODY = ['b0_gloss.html'] + ['b%d.html' % i for i in range(1, 12)]
-SCRIPTS = ['s_capfold.html', 's_helpers.html', 's_figs1.html', 's_figs0.html', 's_figs2.html', 's_figs3.html', 's_figs4.html', 's_tail.html']
+SCRIPTS = ['s_capfold.html', 's_xref.html', 's_helpers.html', 's_figs1.html', 's_figs0.html', 's_figs2.html', 's_figs3.html', 's_figs4.html', 's_tail.html']
 rd = lambda f: open(os.path.join(SRC, f), encoding='utf-8').read()
 
 # Numbering. {{Kind:key}} defines the next number of its counter and prints "Kind N";

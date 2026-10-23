@@ -1,2 +1,1 @@
-
-window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none'},svg:{fontCache:'global'}};
+try{var t=localStorage.getItem("book-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}

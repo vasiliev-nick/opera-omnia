@@ -1,0 +1,61 @@
+<script>
+(function(){
+  /* Fig. ∠.2, canvas stp: a function on [0,1) and its averages over 2^m dyadic cells, the projection onto step functions.
+     The area between the graph and the steps is warm where f is above and violet where it is below; in each cell both areas are equal. */
+  const TB=window.TB,cv=document.getElementById('stp');if(!TB||!cv||!TB.fit||!TB.cols)return;
+  const sl=document.getElementById('stpM'),out=document.getElementById('stpMOut'),fx=document.getElementById('stpFx'),g=new TB.Gauge('gStp');
+  const PI=Math.PI;
+  /* each function: values, antiderivative F (for the cell averages), the integral of f² over [a,b], and the vertical range of the picture */
+  const SIMP=(f,a,b,n)=>{const h=(b-a)/n;let s=f(a)+f(b);for(let i=1;i<n;i++)s+=f(a+i*h)*(i%2?4:2);return s*h/3;};
+  const J1=0.37,J2=0.71;
+  const FN={
+    smooth:{f:x=>Math.sin(2*PI*x)+0.5*Math.sin(5*PI*x+0.6)+0.8*x-0.3,
+      F:x=>-Math.cos(2*PI*x)/(2*PI)-0.5*Math.cos(5*PI*x+0.6)/(5*PI)+0.4*x*x-0.3*x,lo:-2,hi:2},
+    jump:{f:x=>x<J1?0.4+1.5*x:x<J2?-0.9+0.8*(x-J1):1.3-1.2*(x-J2),lo:-1.5,hi:1.8},
+    sing:{f:x=>0.5*Math.pow(Math.max(x,1e-12),-1/3)-0.6,F:x=>0.75*Math.pow(x,2/3)-0.6*x,
+      F2:x=>0.75*Math.pow(x,1/3)-0.9*Math.pow(x,2/3)+0.36*x,lo:-0.8,hi:3.2}};
+  /* the antiderivative of the function with jumps, piece by piece */
+  FN.jump.F=x=>{const a=Math.min(x,J1),b=Math.min(Math.max(x-J1,0),J2-J1),c=Math.max(x-J2,0);
+    return 0.4*a+0.75*a*a+(-0.9*b+0.4*b*b)+(1.3*c-0.6*c*c);};
+  const int2=(fn,a,b)=>fn.F2?fn.F2(b)-fn.F2(a):[[a,Math.min(b,J1)],[Math.max(a,J1),Math.min(b,J2)],[Math.max(a,J2),b]].reduce((s,q)=>q[1]>q[0]?s+SIMP(t=>fn.f(t)**2,q[0],q[1],16):s,0);
+  let key='smooth';
+  function lay(W){const sm=W<520;return {sm:sm,H:Math.round(sm?W*0.8:Math.max(300,W*0.44)),L:sm?34:42,R:12,T:sm?44:40,B:26};}
+  function draw(){
+    const F=TB.fit(cv,W=>lay(W).H),c=F.c,W=F.W,H=F.H,col=TB.cols(),Ly=lay(W),fs=Ly.sm?12:13,fn=FN[key],m=+sl.value,n=1<<m;
+    c.clearRect(0,0,W,H);out.textContent=m;
+    const yb=TB.legend(c,[{k:'thin',col:col.ink,t:[['f','i']]},{k:'line',col:col.eth,t:[['f','i'],['n','s'],[' — средние по клеткам','r']]},
+      {k:'fill',col:col.warm,a:0.4,t:[['f','i'],[' выше','r']]},{k:'fill',col:col.eth,a:0.35,t:[['f','i'],[' ниже','r']]}],Ly.L,W-8,4,fs);
+    const x0=Ly.L,x1=W-Ly.R,y0=Math.max(Ly.T,yb+10),y1=H-Ly.B,X=x=>x0+(x1-x0)*x,Y=v=>y1-(y1-y0)*(v-fn.lo)/(fn.hi-fn.lo);
+    /* axes */
+    c.strokeStyle=TB.rgba(col.ink,0.35);c.lineWidth=1;TB.ln(c,x0,Y(0),x1,Y(0));TB.ln(c,x0,y0,x0,y1);
+    c.font=fs+'px '+TB.ui;c.fillStyle=col.muted;c.textAlign='right';
+    for(let v=Math.ceil(fn.lo);v<=fn.hi;v++){c.fillText(TB.fmt(v,0),x0-6,Y(v)+4);c.strokeStyle=TB.rgba(col.ink,0.12);TB.ln(c,x0,Y(v),x1,Y(v));}
+    c.textAlign='center';[[0,'0'],[0.5,'1/2'],[1,'1']].forEach(q=>c.fillText(q[1],X(q[0]),y1+17));c.textAlign='start';
+    /* cell averages */
+    const a=[],G2=[];for(let k=0;k<n;k++){const u=k/n,v=(k+1)/n;a.push((fn.F(v)-fn.F(u))*n);G2.push(int2(fn,u,v));}
+    c.save();c.beginPath();c.rect(x0,y0,x1-x0,y1-y0);c.clip();
+    /* the areas between f and its steps, cell by cell */
+    const per=Math.max(4,Math.ceil(512/n));
+    for(let k=0;k<n;k++){const u=k/n,v=(k+1)/n,ya=Y(a[k]);
+      c.beginPath();c.moveTo(X(u),ya);for(let i=0;i<=per;i++){const x=u+(v-u)*i/per;c.lineTo(X(x),Y(fn.f(Math.max(x,1e-6))));}c.lineTo(X(v),ya);c.closePath();
+      c.save();c.clip();c.fillStyle=TB.rgba(col.warm,0.4);c.fillRect(X(u),y0,X(v)-X(u),ya-y0);c.fillStyle=TB.rgba(col.eth,0.33);c.fillRect(X(u),ya,X(v)-X(u),y1-ya);c.restore();}
+    if(n<=64){c.strokeStyle=TB.rgba(col.ink,0.14);c.lineWidth=1;for(let k=1;k<n;k++)TB.ln(c,X(k/n),y0,X(k/n),y1);}
+    /* the graph of f and the steps */
+    c.strokeStyle=col.ink;c.lineWidth=1.4;c.beginPath();
+    for(let i=0;i<=900;i++){const x=Math.max(i/900,4e-6),y=Y(fn.f(x)),px=X(x);
+      const br=key==='jump'&&i>0&&((x>=J1&&(i-1)/900<J1)||(x>=J2&&(i-1)/900<J2));if(i===0||br)c.moveTo(px,y);else c.lineTo(px,y);}
+    c.stroke();
+    c.strokeStyle=col.eth;c.lineWidth=2.2;c.beginPath();
+    for(let k=0;k<n;k++){const ya=Y(a[k]);if(k===0)c.moveTo(X(0),ya);else c.lineTo(X(k/n),ya);c.lineTo(X((k+1)/n),ya);}c.stroke();
+    c.restore();
+    /* readouts: the squares of the lengths and the Pythagorean theorem */
+    const nf=G2.reduce((s,v)=>s+v,0),nn=a.reduce((s,v)=>s+v*v,0)/n,ne=Math.max(0,G2.reduce((s,v,k)=>s+v-a[k]*a[k]/n,0));
+    g.set(Math.sqrt(ne/nf));
+    fx.innerHTML=TB.rows([['<i>n</i> = 2<sup>'+m+'</sup> = '+n+','],
+      ['‖<i>f</i>‖² = '+TB.fmt(nf,4)+',','‖<i>f<sub>n</sub></i>‖² = '+TB.fmt(nn,4)+',','‖<i>f</i> − <i>f<sub>n</sub></i>‖² = '+TB.fmt(ne,4)],
+      ['‖<i>f<sub>n</sub></i>‖² + ‖<i>f</i> − <i>f<sub>n</sub></i>‖² = '+TB.fmt(nn+ne,4)+' = ‖<i>f</i>‖²']]);
+  }
+  key=TB.segs(cv,k=>{key=k;draw();});
+  sl.addEventListener('input',draw);TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>

@@ -1,38 +1,52 @@
 
 (function(){
-  /* Fig. ∅.14: Fatou's lemma; f_n, the next two terms, the lower envelope g_n and the lower limit. */
-  const cv=document.getElementById('fatou');if(!cv||!window.TB||!TB.fit)return;
-  const sl=document.getElementById('ftN'),so=document.getElementById('ftNOut'),gG=new TB.Gauge('gFg'),gI=new TB.Gauge('gFi');
-  const bump=(x,c,wl,wr)=>{const w=x<c?wl:wr;return Math.exp(-(x-c)*(x-c)/(2*w*w));},base=x=>0.16+0.12*x;
-  const P=[x=>base(x)+0.85*bump(x,0.20,0.06,0.15),x=>base(x)+0.62*bump(x,0.52,0.14,0.07),x=>base(x)+0.92*bump(x,0.80,0.05,0.11)],PC=[0.20,0.52,0.80];
-  const f=(n,x)=>(1-0.75*Math.pow(0.8,n-1)*(1+x)/2)*P[n%3](x);
-  const M=2000,I=h=>{let s=0;for(let i=0;i<M;i++)s+=h((i+0.5)/M);return s/M;};
-  const IP=P.map(p=>I(p)),Imin=I(x=>Math.min(P[0](x),P[1](x),P[2](x))),liI=Math.min(...IP);
-  const li='lim inf ',fn='<i>f<sub>n</sub></i>';
-  gG.mark('a',Imin,'∫\u2009'+li+fn,true);gI.mark('a',Imin,'∫\u2009'+li+fn,true);gI.mark('b',liI,li+'∫\u2009'+fn);
+  /* Fig. ∅.14: the needle, mass escaping to infinity, the growing peak; the integral on a scale with +∞ at its right end. */
+  const cv=document.getElementById('needle');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('ndN'),so=document.getElementById('ndNOut'),fx=document.getElementById('ndFx');
+  const g=new TB.Gauge('gNd'),cmp=v=>v===Infinity?1:v/(1+v);
+  let md=TB.segs(cv,k=>{md=k;draw();});
+  if(g.el){const ge=g.el.querySelectorAll('.ge');ge[1].textContent='+∞';
+    for(const v of [1,2,4,9]){const t=document.createElement('i');t.className='ge';t.style.left=cmp(v)*100+'%';t.textContent=String(v);g.el.insertBefore(t,g.f);
+      const k=document.createElement('i');k.style.cssText='left:'+cmp(v)*100+'%;top:18px;height:11px;width:0;border-left:1px solid var(--muted);opacity:.7';g.el.insertBefore(k,g.f);}}
+  const sub=(a,b)=>a+'<sub>'+b+'</sub>',one='<b>1</b>',fi=sub('<i>f</i>','<i>n</i>'),dl=' <i>dλ</i><sub>1</sub>';
   function draw(){
     const n=+sl.value;so.textContent=n;
-    const F=TB.fit(cv,W=>Math.max(250,Math.min(340,Math.round(W*0.45)))),c=F.c,W=F.W,H=F.H;
+    const F=TB.fit(cv,W=>Math.max(250,Math.min(350,Math.round(W*0.46)))),c=F.c,W=F.W,H=F.H;
     const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm');
     c.fillStyle=TB.tok('--paper');c.fillRect(0,0,W,H);
     const sm=W<520,s=sm?12:14,L=sm?30:40,R=W-(sm?8:14);
-    const T=TB.legend(c,[{k:'line',col:warm,t:[['f','i'],['n','s']]},{k:'thin',col:muted,t:[['f','i'],['n+1','s'],[', ','r'],['f','i'],['n+2','s']]},
-      {k:'fill',col:eth,a:0.26,t:[['g','i'],['n','s'],[' = inf','r'],['k≥n','s'],[' f','i'],['k','s']]},{k:'dash',col:eth,t:[[li,'r'],['f','i'],['n','s']]}],L,R,4,s)+8;
-    const B=H-(sm?26:30),PR=R-18,X=x=>L+x*(PR-L),Y=y=>B-y/1.12*(B-T);
+    const fN=[['f','i'],[String(n),'s']];
+    const T=TB.legend(c,[{k:'fill',col:warm,a:0.32,t:fN},{k:'dash',col:eth,t:md==='P'?[['lim ','r'],['f','i'],['n','s'],[' = ','r'],['u','i']]:[['lim ','r'],['f','i'],['n','s'],[' = 0','r']]}],L,R,4,s)+6;
+    const B=H-(sm?26:30),PR=R-18,x1=md==='E'?22:1,y1=md==='E'?1.6:21,X=x=>L+x/x1*(PR-L),Y=y=>B-y/y1*(B-T);
     c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);
-    for(const v of [0.5,1]){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}for(const v of [0,0.5,1]){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}c.stroke();
-    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';c.fillText('0,5',L-7,Y(0.5)+s*0.35);c.fillText('1',L-7,Y(1)+s*0.35);c.fillText('0',L-7,B+s*0.35);
-    c.textAlign='center';c.fillText('0,5',X(0.5),B+s+5);c.fillText('1',X(1),B+s+5);c.textAlign='start';
+    const yt=md==='E'?[0,1]:[0,5,10,15,20],xt=md==='E'?[0,5,10,15,20]:[0,0.5,1];
+    for(const v of yt){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}for(const v of xt){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}c.stroke();
+    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of yt)c.fillText(String(v),L-7,Y(v)+s*0.35);
+    c.textAlign='center';for(const v of xt)c.fillText(TB.fmt(v,v%1?1:0),X(v),B+s+5);c.textAlign='start';
     TB.rich(c,[['x','i']],R-9,B-5,s,muted);
-    const N=Math.max(200,Math.round(PR-L)),xs=[];for(let i=0;i<=N;i++)xs.push(i/N);
-    c.beginPath();c.moveTo(X(0),B);for(const x of xs)c.lineTo(X(x),Y(Math.min(f(n,x),f(n+1,x),f(n+2,x))));c.lineTo(X(1),B);c.closePath();
-    c.fillStyle=TB.rgba(eth,0.26);c.fill();
-    const line=(h,col,w,dash)=>{c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.beginPath();xs.forEach((x,i)=>{i?c.lineTo(X(x),Y(h(x))):c.moveTo(X(x),Y(h(x)));});c.stroke();c.setLineDash([]);};
-    line(x=>Math.min(P[0](x),P[1](x),P[2](x)),eth,1.8,[6,5]);
-    line(x=>f(n+2,x),TB.rgba(muted,0.8),1.2);line(x=>f(n+1,x),TB.rgba(muted,0.8),1.2);
-    line(x=>f(n,x),warm,2.6);
-    const r=n%3;TB.rich(c,[['f','i'],[String(n),'s']],X(PC[r]),Y(f(n,PC[r]))-8,s,warm,'center');
-    gG.set(I(x=>Math.min(f(n,x),f(n+1,x),f(n+2,x))));gI.set(Math.min(I(x=>f(n,x)),I(x=>f(n+1,x)),I(x=>f(n+2,x))));
+    c.save();c.beginPath();c.rect(L,T,PR-L+1,B-T+1);c.clip();
+    c.beginPath();
+    if(md==='N'){c.moveTo(X(0),B);c.lineTo(X(0),Y(n));c.lineTo(X(1/n),Y(n));c.lineTo(X(1/n),B);}
+    else if(md==='E'){c.moveTo(X(n),B);c.lineTo(X(n),Y(1));c.lineTo(X(n+1),Y(1));c.lineTo(X(n+1),B);}
+    else{c.moveTo(X(0),B);c.lineTo(X(0),Y(n));c.lineTo(X(1/n),Y(n));for(let i=1;i<=240;i++){const x=1/n+(1-1/n)*i/240;c.lineTo(X(x),Y(1/x));}c.lineTo(X(1),B);}
+    c.fillStyle=TB.rgba(warm,0.32);c.fill();c.strokeStyle=warm;c.lineWidth=2.2;c.stroke();
+    c.strokeStyle=eth;c.lineWidth=2.4;c.setLineDash([7,5]);c.beginPath();
+    if(md==='P'){const x0=1/(y1+0.5);c.moveTo(X(x0),Y(1/x0));for(let i=1;i<=300;i++){const x=x0+(1-x0)*i/300;c.lineTo(X(x),Y(1/x));}}
+    else{c.moveTo(X(0),B-1);c.lineTo(X(x1),B-1);}
+    c.stroke();c.setLineDash([]);c.restore();
+    if(md==='P'){const xa=X(1/y1);c.fillStyle=eth;c.beginPath();c.moveTo(xa-5,T+9);c.lineTo(xa+1,T-1);c.lineTo(xa+5,T+10);c.closePath();c.fill();}
+    let v,html;
+    const fH=sub('<i>f</i>',n);
+    if(md==='N'){v=1;html=TB.rows([[fH+' = '+n+'·'+sub(one,'(0, '+TB.fr(1,n)+')')+',','∫'+fH+dl+' = '+n+'·'+TB.fr(1,n)+' = 1'],
+      ['lim '+fi+'(<i>x</i>) = 0 при каждом <i>x</i>,','∫ lim '+fi+dl+' = 0']]);}
+    else if(md==='E'){v=1;html=TB.rows([[fH+' = '+sub(one,'['+n+', '+(n+1)+')')+',','∫'+fH+dl+' = '+sub('<i>λ</i>',1)+'(['+n+', '+(n+1)+')) = 1'],
+      [fi+'(<i>x</i>) = 0 при <i>n</i> &gt; <i>x</i>,','∫ lim '+fi+dl+' = 0']]);}
+    else{v=1+Math.log(n);html=TB.rows([[fH+' = min('+n+', <i>u</i>),','∫'+fH+dl+' = '+n+'·'+TB.fr(1,n)+' + ln '+n+' ≈ '+TB.fmt(v,3)],
+      ['lim '+fi+' = <i>u</i>,','∫<i>u</i>'+dl+' = +∞']]);}
+    fx.innerHTML=html;
+    g.set(cmp(v));if(g.out)g.out.textContent=TB.fmt(v,3);if(g.el)g.el.setAttribute('aria-valuetext',TB.fmt(v,3));
+    const lim=md==='P'?Infinity:0;g.mark('lim',cmp(lim),'∫ lim '+fi+' = '+(md==='P'?'+∞':'0'));
+    if(g.m.lim)g.m.lim.firstChild.style.transform=md==='P'?'translateX(-100%)':'none';
   }
   sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
 })();

@@ -10,6 +10,27 @@ INIT = '<script>try{var t=localStorage.getItem("book-theme");if(t==="dark"||t===
 OLD_GLOSS = re.compile(r"<script>\n\(function\(\)\{\n  /\* Glossary: opens on hover.*?\}\)\(\);\n</script>\n", re.S)
 
 
+def xref_data(html):
+    """the items of other pages that this page mentions, as JSON for kit/xref.html (index from kit/xref_index.py)"""
+    import json
+    f = os.path.join(KIT, 'xref_index.json')
+    idx = json.load(open(f, encoding='utf-8')) if os.path.exists(f) else {'pages': {}, 'items': {}}
+    sym = '[∅∇𝒩∠⊥]'
+    local = set()
+    for m in re.finditer(r'<div class="(stmt|ex)"><span class="lbl">(Определение|Лемма|Теорема|Предложение|Следствие|Факт|Утверждение|Упражнение|Вопрос)\s+(%s\.\d+)' % sym, html):
+        local.add(('ex' if m.group(2) == 'Упражнение' else 'q' if m.group(2) == 'Вопрос' else 'st') + ':' + m.group(3))
+    for m in re.finditer(r'<figcaption>\s*Рис\.\s*(%s\.\d+)' % sym, html):
+        local.add('fig:' + m.group(1))
+    items, pages = {}, {}
+    for t in set(re.findall(r'%s\.\d+' % sym, html)):
+        for kind in ('st', 'ex', 'q', 'fig'):
+            k = kind + ':' + t
+            if k in idx['items'] and k not in local:
+                items[k] = idx['items'][k]
+                pages[items[k]['p']] = idx['pages'][items[k]['p']]
+    return json.dumps({'pages': pages, 'items': items}, ensure_ascii=False).replace('<', '\\u003c')
+
+
 def apply(html, sym):
     for o, n in zip(OLD_LIGHT, NEW_LIGHT):
         html = html.replace(o, n, 1)
@@ -33,6 +54,11 @@ def apply(html, sym):
         i = html.rfind('</article>')
         i = i + len('</article>') if i >= 0 else html.rindex('</body>')
         html = html[:i] + '\n' + rd('capfold.html').rstrip('\n') + html[i:]
+    # Mentions of numbered items open a card with the item, a jump to it and a way back (Nick, 2026-10-23).
+    if 'id="xref-data"' not in html:
+        i = html.rfind('</article>')
+        i = i + len('</article>') if i >= 0 else html.rindex('</body>')
+        html = html[:i] + '\n<script type="application/json" id="xref-data">' + xref_data(html) + '</script>\n' + rd('xref.html').rstrip('\n') + html[i:]
     html = re.sub(r'<h2([^>]*)>(?=%s\.)' % re.escape(sym), r'<h2\1>§', html)
     html = re.sub(r'(<li><a href="#[^"]+">)(?=%s\.\d)' % re.escape(sym), r'\1§', html)
     return html

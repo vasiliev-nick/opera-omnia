@@ -1,0 +1,108 @@
+<script>
+(function(){
+  /* Fig. ∠.5, canvas rad: the Rademacher functions r_1..r_6 as rows, the Walsh function w_S of the chosen rows below them,
+     a point x with its coins r_n(x), and a random point drawn coin by coin, the interval of possible positions halving at each throw. */
+  const TB=window.TB,cv=document.getElementById('rad');if(!TB||!cv||!TB.fit||!TB.cols||!TB.drag2d)return;
+  const fx=document.getElementById('radFx'),btn=document.getElementById('radGo'),M=6,PI=Math.PI;
+  let x=0.6,S=new Set([1,2]),anim=null,G=null,tEnd=-1e9;
+  const dig=(v,n)=>Math.floor(Math.pow(2,n)*v)-2*Math.floor(Math.pow(2,n-1)*v);
+  const rad=(v,n)=>1-2*dig(v,n);
+  const sgn=v=>v>0?'+1':'−1';
+  /* the value of w_S on the cell j of rank m, from the binary digits of j */
+  const wCell=(j,m)=>{let p=1;S.forEach(n=>{if((j>>(m-n))&1)p=-p;});return p;};
+  function lay(W){const sm=W<520;return {sm:sm,H:Math.round(sm?W*1.12:Math.max(380,W*0.56)),L:sm?32:44,R:sm?34:48};}
+  /* the interval where the point can still lie during the throws, and the digits known so far */
+  function state(){
+    if(!anim)return null;const a=anim,k=a.k;let lo=0;for(let i=0;i<k;i++)lo+=a.d[i]*Math.pow(2,-i-1);let len=Math.pow(2,-k),known=k;
+    if(a.ph==='halve'){const e=1-Math.pow(1-a.p,3);lo+=a.d[k]*Math.pow(2,-k-1)*e;len*=1-e/2;known=k+1;}
+    return {lo:lo,hi:lo+len,known:known,flip:a.ph==='flip'?k:-1,p:a.p};
+  }
+  function coin(c,cx,cy,r,v,col,fs,sx,sel){
+    c.save();c.translate(cx,cy);c.scale(Math.max(0.06,sx),1);
+    if(v===0){c.setLineDash([2,3]);c.strokeStyle=TB.rgba(col.ink,0.45);c.lineWidth=1.2;c.beginPath();c.arc(0,0,r,0,2*PI);c.stroke();c.setLineDash([]);
+      c.fillStyle=col.muted;c.font=(fs-1)+'px '+TB.ui;c.textAlign='center';c.fillText('?',0,4);}
+    else{const k=v>0?col.warm:col.eth;c.fillStyle=TB.rgba(k,0.22);c.strokeStyle=k;c.lineWidth=sel?2:1.3;c.beginPath();c.arc(0,0,r,0,2*PI);c.fill();c.stroke();
+      if(sx>0.5){c.fillStyle=col.ink;c.font=(fs-2)+'px '+TB.ui;c.textAlign='center';c.fillText(sgn(v),0,4);}}
+    c.restore();c.textAlign='start';
+  }
+  function draw(){
+    const F=TB.fit(cv,W=>lay(W).H),c=F.c,W=F.W,H=F.H,col=TB.cols(),Ly=lay(W),fs=Ly.sm?12:13,st=state();
+    c.clearRect(0,0,W,H);
+    const x0=Ly.L,x1=W-Ly.R,X=v=>x0+(x1-x0)*v,yB=Ly.sm?14:16,yR=yB+(Ly.sm?16:20),rh=(H-yR-24)/7.5,yW=yR+6*rh+rh*0.35,hw=rh*1.15,cx=x1+Ly.R/2+2,cr=Ly.sm?9:10.5;
+    /* the band: where the point can lie */
+    c.fillStyle=TB.rgba(col.ink,0.08);c.fillRect(x0,yB-4,x1-x0,8);
+    TB.rich(c,[['x','i']],x0-10,yB+5,fs,col.ink,'right');
+    if(st){c.fillStyle=TB.rgba(col.warm,0.6);c.fillRect(X(st.lo),yB-4,Math.max(1.5,X(st.hi)-X(st.lo)),8);
+      c.fillStyle=TB.rgba(col.warm,0.13);c.fillRect(X(st.lo),yR,Math.max(1.5,X(st.hi)-X(st.lo)),yW+hw-yR);
+      c.setLineDash([3,3]);c.strokeStyle=TB.rgba(col.warm,0.8);c.lineWidth=1;TB.ln(c,X(st.lo),yB+4,X(st.lo),yW+hw);TB.ln(c,X(st.hi),yB+4,X(st.hi),yW+hw);c.setLineDash([]);}
+    /* the rows r_1 … r_6 */
+    for(let n=1;n<=M;n++){
+      const top=yR+(n-1)*rh,hi=top+rh*0.2,lo=top+rh*0.8,mid=top+rh*0.5,sel=S.has(n),N=1<<n;
+      if(sel){c.fillStyle=TB.rgba(col.eth,0.08);c.fillRect(x0,top+1,x1-x0,rh-2);}
+      c.strokeStyle=TB.rgba(col.ink,0.12);c.lineWidth=1;TB.ln(c,x0,mid,x1,mid);
+      c.strokeStyle=sel?col.eth:TB.rgba(col.ink,0.6);c.lineWidth=sel?2:1.2;c.beginPath();c.moveTo(X(0),hi);
+      for(let j=0;j<N;j++){const y=j%2?lo:hi;c.lineTo(X(j/N),y);c.lineTo(X((j+1)/N),y);}c.stroke();
+      TB.rich(c,[['r','i'],[String(n),'n']],x0-10,mid+5,fs,sel?col.eth:col.ink,'right');
+      let v,sx=1;
+      if(!st)v=rad(x,n);else if(n-1<st.known)v=1-2*anim.d[n-1];else if(n-1===st.flip){sx=Math.abs(Math.cos(3*PI*st.p));v=Math.floor(st.p*6)%2?1:-1;}else v=0;
+      coin(c,cx,mid,cr,v,col,fs,sx,sel);
+    }
+    /* the Walsh function of the chosen rows */
+    const m=S.size?Math.max(...S):0,Nw=1<<m,whi=yW+hw*0.12,wlo=yW+hw*0.88,wmid=yW+hw*0.5;
+    for(let j=0;j<Nw;j++){const v=wCell(j,m),a=X(j/Nw),b=X((j+1)/Nw);
+      c.fillStyle=v>0?TB.rgba(col.warm,0.5):TB.rgba(col.eth,0.42);c.fillRect(a,v>0?whi:wmid,b-a,v>0?wmid-whi:wlo-wmid);}
+    c.strokeStyle=TB.rgba(col.ink,0.25);c.lineWidth=1;TB.ln(c,x0,wmid,x1,wmid);
+    c.strokeStyle=col.ink;c.lineWidth=1.4;c.beginPath();
+    for(let j=0;j<Nw;j++){const y=wCell(j,m)>0?whi:wlo;j?c.lineTo(X(j/Nw),y):c.moveTo(X(0),y);c.lineTo(X((j+1)/Nw),y);}c.stroke();
+    TB.rich(c,[['w','i'],['S','s']],x0-10,wmid+5,fs,col.ink,'right');
+    let wv;if(!st)wv=[...S].reduce((p,n)=>p*rad(x,n),1);else wv=[...S].every(n=>n-1<st.known)?[...S].reduce((p,n)=>p*(1-2*anim.d[n-1]),1):0;
+    coin(c,cx,wmid,cr+1.5,wv,col,fs,1,true);
+    /* the axis */
+    c.font=fs+'px '+TB.ui;c.fillStyle=col.muted;c.textAlign='center';
+    [[0,'0'],[0.25,'1/4'],[0.5,'1/2'],[0.75,'3/4'],[1,'1']].forEach(q=>c.fillText(q[1],X(q[0]),yW+hw+17));c.textAlign='start';
+    /* the point x, its coins on the rows, and the handle on the band */
+    if(!st){const px=X(x);c.strokeStyle=TB.rgba(col.ink,0.7);c.lineWidth=1.3;TB.ln(c,px,yB,px,yW+hw);
+      for(let n=1;n<=M;n++){const top=yR+(n-1)*rh,y=rad(x,n)>0?top+rh*0.2:top+rh*0.8;c.fillStyle=S.has(n)?col.eth:col.ink;c.beginPath();c.arc(px,y,3.2,0,2*PI);c.fill();}
+      c.fillStyle=TB.rgba(col.ink,0.15);c.beginPath();c.arc(px,yB,11,0,2*PI);c.fill();
+      c.fillStyle=col.ink;c.strokeStyle=col.paper;c.lineWidth=1.5;c.beginPath();c.arc(px,yB,5.5,0,2*PI);c.fill();c.stroke();}
+    G={X:X,x0:x0,x1:x1,yB:yB,yR:yR,rh:rh,yE:yW+hw,cx:cx};
+    readout(st);
+  }
+  function readout(st){
+    const Sl=[...S].sort((a,b)=>a-b),Ss=Sl.length?'{'+Sl.join(', ')+'}':'∅';
+    if(st){const k=st.known,p=Math.pow(2,k),a=Math.round(st.lo*p);
+      fx.innerHTML=TB.rows([['брошено монет: '+k+' из '+M+';',k?'<i>x</i> ∈ ['+a+'/'+p+'; '+(a+1)+'/'+p+')':'<i>x</i> ∈ [0; 1)'],
+        ['двоичная запись <i>x</i> = 0,'+anim.d.slice(0,k).join('')+'?'.repeat(M-k)+'…<sub>2</sub>']]);return;}
+    const d=[];for(let n=1;n<=M;n++)d.push(dig(x,n));
+    const w=Sl.reduce((q,n)=>q*rad(x,n),1);
+    fx.innerHTML=TB.rows([['<i>x</i> = '+TB.fmt(x,4)+' = 0,'+d.join('')+'…<sub>2</sub>,'],
+      ['(<i>r</i><sub>1</sub>(<i>x</i>), …, <i>r</i><sub>6</sub>(<i>x</i>)) = ('+d.map(v=>v?'−1':'+1').join(', ')+'),'],
+      Sl.length?['<i>S</i> = '+Ss+':','<i>w<sub>S</sub></i>(<i>x</i>) = '+sgn(w)+';','<i>w<sub>S</sub></i> = +1 ровно на половине отрезка, 𝔼<i>w<sub>S</sub></i> = 0']
+        :['<i>S</i> = ∅:','<i>w</i><sub>∅</sub> = 1 всюду, 𝔼<i>w</i><sub>∅</sub> = 1']]);
+  }
+  /* the throws: a coin spins, then the interval of possible positions halves; after six throws the point is placed in its cell */
+  const FLIP=450,HALVE=380;
+  function go(){
+    const d=[];for(let i=0;i<M;i++)d.push(Math.random()<0.5?0:1);const u=0.15+0.7*Math.random();
+    const fin=()=>{x=d.reduce((s,v,i)=>s+v*Math.pow(2,-i-1),0)+u*Math.pow(2,-M);anim=null;draw();};
+    if(TB.reduced()){anim=null;fin();return;}
+    const a={d:d,k:0,ph:'flip',p:0,t0:performance.now()};anim=a;
+    const step=t=>{if(anim!==a)return;const dur=a.ph==='flip'?FLIP:HALVE;a.p=Math.min(1,(t-a.t0)/dur);
+      if(a.p>=1){if(a.ph==='flip'){a.ph='halve';}else{a.k++;a.ph='flip';if(a.k>=M){fin();return;}}a.p=0;a.t0=t;}
+      draw();requestAnimationFrame(step);};
+    draw();requestAnimationFrame(step);
+  }
+  btn.addEventListener('click',go);
+  /* dragging the point; a click on a row puts it into the product or takes it out */
+  const nearLine=(px,touch)=>!anim&&G&&Math.abs(px-G.X(x))<(touch?18:9);
+  const rowAt=(px,py)=>{if(!G||py<G.yR||py>=G.yR+6*G.rh)return 0;return 1+Math.floor((py-G.yR)/G.rh);};
+  TB.drag2d(cv,{hit:(px,py,touch)=>G&&py>G.yB-14&&py<G.yE&&nearLine(px,touch)?{dx:G.X(x)-px}:null,
+    move(o,px){x=Math.max(0,Math.min(1-1e-9,(px+o.dx-G.x0)/(G.x1-G.x0)));draw();},end(){tEnd=performance.now();},cursor:'ew-resize'});
+  cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
+    if(e.buttons===0&&!nearLine(px,false)&&rowAt(px,py))cv.style.cursor='pointer';});
+  cv.addEventListener('click',e=>{if(performance.now()-tEnd<300)return;const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
+    if(nearLine(px,e.pointerType&&e.pointerType!=='mouse'))return;const n=rowAt(px,py);if(!n)return;
+    if(S.has(n))S.delete(n);else S.add(n);draw();});
+  TB.onTheme(draw);TB.onResize(cv,draw);draw();
+})();
+</script>

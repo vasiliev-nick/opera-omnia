@@ -45,5 +45,6 @@ scripts=helper+rd(os.path.join(SRC,'s_new.html'))+tail
 head=rd(os.path.join(SRC,'head.part'))
 open(os.path.join(P2,'body.part'),'w',encoding='utf-8').write(body)
 open(os.path.join(P2,'scripts.part'),'w',encoding='utf-8').write(scripts)
-open(os.path.join(P2,'ch0p3.html'),'w',encoding='utf-8').write(head+body+scripts)
+import sys;sys.path.insert(0,os.path.join(SP,'kit'));import kit
+open(os.path.join(P2,'ch0p3.html'),'w',encoding='utf-8').write(kit.apply(head+body+scripts,'∅'))
 print('ok',len(body),len(scripts))

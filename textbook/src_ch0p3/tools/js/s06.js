@@ -1,49 +1,59 @@
 
 (function(){
-  /* Fig. ∅.22: the density of η = exp ξ for standard normal ξ; a strip under φ and its image under q carry the same probability. */
-  const cv=document.getElementById('dens1');if(!cv||!window.TB||!TB.fit)return;
-  const sx=document.getElementById('d1X'),sxo=document.getElementById('d1XOut'),sw=document.getElementById('d1W'),swo=document.getElementById('d1WOut'),fx=document.getElementById('d1Fx');
-  const g1=new TB.Gauge('gD11'),g2=new TB.Gauge('gD12');
-  const phi=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI),q=y=>y>0?phi(Math.log(y))/y:0;
-  const simp=(f,a,b,n)=>{n=n||400;const h=(b-a)/n;let s=f(a)+f(b);for(let i=1;i<n;i++)s+=f(a+i*h)*(i%2?4:2);return s*h/3;};
-  const xa=-2.6,xb=2.1,ym=7.6;
+  /* Fig. ∅.21: the Cantor distribution against a distribution with a density; histograms on triadic intervals and distribution functions. */
+  const cv=document.getElementById('cantor');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('caK'),so=document.getElementById('caKOut'),fx=document.getElementById('caFx');
+  const g1=new TB.Gauge('gCa1'),g2=new TB.Gauge('gCa2');
+  const Kf=x=>{let s=0,p=1/3;for(let j=0;j<40;j++){x*=2;const d=x>=1?1:0;x-=d;s+=2*d*p;p/=3;}return s;};
+  const FCx=t=>{if(t<=0)return 0;if(t>=1)return 1;let lo=0,hi=1;for(let i=0;i<46;i++){const mid=(lo+hi)/2;if(Kf(mid)<=t)lo=mid;else hi=mid;}return lo;};
+  const NG=1200,FCg=[];for(let i=0;i<=NG;i++)FCg.push(FCx(i/NG));
+  const FP=t=>t<=0?0:t>=1?1:t*t*(6-8*t+3*t*t),pP=t=>t<0||t>1?0:12*t*(1-t)*(1-t);
+  const inC=(j,k)=>{for(let i=0;i<k;i++){if(j%3===1)return false;j=Math.floor(j/3);}return true;};
+  let md=TB.segs(cv,k=>{md=k;draw();});
+  g1.mark('p',16/9,'max <i>p</i>');
   function draw(){
-    const x0=+sx.value,d=+sw.value,x1=x0+d,y0=Math.exp(x0),y1=Math.exp(x1);sxo.textContent=TB.fmt(x0,2);swo.textContent=TB.fmt(d,2);
-    const F=TB.fit(cv,W=>Math.max(340,Math.min(440,Math.round(W*0.58)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    const k=+sl.value;so.textContent=k;const n=Math.pow(3,k),w=1/n;
+    const ms=new Float64Array(n);for(let j=0;j<n;j++)ms[j]=md==='C'?(inC(j,k)?Math.pow(2,-k):0):FP((j+1)*w)-FP(j*w);
+    const F=TB.fit(cv,W=>Math.max(330,Math.min(420,Math.round(W*0.55)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
     c.fillStyle=K.paper;c.fillRect(0,0,W,H);
-    const sm=W<520,s=sm?12:14,L=sm?8:14,R=W-(sm?8:14);
-    const top=TB.legend(c,[{k:'line',col:K.ink,t:[['y','i'],[' = ','m'],['e','i'],['ˣ','i']]},{k:'line',col:K.warm,t:[['φ','i'],[' — плотность ','r'],['ξ','i']]},
-      {k:'line',col:K.eth,t:[['q','i'],[' — плотность ','r'],['η','i']]}],L,R,4,s)+8;
-    const QX=L+(R-L)*0.72,GB=top+(H-top-(sm?22:26))*0.74,PB=H-(sm?22:26);
-    const X=x=>L+(x-xa)/(xb-xa)*(QX-L),Y=y=>GB-y/ym*(GB-top),PY=v=>GB+v/0.42*(PB-GB-2),QXv=v=>QX+v/0.7*(R-QX-4);
-    // strips
-    c.fillStyle=TB.rgba(K.warm,0.13);c.beginPath();c.moveTo(X(x0),GB);for(let i=0;i<=40;i++){const x=x0+d*i/40;c.lineTo(X(x),Y(Math.exp(x)));}c.lineTo(X(x1),GB);c.closePath();c.fill();
-    c.fillStyle=TB.rgba(K.eth,0.13);c.beginPath();c.moveTo(QX,Y(y0));for(let i=0;i<=40;i++){const x=x0+d*i/40;c.lineTo(X(x),Y(Math.exp(x)));}c.lineTo(QX,Y(y1));c.closePath();c.fill();
-    c.fillStyle=TB.rgba(K.warm,0.45);c.beginPath();c.moveTo(X(x0),GB);for(let i=0;i<=60;i++){const x=x0+d*i/60;c.lineTo(X(x),PY(phi(x)));}c.lineTo(X(x1),GB);c.closePath();c.fill();
-    c.fillStyle=TB.rgba(K.eth,0.45);c.beginPath();c.moveTo(QX,Y(y0));for(let i=0;i<=60;i++){const y=y0+(y1-y0)*i/60;c.lineTo(QXv(q(y)),Y(y));}c.lineTo(QX,Y(y1));c.closePath();c.fill();
-    // axes: x-axis at y = 0, y-axis on the right edge of the graph; x tick labels under the φ panel
-    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(L,GB);c.lineTo(R,GB);c.moveTo(QX,top);c.lineTo(QX,PB);
-    for(const v of [-2,-1,0,1,2]){c.moveTo(X(v),PB-4);c.lineTo(X(v),PB);c.moveTo(X(v),GB);c.lineTo(X(v),GB+4);}
-    for(const v of [2,4,6]){c.moveTo(QX,Y(v));c.lineTo(QX+4,Y(v));}c.stroke();
-    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='center';for(const v of [-2,-1,0,1,2])c.fillText(TB.fmt(v,0),X(v),PB+s+4);
-    c.textAlign='right';for(const v of [2,4,6])c.fillText(String(v),QX-6,Y(v)+s*0.35);c.textAlign='start';
-    TB.rich(c,[['y','i']],QX+8,top+s,s,K.muted);TB.rich(c,[['x','i']],L+2,GB-6,s,K.muted);
-    // the curves
-    c.strokeStyle=K.warm;c.lineWidth=1.8;c.beginPath();for(let i=0;i<=300;i++){const x=xa+(xb-xa)*i/300;i?c.lineTo(X(x),PY(phi(x))):c.moveTo(X(x),PY(phi(x)));}c.stroke();
-    c.strokeStyle=K.eth;c.lineWidth=1.8;c.beginPath();for(let i=0;i<=500;i++){const y=1e-3+(ym-1e-3)*i/500;i?c.lineTo(QXv(q(y)),Y(y)):c.moveTo(QXv(q(y)),Y(y));}c.stroke();
-    c.save();c.beginPath();c.rect(L,top,QX-L,GB-top);c.clip();
-    c.strokeStyle=K.ink;c.lineWidth=2.2;c.beginPath();for(let i=0;i<=300;i++){const x=xa+(xb-xa)*i/300;i?c.lineTo(X(x),Y(Math.exp(x))):c.moveTo(X(x),Y(Math.exp(x)));}c.stroke();c.restore();
-    c.fillStyle=K.ink;c.beginPath();c.arc(X(x0),Y(y0),3.2,0,7);c.fill();
-    c.strokeStyle=TB.rgba(K.ink,0.55);c.lineWidth=1;c.setLineDash([3,3]);c.beginPath();c.moveTo(X(x0),GB);c.lineTo(X(x0),Y(y0));c.lineTo(QX,Y(y0));c.stroke();c.setLineDash([]);
-    TB.rich(c,[['φ','i']],X(-1.75),PY(phi(-1.75))+s+2,s,K.warm,'center');
-    TB.rich(c,[['q','i']],QXv(q(Math.exp(-1)))+6,Y(Math.exp(-1))-8,s,K.eth);
-    // numbers
-    const P1=simp(phi,x0,x1),P2=simp(q,y0,y1);
-    g1.set(P1);g2.set(P2);
-    const x0s='<i>x</i><sub>0</sub>',ex='<i>e</i><sup><i>x</i><sub>0</sub></sup>';
-    fx.innerHTML=TB.rows([['<i>y</i><sub>0</sub> = '+ex+' = '+TB.fmt(y0,3)+',','<i>φ</i>('+x0s+') = '+TB.fmt(phi(x0),3)+','],
-      ['<i>q</i>(<i>y</i><sub>0</sub>) = <i>φ</i>('+x0s+') / '+ex+' = '+TB.fmt(q(y0),3)+','],
-      ['('+'<i>e</i><sup><i>x</i><sub>0</sub>+Δ</sup> − '+ex+') / Δ = '+TB.fmt((y1-y0)/d,3)+',','<i>T</i>′('+x0s+') = '+ex+' = '+TB.fmt(y0,3)]]);
+    const sm=W<520,s=sm?12:14,L=sm?30:40,R=W-(sm?8:14),PR=R-10;
+    const items=[{k:'fill',col:K.eth,a:0.45,t:[['мера / длина','r']]}];
+    if(md==='P')items.push({k:'line',col:K.warm,t:[['p','i']]});
+    items.push({k:'line',col:K.ink,t:[['F','i']]},{k:'dash',col:K.eth,t:[['ломаная','r']]});
+    const top=TB.legend(c,items,L,R,4,s)+8;
+    const B2=H-(sm?24:28),gap=sm?26:30,mid=top+(B2-top)*0.56,B1=mid-gap/2,T2=mid+gap/2-6;
+    const X=x=>L+x*(PR-L),Y1=y=>B1-y/3*(B1-top),Y2=y=>B2-y*(B2-T2);
+    // axes
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();
+    c.moveTo(L,top);c.lineTo(L,B1);c.lineTo(R,B1);c.moveTo(L,T2);c.lineTo(L,B2);c.lineTo(R,B2);
+    for(const v of [1,2,3]){c.moveTo(L-4,Y1(v));c.lineTo(L,Y1(v));}for(const v of [0.5,1]){c.moveTo(L-4,Y2(v));c.lineTo(L,Y2(v));}
+    for(const v of [0,1/3,2/3,1]){c.moveTo(X(v),B1);c.lineTo(X(v),B1+4);c.moveTo(X(v),B2);c.lineTo(X(v),B2+4);}c.stroke();
+    c.fillStyle=K.muted;c.font=s+'px '+TB.ui;c.textAlign='right';
+    for(const v of [0,1,2,3])c.fillText(String(v),L-7,Y1(v)+s*0.35);for(const v of [0,0.5,1])c.fillText(TB.tickLabel(v),L-7,Y2(v)+s*0.35);
+    c.textAlign='center';const xl=['0','1/3','2/3','1'];[0,1/3,2/3,1].forEach((v,i)=>c.fillText(xl[i],X(v),B2+s+5));c.textAlign='start';
+    TB.rich(c,[['t','i']],R-8,B2-5,s,K.muted);
+    // bars
+    let mh=0,sup=0,clip=false;
+    c.fillStyle=TB.rgba(K.eth,0.45);
+    for(let j=0;j<n;j++){if(ms[j]<=0)continue;const hgt=ms[j]/w;mh=Math.max(mh,hgt);sup+=w;
+      const x1=X(j*w),x2=Math.max(X((j+1)*w),x1+1),yt=Math.max(top,Y1(hgt));if(hgt>3)clip=true;c.fillRect(x1,yt,x2-x1,B1-yt);}
+    if(n<=27){c.strokeStyle=TB.rgba(K.eth,0.9);c.lineWidth=1;for(let j=0;j<n;j++){if(ms[j]<=0)continue;const yt=Math.max(top,Y1(ms[j]/w));c.strokeRect(X(j*w),yt,X((j+1)*w)-X(j*w),B1-yt);}}
+    if(md==='P'){c.strokeStyle=K.warm;c.lineWidth=2.2;c.beginPath();for(let i=0;i<=300;i++){const t=i/300;i?c.lineTo(X(t),Y1(pP(t))):c.moveTo(X(t),Y1(pP(t)));}c.stroke();}
+    if(clip){c.fillStyle=K.paper;const lb=[['высота (3/2)','r'],[TB.sup(k),'r'],[' ≈ '+TB.fmt(Math.pow(1.5,k),2),'r']],lw=TB.richW(c,lb,s);
+      c.globalAlpha=0.85;c.fillRect(X(0.5)-lw/2-4,top+2,lw+8,s+8);c.globalAlpha=1;TB.rich(c,lb,X(0.5),top+s+4,s,K.ink,'center');
+      c.strokeStyle=K.ink;c.lineWidth=1;c.setLineDash([3,3]);c.beginPath();c.moveTo(L,top+0.5);c.lineTo(PR,top+0.5);c.stroke();c.setLineDash([]);}
+    // distribution functions
+    const Fv=t=>{if(md==='P')return FP(t);const u=t*NG,i=Math.min(NG-1,Math.floor(u));return FCg[i]+(FCg[i+1]-FCg[i])*(u-i);};
+    c.strokeStyle=K.ink;c.lineWidth=2;c.beginPath();for(let i=0;i<=NG;i++){const t=i/NG;i?c.lineTo(X(t),Y2(Fv(t))):c.moveTo(X(t),Y2(Fv(t)));}c.stroke();
+    c.strokeStyle=K.eth;c.lineWidth=2;c.setLineDash([6,4]);c.beginPath();let acc=0;c.moveTo(X(0),Y2(0));
+    for(let j=0;j<n;j++){acc+=ms[j];c.lineTo(X((j+1)*w),Y2(acc));}c.stroke();c.setLineDash([]);
+    // readouts
+    const two='2<sup>−'+k+'</sup>',r32='(3/2)<sup>'+k+'</sup>',r23='(2/3)<sup>'+k+'</sup>';
+    if(md==='C')fx.innerHTML=TB.rows([['<i>μ</i><sub><i>C</i></sub> каждого из 2<sup>'+k+'</sup> отрезков = '+two+' = '+TB.fmt(Math.pow(2,-k),4)+','],
+      ['высота = '+two+' · 3<sup>'+k+'</sup> = '+r32+' = '+TB.fmt(Math.pow(1.5,k),3)+',','<i>λ</i><sub>1</sub>(<i>C</i><sub>'+k+'</sub>) = '+r23+' = '+TB.fmt(Math.pow(2/3,k),3)]]);
+    else fx.innerHTML=TB.rows([['наибольшая высота = 3<sup>'+k+'</sup> · max<sub><i>j</i></sub> <i>μ</i>(<i>I<sub>j</sub></i>) = '+TB.fmt(mh,3)+',','max <i>p</i> = '+TB.fr(16,9)+' ≈ 1,778'],
+      ['длина опоры = 1']]);
+    g1.set(mh);g2.set(sup);if(g1.m.p)g1.m.p.style.display=md==='P'?'':'none';
   }
-  [sx,sw].forEach(e=>e.addEventListener('input',draw));draw();TB.onTheme(draw);TB.onResize(cv,draw);
+  sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
 })();

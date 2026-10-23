@@ -1,52 +1,47 @@
 
 (function(){
-  /* Fig. ∅.13: the needle, mass escaping to infinity, the growing peak; the integral on a scale with +∞ at its right end. */
-  const cv=document.getElementById('needle');if(!cv||!window.TB||!TB.fit)return;
-  const sl=document.getElementById('ndN'),so=document.getElementById('ndNOut'),fx=document.getElementById('ndFx');
-  const g=new TB.Gauge('gNd'),cmp=v=>v===Infinity?1:v/(1+v);
-  let md=TB.segs(cv,k=>{md=k;draw();});
-  if(g.el){const ge=g.el.querySelectorAll('.ge');ge[1].textContent='+∞';
-    for(const v of [1,2,4,9]){const t=document.createElement('i');t.className='ge';t.style.left=cmp(v)*100+'%';t.textContent=String(v);g.el.insertBefore(t,g.f);
-      const k=document.createElement('i');k.style.cssText='left:'+cmp(v)*100+'%;top:18px;height:11px;width:0;border-left:1px solid var(--muted);opacity:.7';g.el.insertBefore(k,g.f);}}
-  const sub=(a,b)=>a+'<sub>'+b+'</sub>',one='<b>1</b>',fi=sub('<i>f</i>','<i>n</i>'),dl=' <i>dλ</i><sub>1</sub>';
-  function draw(){
-    const n=+sl.value;so.textContent=n;
-    const F=TB.fit(cv,W=>Math.max(250,Math.min(350,Math.round(W*0.46)))),c=F.c,W=F.W,H=F.H;
-    const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm');
-    c.fillStyle=TB.tok('--paper');c.fillRect(0,0,W,H);
-    const sm=W<520,s=sm?12:14,L=sm?30:40,R=W-(sm?8:14);
-    const fN=[['f','i'],[String(n),'s']];
-    const T=TB.legend(c,[{k:'fill',col:warm,a:0.32,t:fN},{k:'dash',col:eth,t:md==='P'?[['lim ','r'],['f','i'],['n','s'],[' = ','r'],['u','i']]:[['lim ','r'],['f','i'],['n','s'],[' = 0','r']]}],L,R,4,s)+6;
-    const B=H-(sm?26:30),PR=R-18,x1=md==='E'?22:1,y1=md==='E'?1.6:21,X=x=>L+x/x1*(PR-L),Y=y=>B-y/y1*(B-T);
-    c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);
-    const yt=md==='E'?[0,1]:[0,5,10,15,20],xt=md==='E'?[0,5,10,15,20]:[0,0.5,1];
-    for(const v of yt){c.moveTo(L-4,Y(v));c.lineTo(L,Y(v));}for(const v of xt){c.moveTo(X(v),B);c.lineTo(X(v),B+4);}c.stroke();
-    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';for(const v of yt)c.fillText(String(v),L-7,Y(v)+s*0.35);
-    c.textAlign='center';for(const v of xt)c.fillText(TB.fmt(v,v%1?1:0),X(v),B+s+5);c.textAlign='start';
-    TB.rich(c,[['x','i']],R-9,B-5,s,muted);
-    c.save();c.beginPath();c.rect(L,T,PR-L+1,B-T+1);c.clip();
-    c.beginPath();
-    if(md==='N'){c.moveTo(X(0),B);c.lineTo(X(0),Y(n));c.lineTo(X(1/n),Y(n));c.lineTo(X(1/n),B);}
-    else if(md==='E'){c.moveTo(X(n),B);c.lineTo(X(n),Y(1));c.lineTo(X(n+1),Y(1));c.lineTo(X(n+1),B);}
-    else{c.moveTo(X(0),B);c.lineTo(X(0),Y(n));c.lineTo(X(1/n),Y(n));for(let i=1;i<=240;i++){const x=1/n+(1-1/n)*i/240;c.lineTo(X(x),Y(1/x));}c.lineTo(X(1),B);}
-    c.fillStyle=TB.rgba(warm,0.32);c.fill();c.strokeStyle=warm;c.lineWidth=2.2;c.stroke();
-    c.strokeStyle=eth;c.lineWidth=2.4;c.setLineDash([7,5]);c.beginPath();
-    if(md==='P'){const x0=1/(y1+0.5);c.moveTo(X(x0),Y(1/x0));for(let i=1;i<=300;i++){const x=x0+(1-x0)*i/300;c.lineTo(X(x),Y(1/x));}}
-    else{c.moveTo(X(0),B-1);c.lineTo(X(x1),B-1);}
-    c.stroke();c.setLineDash([]);c.restore();
-    if(md==='P'){const xa=X(1/y1);c.fillStyle=eth;c.beginPath();c.moveTo(xa-5,T+9);c.lineTo(xa+1,T-1);c.lineTo(xa+5,T+10);c.closePath();c.fill();}
-    let v,html;
-    const fH=sub('<i>f</i>',n);
-    if(md==='N'){v=1;html=TB.rows([[fH+' = '+n+'·'+sub(one,'(0, '+TB.fr(1,n)+')')+',','∫'+fH+dl+' = '+n+'·'+TB.fr(1,n)+' = 1'],
-      ['lim '+fi+'(<i>x</i>) = 0 при каждом <i>x</i>,','∫ lim '+fi+dl+' = 0']]);}
-    else if(md==='E'){v=1;html=TB.rows([[fH+' = '+sub(one,'['+n+', '+(n+1)+')')+',','∫'+fH+dl+' = '+sub('<i>λ</i>',1)+'(['+n+', '+(n+1)+')) = 1'],
-      [fi+'(<i>x</i>) = 0 при <i>n</i> &gt; <i>x</i>,','∫ lim '+fi+dl+' = 0']]);}
-    else{v=1+Math.log(n);html=TB.rows([[fH+' = min('+n+', <i>u</i>),','∫'+fH+dl+' = '+n+'·'+TB.fr(1,n)+' + ln '+n+' ≈ '+TB.fmt(v,3)],
-      ['lim '+fi+' = <i>u</i>,','∫<i>u</i>'+dl+' = +∞']]);}
-    fx.innerHTML=html;
-    g.set(cmp(v));if(g.out)g.out.textContent=TB.fmt(v,3);if(g.el)g.el.setAttribute('aria-valuetext',TB.fmt(v,3));
-    const lim=md==='P'?Infinity:0;g.mark('lim',cmp(lim),'∫ lim '+fi+' = '+(md==='P'?'+∞':'0'));
-    if(g.m.lim)g.m.lim.firstChild.style.transform=md==='P'?'translateX(-100%)':'none';
-  }
-  sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+  /* Canvas sizing for the figures of part 2: drawing in CSS pixels at the width of the column, sharp on dense screens; rich labels and a legend row. */
+  const TB=window.TB;if(!TB)return;
+  TB.fit=function(cv,hOf){
+    const W=Math.round(cv.parentNode.getBoundingClientRect().width)||760,H=Math.round(hOf(W)),r=window.devicePixelRatio||1;
+    const bw=Math.round(W*r),bh=Math.round(H*r);if(cv.width!==bw)cv.width=bw;if(cv.height!==bh)cv.height=bh;
+    const c=cv.getContext('2d');c.setTransform(r,0,0,r,0,0);c.textAlign='start';c.textBaseline='alphabetic';c.setLineDash([]);
+    return {c:c,W:W,H:H};};
+  TB.onResize=function(cv,fn){let w=Math.round(cv.parentNode.getBoundingClientRect().width);
+    if(window.ResizeObserver)new ResizeObserver(()=>{const nw=Math.round(cv.parentNode.getBoundingClientRect().width);if(nw!==w){w=nw;fn();}}).observe(cv.parentNode);
+    else window.addEventListener('resize',fn);};
+  /* A label is a list of [text, kind]: 'i' italic letter, 's' italic subscript, 'p' italic superscript, 'r' upright sans, 'm' upright serif. */
+  function font(k,s){return k==='i'?'italic '+(s+2)+'px '+TB.serif:(k==='s'||k==='p')?'italic '+Math.round(s*0.78)+'px '+TB.serif:k==='m'?(s+1)+'px '+TB.serif:s+'px '+TB.ui;}
+  /* The italic θ of the text fonts is often the open, cursive form; the closed formula θ is drawn by hand, so that labels match the formulas. */
+  const fsz=(k,s)=>(k==='s'||k==='p')?Math.round(s*0.78):k==='m'?s+1:k==='r'?s:s+2,dy=(k,s)=>k==='s'?s*0.3:k==='p'?-s*0.45:0;
+  TB.theta=function(c,x,y,f,col){c.save();c.translate(x,y);c.transform(1,0,-0.2,1,0,0);c.strokeStyle=col;c.setLineDash([]);
+    c.lineWidth=Math.max(1,f*0.075);c.beginPath();c.ellipse(f*0.27,-f*0.36,f*0.155,f*0.335,0,0,7);c.stroke();
+    c.lineWidth=Math.max(0.9,f*0.06);c.beginPath();c.moveTo(f*0.12,-f*0.36);c.lineTo(f*0.42,-f*0.36);c.stroke();c.restore();};
+  const segW=(c,q,s)=>{if(q[0]==='θ')return fsz(q[1],s)*0.56;c.font=font(q[1],s);return c.measureText(q[0]).width;};
+  TB.richW=function(c,segs,s){let w=0;for(const q of segs)w+=segW(c,q,s)+(q[1]==='i'?1:0);return w;};
+  TB.rich=function(c,segs,x,y,s,col,align){
+    const w=TB.richW(c,segs,s);if(align==='center')x-=w/2;else if(align==='right')x-=w;
+    c.fillStyle=col;c.textAlign='start';
+    for(const q of segs){const yy=y+dy(q[1],s);
+      if(q[0]==='θ')TB.theta(c,x,yy,fsz(q[1],s),col);else{c.font=font(q[1],s);c.fillStyle=col;c.fillText(q[0],x,yy);}
+      x+=segW(c,q,s)+(q[1]==='i'?1:0);}
+    return w;};
+  /* The same closed θ inside HTML readouts. */
+  TB.thSvg='<svg class="gth" viewBox="0 -74 58 76" aria-label="θ"><g transform="skewX(-11.3)"><ellipse cx="27" cy="-36" rx="15.5" ry="33.5"/><line x1="12" y1="-36" x2="42" y2="-36"/></g></svg>';
+  /* Legend items: {k:'line'|'thin'|'dash'|'fill', col, a (fill opacity), t: label}. Wraps to the next row when needed; returns the bottom y. */
+  TB.legend=function(c,items,L,R,y,s){
+    const sw=22,gap=18,rowH=s+9;let x=L;y+=s;
+    for(const it of items){const w=sw+6+TB.richW(c,it.t,s);
+      if(x>L&&x+w>R){x=L;y+=rowH;}
+      const ym=y-s*0.33;
+      if(it.k==='fill'){c.fillStyle=TB.rgba(it.col,it.a||0.3);c.fillRect(x,ym-6,sw,12);}
+      else{c.strokeStyle=it.col;c.lineWidth=it.k==='thin'?1.2:2.2;c.setLineDash(it.k==='dash'?[5,4]:[]);
+        c.beginPath();c.moveTo(x,ym);c.lineTo(x+sw,ym);c.stroke();c.setLineDash([]);}
+      TB.rich(c,it.t,x+sw+6,y,s,TB.tok('--ink'));x+=w+gap;}
+    return y+7;};
+  /* Readout lines for .fx: each part stays on one line, a line may break only between parts (at an ordinary space; the gap is padding of the parts). */
+  TB.rows=rows=>rows.map(r=>'<span>'+r.map(p=>'<span class="nw">'+p+'</span>').join(' ')+'</span>').join('').replace(/(<i[^>]*>)θ(<\/i>)/g,'$1'+TB.thSvg+'$2');
+  TB.segs=function(cv,fn){const b=[...cv.closest('figure').querySelectorAll('.seg button')];
+    b.forEach(e=>e.addEventListener('click',()=>{b.forEach(o=>o.setAttribute('aria-pressed',o===e?'true':'false'));fn(e.dataset.k);}));
+    const on=b.find(e=>e.getAttribute('aria-pressed')==='true');return on?on.dataset.k:b[0].dataset.k;};
 })();

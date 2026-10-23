@@ -1,57 +1,52 @@
 
 (function(){
-  /* Fig. ∅.18: a double series as functions on ℕ; rows, partial sums S_K and column sums. */
-  const cv=document.getElementById('dseries');if(!cv||!window.TB||!TB.fit)return;
-  const sl=document.getElementById('dsK'),so=document.getElementById('dsKOut'),fx=document.getElementById('dsFx'),g=new TB.Gauge('gDs');
-  let md=TB.segs(cv,k=>{md=k;draw();});
-  const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
-  const pow2=e=>'2'+String(e).split('').map(ch=>SUP[ch]).join('');
-  const a=(k,n)=>md==='A'?(n===k?1:n===k+1?-1:0):(n<=k?Math.pow(2,-k):0);
-  const SK=(K,n)=>{let s=0;for(let k=1;k<=K;k++)s+=a(k,n);return s;};
-  const col=n=>md==='A'?(n===1?1:0):Math.pow(2,1-n);
-  const sub=(x,y)=>x+'<sub>'+y+'</sub>';
+  /* Fig. ∅.17: the typewriter sequence; the graph of f_n and, row by row, the values f_k(x) for k ≤ n. */
+  const cv=document.getElementById('typewriter');if(!cv||!window.TB||!TB.fit)return;
+  const sl=document.getElementById('twN'),so=document.getElementById('twNOut'),fx=document.getElementById('twFx'),g=new TB.Gauge('gTw');
+  let px=0.71,geo=null;
+  const mj=n=>{let m=0;while((2<<m)<=n)m++;return [m,n-(1<<m)];};
   function draw(){
-    const K=+sl.value;so.textContent=K;
-    const F=TB.fit(cv,W=>W<520?372:400),c=F.c,W=F.W,H=F.H;
-    const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm');
-    c.fillStyle=TB.tok('--paper');c.fillRect(0,0,W,H);
-    const sm=W<520,s=sm?11:13,Lw=sm?50:64,Rw=sm?48:66,Nc=sm?6:10,R=10;
-    const cw=(W-Lw-Rw-(sm?16:22))/Nc,ch=sm?21:22,top=24,x0=Lw,xr=x0+Nc*cw+(sm?16:22);
-    const X=n=>x0+(n-0.5)*cw,Yr=k=>top+(k-1)*ch;
-    /* header */
-    c.font=s+'px '+TB.ui;c.fillStyle=muted;c.textAlign='center';
-    for(let n=1;n<=Nc;n++)TB.rich(c,[['n','i'],[' = '+n,'r']],X(n),top-8,s-1,muted,'center');
-    TB.rich(c,[['…','r']],x0+Nc*cw+(sm?8:11),top-8,s,muted,'center');
-    TB.rich(c,[['Σ','r'],['n','s']],xr+Rw/2,top-8,s,muted,'center');
-    /* highlighted rows */
-    c.fillStyle=TB.rgba(eth,0.10);c.fillRect(2,Yr(1),xr+Rw-4,K*ch);
-    c.strokeStyle=TB.rgba(eth,0.55);c.lineWidth=1;c.strokeRect(2.5,Yr(1)+0.5,xr+Rw-5,K*ch-1);
-    const cell=(v,x,y,txt)=>{if(v!==0){c.fillStyle=TB.rgba(v>0?warm:eth,v>0?0.16+0.3*Math.min(1,Math.abs(v)):0.30);c.fillRect(x-cw/2+2,y+2,cw-4,ch-4);}
-      c.fillStyle=v===0?TB.rgba(muted,0.6):ink;c.font=(v===0?s:s+1)+'px '+(v===0?TB.ui:TB.serif);c.textAlign='center';c.fillText(txt,x,y+ch/2+s*0.36);};
-    for(let k=1;k<=R;k++){
-      TB.rich(c,[['k','i'],[' = '+k,'r']],Lw-8,Yr(k)+ch/2+s*0.36,s-1,k<=K?ink:muted,'right');
-      for(let n=1;n<=Nc;n++){const v=a(k,n);cell(v,X(n),Yr(k),v===0?'·':md==='A'?(v>0?'1':'−1'):pow2(-k));}
-      c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='center';c.fillText('…',x0+Nc*cw+(sm?8:11),Yr(k)+ch/2+s*0.36);
-      const rs=md==='A'?0:k*Math.pow(2,-k);c.fillStyle=ink;c.font=s+'px '+TB.ui;c.fillText(TB.fmt(rs,md==='A'?0:3),xr+Rw/2,Yr(k)+ch/2+s*0.36);}
-    c.fillStyle=muted;c.textAlign='center';c.fillText('⋮',X(1),Yr(R)+ch+s);c.fillText('⋮',xr+Rw/2,Yr(R)+ch+s);
-    /* partial sums and column sums */
-    const y1=Yr(R)+ch+s+14,y2=y1+ch+8,dg=sm?2:3;
-    c.strokeStyle=rule;c.beginPath();c.moveTo(4,y1-4);c.lineTo(W-4,y1-4);c.stroke();
-    TB.rich(c,[['S','i'],['K','s'],['(','r'],['n','i'],[')','r']],Lw-8,y1+ch/2+s*0.36,s,ink,'right');
-    TB.rich(c,[['Σ','r'],['k','s'],[' a','i'],['kn','s']],Lw-8,y2+ch/2+s*0.36,s,ink,'right');
-    for(let n=1;n<=Nc;n++){const v=SK(K,n),w=col(n);
-      cell(Math.abs(v)<1e-12?0:v,X(n),y1,Math.abs(v)<1e-12?'0':md==='A'?(v>0?'1':'−1'):TB.fmt(v,dg));
-      cell(w,X(n),y2,md==='A'?String(w):TB.fmt(w,dg));}
-    const out=md==='A'&&K+1>Nc;
-    c.font=s+'px '+TB.ui;c.textAlign='center';c.fillStyle=out?eth:muted;c.fillText(out?'−1 →':'…',x0+Nc*cw+(sm?8:11)+(out?(sm?6:4):0),y1+ch/2+s*0.36);
-    c.fillStyle=muted;c.fillText('…',x0+Nc*cw+(sm?8:11),y2+ch/2+s*0.36);
-    /* readout */
-    const I=md==='A'?0:2-(K+2)*Math.pow(2,-K),Il=md==='A'?1:2;
-    g.mark('l',Il,'Σ<sub><i>n</i></sub> Σ<sub><i>k</i></sub> <i>a<sub>kn</sub></i>');g.set(I);
-    const SKh=sub('<i>S</i>','<i>K</i>'),dh=' <i>d</i>#';
-    fx.innerHTML=md==='A'
-      ?TB.rows([[SKh+' = '+sub('<b>1</b>','{1}')+' − '+sub('<b>1</b>','{'+(K+1)+'}')+',','∫'+SKh+dh+' = 1 − 1 = 0'],['lim '+SKh+' = '+sub('<b>1</b>','{1}')+',','∫ lim '+SKh+dh+' = 1']])
-      :TB.rows([['∫'+SKh+dh+' = Σ<sub><i>k</i> ≤ '+K+'</sub> <i>k</i>·2<sup>−<i>k</i></sup> = 2 − '+TB.fr(K+2,'2<sup>'+K+'</sup>')+' ≈ '+TB.fmt(I,3)],['∫ lim '+SKh+dh+' = Σ<sub><i>n</i></sub> 2<sup>1−<i>n</i></sup> = 2']]);
+    const n=+sl.value;so.textContent=n;const [m0,j0]=mj(n);
+    const F=TB.fit(cv,W=>W<520?318:372),c=F.c,W=F.W,H=F.H;
+    const ink=TB.tok('--ink'),muted=TB.tok('--muted'),rule=TB.tok('--rule'),eth=TB.tok('--ether'),warm=TB.tok('--warm'),paper=TB.tok('--paper');
+    c.fillStyle=paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,L=sm?42:56,R=W-(sm?10:16),X=x=>L+x*(R-L);
+    const sT=s+14,sB=sT+(sm?44:56),rh=sm?30:36,r0=sB+(sm?16:20),bot=r0+6*rh;
+    geo={L:L,R:R};
+    c.strokeStyle=rule;c.lineWidth=1;c.setLineDash([2,4]);c.beginPath();c.moveTo(L,sT);c.lineTo(R,sT);c.stroke();c.setLineDash([]);
+    c.beginPath();c.moveTo(L,sB);c.lineTo(R,sB);c.stroke();
+    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';c.fillText('1',L-8,sT+s*0.35);c.fillText('0',L-8,sB+s*0.35);
+    const a=j0/(1<<m0),b=(j0+1)/(1<<m0);
+    c.fillStyle=TB.rgba(warm,0.32);c.fillRect(X(a),sT,X(b)-X(a),sB-sT);
+    c.strokeStyle=warm;c.lineWidth=2.2;c.beginPath();c.moveTo(X(a),sB);c.lineTo(X(a),sT);c.lineTo(X(b),sT);c.lineTo(X(b),sB);c.stroke();
+    const lw=TB.richW(c,[['f','i'],[String(n),'s']],s);
+    TB.rich(c,[['f','i'],[String(n),'s']],Math.min(R-lw/2,Math.max(L+lw/2,(X(a)+X(b))/2)),sT-7,s,warm,'center');
+    for(let m=0;m<6;m++){const y=r0+(m+0.5)*rh,q=1<<m,dx=(R-L)/q,rd=Math.max(2.6,Math.min(5,dx*0.34));
+      c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,y);c.lineTo(R,y);for(let j=0;j<=q;j++){c.moveTo(X(j/q),y-5);c.lineTo(X(j/q),y+5);}c.stroke();
+      c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='right';TB.rich(c,[['m','i'],[' = '+m,'r']],L-8,y+s*0.35,s,muted,'right');
+      for(let j=0;j<q;j++){const k=q+j;if(k>n)break;const cx=X((j+0.5)/q),on=px>=j/q&&px<(j+1)/q;
+        if(j===0){c.fillStyle=TB.rgba(eth,0.3);c.beginPath();c.arc(cx,y,rd+4.5,0,7);c.fill();}
+        c.beginPath();c.arc(cx,y,on?rd+0.65:rd,0,7);if(on){c.fillStyle=ink;c.fill();}else{c.fillStyle=paper;c.fill();c.strokeStyle=ink;c.lineWidth=1.3;c.stroke();}
+        if(k===n){c.strokeStyle=warm;c.lineWidth=2.2;c.beginPath();c.arc(cx,y,rd+4,0,7);c.stroke();}}}
+    c.strokeStyle=rule;c.lineWidth=1;c.beginPath();c.moveTo(L,bot+4);c.lineTo(R,bot+4);
+    for(const v of [0,0.25,0.5,0.75,1]){c.moveTo(X(v),bot+4);c.lineTo(X(v),bot+8);}c.stroke();
+    c.fillStyle=muted;c.font=s+'px '+TB.ui;c.textAlign='center';
+    ['0','1/4','1/2','3/4','1'].forEach((t,i)=>c.fillText(t,X(i/4),bot+s+10));c.textAlign='start';
+    const xp=X(px);c.strokeStyle=TB.rgba(ink,0.85);c.lineWidth=1.4;c.beginPath();c.moveTo(xp,sT);c.lineTo(xp,bot+4);c.stroke();
+    c.fillStyle=ink;c.beginPath();c.moveTo(xp,bot+4);c.lineTo(xp-6,bot+13);c.lineTo(xp+6,bot+13);c.closePath();c.fill();
+    const xl=TB.richW(c,[['x','i']],s);TB.rich(c,[['x','i']],xp+(xp+14+xl<R?6:-6-xl),(sB+r0)/2+s*0.35,s,ink);
+    const ks=[];for(let k=1;k<=n;k++){const [m,j]=mj(k);if(px>=j/(1<<m)&&px<(j+1)/(1<<m))ks.push(k);}
+    const p2='2<sup>'+m0+'</sup>';
+    fx.innerHTML=TB.rows([['<i>n</i> = '+n+' = '+p2+' + '+j0+',','<i>I</i><sub>'+n+'</sub> = ['+TB.fr(j0,p2)+', '+TB.fr(j0+1,p2)+'),','‖<i>f</i><sub>'+n+'</sub>‖<sub>1</sub> = '+TB.fr(1,p2)],
+      ['<i>x</i> = '+TB.fmt(px,3)+':','<i>f<sub>k</sub></i>(<i>x</i>) = 1 при <i>k</i> = '+ks.join(', ')]]);
+    g.set(1/(1<<m0));
   }
+  function setFrom(e){if(!geo)return;const b=cv.getBoundingClientRect();
+    const x=(e.clientX-b.left-geo.L)/(geo.R-geo.L);px=Math.min(0.999,Math.max(0.001,Math.round(x*1000)/1000));draw();}
+  let down=false;
+  cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}setFrom(e);});
+  cv.addEventListener('pointermove',e=>{if(down)setFrom(e);});
+  cv.addEventListener('pointerup',()=>{down=false;});cv.addEventListener('pointercancel',()=>{down=false;});
+  cv.style.touchAction='pan-y';cv.style.cursor='ew-resize';
   sl.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
 })();
