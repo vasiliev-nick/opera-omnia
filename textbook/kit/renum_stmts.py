@@ -8,8 +8,14 @@ FILES = [f for d in ['p2/src', 'p3/src', 'n1/src', 'ang/src', 'nb/src'] for f in
 FILES += [os.path.join(SP, f) for f in ['ch0_body.part', 'ch0_head.part']]
 NUM = r'∅\.\d+(?:\s*\([а-яё]\))*(?:\s*\([а-яё]\)\s*(?:,|и)\s*\([а-яё]\))*'
 SEP = r'\s*(?:,|и|или|–|—|-|&nbsp;)\s*'
-OTHER = re.compile(r'(?:[Рр]ис(?:\.|ун\w*)|[Уу]пражнени\w*|[Вв]опрос\w*)\s*(?:<[^>]+>\s*)*(' + NUM + r'(?:' + SEP + NUM + r')*)')
+# Sections (§∅.7, §∅.13–∅.18), short labels (Упр., Вопр.), English comments (Fig.) and index keys (fig:, sec:, ex:, q:) keep their numbers too.
+OTHER = re.compile(r'(?:[Рр]ис(?:\.|ун\w*)|[Уу]пражнени\w*|[Уу]пр\.|[Вв]опрос\w*|[Вв]опр\.|Fig\.|Exercise|§§?|\b(?:fig|sec|ex|q):)\s*(?:<[^>]+>\s*)*(' + NUM + r'(?:' + SEP + NUM + r')*)')
 TOK = re.compile(r'∅\.(\d+)')
+# Section numbers in headings and in the contents list of a part («<h2>∅.14. Плотности», «<a href="#a14">∅.14. …»).
+HEAD = re.compile(r'(?:<h[23][^>]*>|<a href="#a\d+">)\s*(∅\.\d+)\.')
+# The opening paragraph of an «Упражнения и вопросы» section lists exercises by bare numbers in brackets: «(∅.14 и ∅.16)».
+EXSEC = re.compile(r'<h2[^>]*>[^<]*Упражнения и вопросы</h2>\s*<p>(.*?)</p>', re.S)
+BARE = re.compile(r'\((∅\.\d+(?:\s*(?:и|,)\s*∅\.\d+)*)\)')
 total = 0
 for f in sorted(FILES):
     s = open(f, encoding='utf-8').read()
@@ -17,6 +23,12 @@ for f in sorted(FILES):
     for m in OTHER.finditer(s):
         for t in TOK.finditer(m.group(1)):
             skip.add(m.start(1) + t.start())
+    for m in HEAD.finditer(s):
+        skip.add(m.start(1))
+    for m in EXSEC.finditer(s):
+        for b in BARE.finditer(m.group(1)):
+            for t in TOK.finditer(b.group(1)):
+                skip.add(m.start(1) + b.start(1) + t.start())
     out, last, n = [], 0, 0
     for t in TOK.finditer(s):
         k = int(t.group(1))

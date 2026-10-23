@@ -6,9 +6,9 @@
 <h3 id="l2p">Пространство $L^2(P)$</h3>
 <p>Пусть $(\Omega,\mathcal F,P)$ — вероятностное пространство: $\Omega$ — множество исходов, $\mathcal F$ — σ-алгебра событий, $P$ — мера с $P(\Omega)=1$. Через $L^2(P)$ обозначим случайные величины $\xi$ с конечным вторым моментом $\mathbb E\xi^2$, как в §∅.10, причём величины, равные почти наверное, считаются одной и той же. Мы пользуемся тремя фактами оттуда.</p>
 <ol class="ax">
-<li>$L^2(P)$ — векторное пространство, а $\langle\xi,\eta\rangle=\mathbb E\xi\eta$ — конечное число, симметричное и линейное по каждому аргументу; $\langle\xi,\xi\rangle=\|\xi\|^2$ (лемма ∅.42 и §∅.10).</li>
-<li>Неравенство Коши–Буняковского: $|\langle\xi,\eta\rangle|\le\|\xi\|\,\|\eta\|$ (лемма ∅.42(в)). Поэтому при ненулевых $\xi,\eta$ формула $\cos\varphi=\langle\xi,\eta\rangle/(\|\xi\|\,\|\eta\|)$ задаёт угол $\varphi\in[0,\pi]$ между ними, а при $\langle\xi,\eta\rangle=0$ величины называют ортогональными.</li>
-<li>Каждая $\xi\in L^2(P)$ интегрируема, $\mathbb E|\xi|\le\|\xi\|$ (лемма ∅.42(д)), так что у неё есть среднее $\mathbb E\xi$.</li>
+<li>$L^2(P)$ — векторное пространство, а $\langle\xi,\eta\rangle=\mathbb E\xi\eta$ — конечное число, симметричное и линейное по каждому аргументу; $\langle\xi,\xi\rangle=\|\xi\|^2$ (лемма ∅.43 и §∅.10).</li>
+<li>Неравенство Коши–Буняковского: $|\langle\xi,\eta\rangle|\le\|\xi\|\,\|\eta\|$ (лемма ∅.43(в)). Поэтому при ненулевых $\xi,\eta$ формула $\cos\varphi=\langle\xi,\eta\rangle/(\|\xi\|\,\|\eta\|)$ задаёт угол $\varphi\in[0,\pi]$ между ними, а при $\langle\xi,\eta\rangle=0$ величины называют ортогональными.</li>
+<li>Каждая $\xi\in L^2(P)$ интегрируема, $\mathbb E|\xi|\le\|\xi\|$ (лемма ∅.43(д)), так что у неё есть среднее $\mathbb E\xi$.</li>
 </ol>
 <p>Постоянные тоже лежат в $L^2(P)$: $\mathbb Ec^2=c^2P(\Omega)=c^2$. Как и на трёх исходах, обозначим через $\mathbf 1$ постоянную величину, равную единице; это вектор длины $1$, и $\langle\xi,\mathbf 1\rangle=\mathbb E\xi$. Постоянные $c\mathbf 1$ образуют в $L^2(P)$ прямую — <b>прямую постоянных</b>. Поскольку $L^2(P)$ — векторное пространство, вместе с $\xi$ и постоянной $\mathbb E\xi$ в нём лежит и <b>отклонение</b> $\xi-\mathbb E\xi$.</p>
 <p>В §∅.10 определены ковариация, дисперсия и коэффициент корреляции. Напомним их на языке скалярного произведения:</p>
@@ -31,7 +31,7 @@
 </ol></div>
 <div class="proof"><span class="lbl">Доказательство.</span>
 <div class="plain"><span class="pl">Идея</span>Разложим $\xi-c$ на отклонение и постоянную. Слагаемые ортогональны, и квадрат длины суммы равен сумме квадратов длин.</div>
-<div class="step"><span class="sh">Шаг 1. Пункт (а).</span> По линейности ожидания (лемма ∅.32) и равенству $\mathbb E1=1$
+<div class="step"><span class="sh">Шаг 1. Пункт (а).</span> По линейности ожидания (лемма ∅.33) и равенству $\mathbb E1=1$
 <span class="math-wrap">$$\langle\xi-\mathbb E\xi,\ c\mathbf 1\rangle=c\,\mathbb E\xi-c\,\mathbb E\xi\cdot\mathbb E1=0.$$</span></div>
 <div class="step"><span class="sh">Шаг 2. Пункт (б).</span> Запишем $\xi-c=(\xi-\mathbb E\xi)+(\mathbb E\xi-c)\mathbf 1$. Второе слагаемое — постоянная, и по шагу 1 оно ортогонально первому. Поэтому при раскрытии квадрата длины удвоенное скалярное произведение слагаемых равно нулю (теорема Пифагора):
 <span class="math-wrap">$$\|\xi-c\|^2=\|\xi-\mathbb E\xi\|^2+(\mathbb E\xi-c)^2\|\mathbf 1\|^2=\mathbb D\xi+(\mathbb E\xi-c)^2.$$</span></div>
@@ -53,7 +53,7 @@
 </ol></div>
 <div class="proof tech"><span class="lbl">Доказательство.</span>
 <div class="plain"><span class="pl">Идея</span>Отклонение линейной комбинации — та же линейная комбинация отклонений, а ковариация — скалярное произведение отклонений. Остаётся применить свойства скалярного произведения.</div>
-<div class="step"><span class="sh">Шаг 1. Отклонения линейны.</span> По линейности ожидания (лемма ∅.32)
+<div class="step"><span class="sh">Шаг 1. Отклонения линейны.</span> По линейности ожидания (лемма ∅.33)
 <span class="math-wrap">$$\begin{aligned}(a\xi+b\zeta)-\mathbb E(a\xi+b\zeta)&amp;=a(\xi-\mathbb E\xi)+b(\zeta-\mathbb E\zeta),\\(\xi+c)-\mathbb E(\xi+c)&amp;=\xi-\mathbb E\xi.\end{aligned}$$</span></div>
 <div class="step"><span class="sh">Шаг 2. Пункты (а) и (б).</span> Ковариация — скалярное произведение отклонений, а скалярное произведение симметрично и линейно по первому аргументу. Подставляя отклонения из шага 1, получаем (а) и первое равенство (б). Тогда $\mathbb D(a\xi+c)=\operatorname{Cov}(a\xi+c,\ a\xi+c)=\operatorname{Cov}(a\xi,\ a\xi)=a^2\,\mathbb D\xi$ по (б) и (а), применённым к обоим аргументам.</div>
 <div class="step"><span class="sh">Шаг 3. Пункт (в).</span> Это неравенство Коши–Буняковского для отклонений: $|\langle u,v\rangle|\le\|u\|\,\|v\|$ при $u=\xi-\mathbb E\xi$, $v=\eta-\mathbb E\eta$, и $\|u\|^2=\mathbb D\xi$, $\|v\|^2=\mathbb D\eta$.</div>

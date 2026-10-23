@@ -14,6 +14,7 @@
 .xpop .xwhere{font-weight:400;color:var(--muted);margin-left:.45em;white-space:nowrap}
 .xpop .xbody p,.xpop .xbody ol,.xpop .xbody ul{margin:.35rem 0}
 .xpop.k-sec{--xbg:color-mix(in srgb,var(--ether) 6%,var(--paper));--xlc:var(--ether)}
+.xpop.k-sec .xlbl{font-family:var(--font-body);font-size:1.05rem;font-weight:600;line-height:1.35;margin-bottom:.2rem}
 .xpop .ximgs{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.5rem;margin:.2rem 0 .45rem}
 .xpop .ximgs img,.xpop .ximgs svg{display:block;max-width:100%;max-height:min(42vh,22rem);width:auto;height:auto;border-radius:6px}
 .xpop .xcap{color:var(--muted);font-size:.92em;margin:.2rem 0 .1rem;text-align:center}
@@ -47,6 +48,10 @@
   /* sections: «§∅.10», «§5–§7», «§∅.7–∅.9»; the number is not followed by a further «.digit» (a subsection) */
   const SNUM='(?:'+SYM+'\\.)?\\d+(?![.,]\\d)';
   const RS=new RegExp('§§?[\\s\\u00a0]*('+SNUM+')((?:'+SEP+'§?[\\s\\u00a0]*'+SNUM+')*)','gu'),RSN=new RegExp(SNUM,'gu');
+  /* the artifact viewer passes on only plain anchors (letters, digits, . _ ~ -), so a key travels as st:∅.26 ↔ #st-o.26 */
+  const HC={'∅':'o','∇':'d','∠':'a','𝒩':'n'},HD={o:'∅',d:'∇',a:'∠',n:'𝒩'};
+  const toHash=k=>k.replace(/^(\w+):/,'$1-').replace(/[∅∇∠]|𝒩/gu,c=>HC[c]);
+  const fromHash=h=>{const m=h.match(/^(st|fig|sec|ex|q)-(?:([odan])(?=\.))?([.\d]+)$/);return m?m[1]+':'+(m[2]?HD[m[2]]:'')+m[3]:'';};
   const kindOf=w=>/^[Уу]пр/.test(w)?'ex':/^[Вв]опрос/.test(w)?'q':/^[Рр]ис/.test(w)?'fig':'st';
   const base=n=>n.replace(/\(.*$/,'');
   const SKIP='h1,h2,h3,h4,.lbl,.toc,.eyebrow,.gloss,.navm,.xpop,.xback,a,button,script,style,mjx-container,svg,canvas,output,label,.controls,.fx,.ro,.cap-tog';
@@ -115,10 +120,8 @@
       if(t&&t.nodeType===3)t.nodeValue=t.nodeValue.replace(new RegExp('^\\s*Рис\\.[\\s\\u00a0]*(?:'+SYM+'\\.)?\\d+\\.\\s*','u'),'');
       body.appendChild(d);return;}
     if(kind==='sec'){
-      /* a section: its heading and its opening paragraph */
-      lbl.innerHTML=cleanClone(el.cloneNode(true)).innerHTML;
-      let n=el.nextElementSibling;while(n&&n.tagName!=='P')n=n.nextElementSibling;
-      if(n)body.appendChild(cleanClone(n.cloneNode(true)));return;}
+      /* a section: only its title (Nick, 2026-10-23: the opening paragraph made the card a wall of text) */
+      lbl.innerHTML=cleanClone(el.cloneNode(true)).innerHTML;return;}
     const c=cleanClone(el.cloneNode(true)),l=c.querySelector(':scope>.lbl');
     if(l){lbl.innerHTML=l.innerHTML;l.remove();}
     c.querySelectorAll('figure').forEach(x=>x.remove());
@@ -151,7 +154,7 @@
       else{const d=document.createElement('div');d.innerHTML=it.html;d.querySelectorAll('figure,canvas,.controls,.fx,.ro').forEach(x=>x.remove());while(d.firstChild)body.appendChild(d.firstChild);}
       /* a plain link, so that it opens the other part the same way as the links in the chapter leads */
       const u=location.protocol==='file:'?pg.file:pg.url;go=document.createElement('a');go.className='go';go.target='_blank';go.rel='noopener';
-      go.href=(u||'#')+'#ref='+encodeURIComponent(k);go.textContent='Открыть: '+(pg.name||'другая часть')+' ↗';go.onclick=()=>setTimeout(close,0);}
+      go.href=(u||'')+'#'+toHash(k);go.textContent='Открыть: '+(pg.name||'другая часть')+' ↗';go.onclick=()=>setTimeout(close,0);}
     cl.onclick=()=>{close();ref.focus({preventScroll:true});};
     foot.appendChild(go);foot.appendChild(cl);pop.appendChild(arr);pop.appendChild(body);pop.appendChild(foot);document.body.appendChild(pop);
     place(ref,pt);requestAnimationFrame(()=>pop&&pop.classList.add('show'));
@@ -175,8 +178,8 @@
       if(e.key==='Escape'){if(pop)close();else if(back&&!back.hidden)back.hidden=true;return;}
       const r=e.target.closest&&e.target.closest('.xref');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();if(r===cur)close();else open(r,null);}});
     window.addEventListener('resize',()=>{if(pop&&cur)place(cur,null);});
-    /* arriving from another part with #ref=…: show the item */
-    const h=decodeURIComponent((location.hash.match(/^#ref=(.+)$/)||[])[1]||'');
+    /* arriving from another part or from the library page with #st-o.26 (older links: #ref=st%3A…): show the item */
+    const old=location.hash.match(/^#ref=(.+)$/),h=old?decodeURIComponent(old[1]):fromHash(location.hash.slice(1));
     if(h&&loc[h])setTimeout(()=>{loc[h].scrollIntoView({block:'center'});flash(loc[h]);},250);}
   let n=0;(function wait(){const M=window.MathJax;
     if(M&&M.startup&&M.startup.promise)M.startup.promise.then(start,start);

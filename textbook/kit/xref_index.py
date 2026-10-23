@@ -52,10 +52,9 @@ def items(html):
             if th:
                 it['img'] = th
             out.setdefault('fig:' + t.group(1), it)
-    # sections: the heading and the opening paragraph, which says what the section is about
+    # sections: only the heading; the card shows the title and the way to the section
     for m in re.finditer(r'<h2[^>]*>\s*§?\s*(%s\.\d+)\.\s*(.*?)</h2>' % SYM, html, re.S):
-        nxt = re.search(r'<p\b[^>]*>(.*?)</p>', html[m.end():m.end() + 20000], re.S)
-        out.setdefault('sec:' + m.group(1), {'lab': '§' + m.group(1) + '. ' + m.group(2).strip(), 'html': '<p>' + nxt.group(1) + '</p>' if nxt else ''})
+        out.setdefault('sec:' + m.group(1), {'lab': '§' + m.group(1) + '. ' + m.group(2).strip(), 'html': ''})
     return out
 
 

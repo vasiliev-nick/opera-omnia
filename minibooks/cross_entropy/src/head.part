@@ -216,6 +216,10 @@ button.act:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
 .hat::after{content:"";position:absolute;left:52%;top:-.12em;width:.3em;height:.3em;border-left:1px solid currentColor;border-top:1px solid currentColor;transform:translateX(-50%) rotate(45deg) scale(.75,.75)}
 .hat.hs::after{top:.12em}
 .hat:has(.gth)::after{top:.1em}
+/* «Все учебники» in the contents panel: a quiet link to the library page (index.html) */
+.navm .ghead{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+.ghome{font-weight:400;text-transform:none;letter-spacing:0;font-size:.8rem;color:var(--muted);text-decoration:none;white-space:nowrap}
+.ghome:hover,.ghome:focus-visible{color:var(--ether);text-decoration:underline;text-underline-offset:2px}
 </style>
 <script>
 window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none'},svg:{fontCache:'global'}};
