@@ -63,7 +63,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.20: the image of Lebesgue measure on [0,1] under T; points travel up to the graph and across to the y-axis, where a histogram of T_*λ grows. */
+  /* Figure #push: the image of Lebesgue measure on [0,1] under T; points travel up to the graph and across to the y-axis, where a histogram of T_*λ grows. */
   const cv=document.getElementById('push');if(!cv||!window.TB||!TB.fit)return;
   const sl=document.getElementById('puH'),so=document.getElementById('puHOut'),fx=document.getElementById('puFx');
   const g1=new TB.Gauge('gPu1'),g2=new TB.Gauge('gPu2');
@@ -131,7 +131,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.21: the Cantor distribution against a distribution with a density; histograms on triadic intervals and distribution functions. */
+  /* Figure #cantor: the Cantor distribution against a distribution with a density; histograms on triadic intervals and distribution functions. */
   const cv=document.getElementById('cantor');if(!cv||!window.TB||!TB.fit)return;
   const sl=document.getElementById('caK'),so=document.getElementById('caKOut'),fx=document.getElementById('caFx');
   const g1=new TB.Gauge('gCa1'),g2=new TB.Gauge('gCa2');
@@ -191,7 +191,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.22: the density of η = exp ξ for standard normal ξ; a strip under φ and its image under q carry the same probability. */
+  /* Figure #dens1: the density of η = exp ξ for standard normal ξ; a strip under φ and its image under q carry the same probability. */
   const cv=document.getElementById('dens1');if(!cv||!window.TB||!TB.fit)return;
   const sx=document.getElementById('d1X'),sxo=document.getElementById('d1XOut'),sw=document.getElementById('d1W'),swo=document.getElementById('d1WOut'),fx=document.getElementById('d1Fx');
   const g1=new TB.Gauge('gD11'),g2=new TB.Gauge('gD12');
@@ -241,7 +241,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.23: Tonelli on the unit square; a heat map of f, the current section, its integral, and the inner integral as a function of the section. */
+  /* Figure #fubini: Tonelli on the unit square; a heat map of f, the current section, its integral, and the inner integral as a function of the section. */
   const cv=document.getElementById('fubini');if(!cv||!window.TB||!TB.fit)return;
   const sl=document.getElementById('fbS'),so=document.getElementById('fbSOut'),fx=document.getElementById('fbFx');
   const g1=new TB.Gauge('gFb1'),g2=new TB.Gauge('gFb2');
@@ -313,7 +313,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.24: (x²−y²)/(x²+y²)² on the unit square; the corner where both infinite masses live, and the strips of the two iterated integrals. */
+  /* Figure #fcounter: (x²−y²)/(x²+y²)² on the unit square; the corner where both infinite masses live, and the strips of the two iterated integrals. */
   const cv=document.getElementById('fcounter');if(!cv||!window.TB||!TB.fit)return;
   const sl=document.getElementById('fcE'),so=document.getElementById('fcEOut'),fx=document.getElementById('fcFx');
   const g1=new TB.Gauge('gFc1'),g2=new TB.Gauge('gFc2'),g3=new TB.Gauge('gFc3');
@@ -354,7 +354,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.25: the standard Gaussian density on the plane and its image under a lower-triangular A; circles go to ellipses, the unit square to a parallelogram. */
+  /* Figure #gauss2: the standard Gaussian density on the plane and its image under a lower-triangular A; circles go to ellipses, the unit square to a parallelogram. */
   const cv=document.getElementById('gauss2');if(!cv||!window.TB||!TB.fit)return;
   const sa=document.getElementById('g2A'),sb=document.getElementById('g2B'),sd=document.getElementById('g2D'),fx=document.getElementById('g2Fx');
   const oa=document.getElementById('g2AOut'),ob=document.getElementById('g2BOut'),od=document.getElementById('g2DOut');
@@ -406,7 +406,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.26: the area under a graph collected by vertical strips or by horizontal layers; on the right, t ↦ λ{f > t} on the same t-axis. */
+  /* Figure #layer: the area under a graph collected by vertical strips or by horizontal layers; on the right, t ↦ λ{f > t} on the same t-axis. */
   const cv=document.getElementById('layer');if(!cv||!window.TB||!TB.fit)return;
   const sl=document.getElementById('lyN'),so=document.getElementById('lyNOut'),fx=document.getElementById('lyFx'),g=new TB.Gauge('gLy');
   const bump=(x,c,wl,wr)=>{const w=x<c?wl:wr;return Math.exp(-(x-c)*(x-c)/(2*w*w));};
@@ -652,7 +652,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.37 (§∅.14): observations fall into a strip, a histogram with bar height (share in the bin)/h grows under it, and its outline approaches the density. */
+  /* Figure #dhist (§∅.14): observations fall into a strip, a histogram with bar height (share in the bin)/h grows under it, and its outline approaches the density. */
   const cv=document.getElementById('dhist');if(!cv||!window.TB||!TB.fit)return;
   const sl=document.getElementById('dhH'),so=document.getElementById('dhHOut'),fx=document.getElementById('dhFx'),b0=document.getElementById('dh0');
   const g1=new TB.Gauge('gDh1'),g2=new TB.Gauge('gDh2');
@@ -762,7 +762,7 @@
 </script>
 <script>
 (function(){
-  /* Fig. ∅.38 (§∅.14): the density as probability per unit length; windows on both sides of x, chords of F and a magnifier on [x − 2h, x + 2h]. */
+  /* Figure #dwin (§∅.14): the density as probability per unit length; windows on both sides of x, chords of F and a magnifier on [x − 2h, x + 2h]. */
   const cv=document.getElementById('dwin');if(!cv||!window.TB||!TB.fit)return;
   const sx=document.getElementById('dwX'),sxo=document.getElementById('dwXOut'),sh=document.getElementById('dwH'),sho=document.getElementById('dwHOut'),fx=document.getElementById('dwFx');
   const gR=new TB.Gauge('gDwR'),gL=new TB.Gauge('gDwL');
@@ -870,5 +870,101 @@
   cv.addEventListener('pointermove',e=>{if(drag)pick(e);});
   ['pointerup','pointercancel'].forEach(k=>cv.addEventListener(k,()=>{drag=false;}));
   draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Figure #pushd (§∅.13): the image of a measure on the four outcomes of two coin tosses. Copies of the tiles fly along the arrows of T and pile up on the line; B=[a,b] picks out the preimage. */
+  const cv=document.getElementById('pushd');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('pdFx'),b0=document.getElementById('pd0'),g=new TB.Gauge('gPd');
+  const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+  const NM=['ГГ','ГР','РГ','РР'],HEADS=[2,1,1,0],V0=-1,V1=3,LO=V0-0.5,HI=V1+0.5,FR=['0','¼','½','¾','1'];
+  let T=HEADS.slice(),a=0.5,b=2.5,geo=null,drag=null,raf=0,started=false;
+  /* A copy moves from one place to another; a place is the tile on the left ('L'), a slot j in the pile at the value v ('S') or a point ('P'). */
+  const cp=NM.map((_,i)=>({from:{k:'L',i:i},to:{k:'L',i:i},t0:0,dur:0}));
+  const ease=u=>u<=0?0:u>=1?1:u*u*(3-2*u);
+  function slots(){const r=[],n={};for(let i=0;i<4;i++){const v=T[i];n[v]=(n[v]||0);r.push({k:'S',v:v,j:n[v]});n[v]++;}return r;}
+  function place(d){const G=geo;if(d.k==='L')return {x:G.BX+G.bw/2,y:G.ly[d.i]};if(d.k==='S')return {x:G.AX+(d.j+0.5)*G.bw,y:G.Y(d.v)};return {x:d.x,y:d.y};}
+  function at(i,t){const q=cp[i],u=q.dur?ease((t-q.t0)/q.dur):1,A=place(q.from),B=place(q.to);
+    if(u>=1)return B;if(u<=0)return A;
+    if(q.from.k==='L'){const G=geo,d=G.AX-G.BX-G.bw,P1={x:A.x+G.bw/2+d*0.55,y:A.y},P2={x:G.AX-d*0.25,y:B.y},w=1-u;
+      return {x:w*w*w*A.x+3*w*w*u*P1.x+3*w*u*u*P2.x+u*u*u*B.x,y:w*w*w*A.y+3*w*w*u*P1.y+3*w*u*u*P2.y+u*u*u*B.y};}
+    return {x:A.x+(B.x-A.x)*u,y:A.y+(B.y-A.y)*u};}
+  const moving=t=>cp.some(q=>q.dur&&t<q.t0+q.dur);
+  function relayout(){const t=performance.now(),S=slots();
+    cp.forEach((q,i)=>{const n=S[i];if(q.to.k==='S'&&q.to.v===n.v&&q.to.j===n.j)return;
+      if(!started){q.to=n;return;}
+      const p=geo?at(i,t):null;q.from=p?{k:'P',x:p.x,y:p.y}:q.to;q.to=n;q.t0=t;q.dur=reduced()?0:420;});
+    loop();}
+  function start(){if(started)return;started=true;const t=performance.now(),S=slots();
+    cp.forEach((q,i)=>{q.from={k:'L',i:i};q.to=S[i];q.t0=t+i*280;q.dur=reduced()?0:950;});loop();}
+  function loop(){if(!raf)raf=requestAnimationFrame(tick);}
+  function tick(t){raf=0;draw(t);if(moving(t))raf=requestAnimationFrame(tick);}
+  function draw(t){
+    t=t||performance.now();
+    const F=TB.fit(cv,W=>W<520?300:330),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,R=W-(sm?6:16),BX=sm?4:16;
+    const MW=Math.min(sm?180:300,(R-30-BX-70)/1.25),bw=MW/4,AX=R-30-MW;
+    const Yt=s+22,Yb=H-10,Y=v=>Yb-(v-LO)/(HI-LO)*(Yb-Yt),Yi=y=>LO+(Yb-y)/(Yb-Yt)*(HI-LO),bh=Math.min(34,(Yb-Yt)/(HI-LO)*0.62);
+    const ly=[0,1,2,3].map(i=>Yt+(i+0.5)*(Yb-Yt)/4);
+    geo={BX:BX,bw:bw,bh:bh,AX:AX,R:R,Y:Y,Yi:Yi,ly:ly,Yt:Yt,Yb:Yb};
+    const inB=v=>v>=a&&v<=b,pre=[0,1,2,3].filter(i=>inB(T[i]));
+    // titles
+    TB.rich(c,[['X','i'],[sm?', ':', мера ','r'],['μ','i'],[' (по ¼)','r']],BX,s+4,s,K.muted);
+    TB.rich(c,[['T','i']],(BX+bw+AX)/2,s+4,s,K.muted,'center');
+    TB.rich(c,[['ℝ','m'],[', мера ','r'],['T','i'],['*','s'],['μ','i']],AX-6,s+4,s,K.muted);
+    // the set B: a band over the right part and a thick piece of the axis
+    c.fillStyle=TB.rgba(K.warm,0.11);c.fillRect(AX,Y(b),R-AX,Y(a)-Y(b));
+    c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(AX+0.5,Yt-4);c.lineTo(AX+0.5,Yb);c.stroke();
+    c.strokeStyle=K.warm;c.lineWidth=4;c.beginPath();c.moveTo(AX+0.5,Y(a));c.lineTo(AX+0.5,Y(b));c.stroke();
+    for(const v of [a,b]){c.fillStyle=K.warm;c.beginPath();c.arc(AX+0.5,Y(v),5,0,7);c.fill();}
+    // integer points of the line
+    c.font=s+'px '+TB.ui;c.textAlign='right';
+    for(let v=V0;v<=V1;v++){c.fillStyle=K.ink;c.beginPath();c.arc(AX+0.5,Y(v),2.6,0,7);c.fill();
+      c.fillStyle=K.muted;c.fillText(TB.fmt(v,0),AX-8,Y(v)-7);}
+    c.textAlign='start';
+    // arrows of T
+    for(let i=0;i<4;i++){const x0=BX+bw+3,y0=ly[i],x1=AX-3,y1=Y(T[i]),d=x1-x0,hot=inB(T[i]);
+      c.strokeStyle=hot?TB.rgba(K.warm,0.9):TB.rgba(K.muted,0.55);c.lineWidth=hot?1.8:1.3;
+      c.beginPath();c.moveTo(x0,y0);c.bezierCurveTo(x0+d*0.55,y0,x1-d*0.25,y1,x1,y1);c.stroke();
+      c.fillStyle=c.strokeStyle;c.beginPath();c.moveTo(x1+1,y1);c.lineTo(x1-8,y1-4);c.lineTo(x1-8,y1+4);c.closePath();c.fill();}
+    // tiles: the measure μ on X
+    const tile=(x,y,i,hot,al)=>{c.fillStyle=hot?TB.rgba(K.warm,0.55*al):TB.rgba(K.eth,0.32*al);c.fillRect(x-bw/2+1,y-bh/2,bw-2,bh);
+      c.strokeStyle=hot?TB.rgba(K.warm,al):TB.rgba(K.eth,0.85*al);c.lineWidth=1.2;c.strokeRect(x-bw/2+1.5,y-bh/2+0.5,bw-3,bh-1);
+      c.fillStyle=TB.rgba(K.ink,al);c.font=s+'px '+TB.ui;c.textAlign='center';c.fillText(NM[i],x,y+s*0.36);c.textAlign='start';};
+    for(let i=0;i<4;i++)tile(BX+bw/2,ly[i],i,inB(T[i]),drag&&drag.k==='t'&&drag.i===i?0.75:1);
+    // the copies: the image measure T_*μ on the line
+    if(started)for(let i=0;i<4;i++){const q=cp[i];if(q.dur&&t<q.t0)continue;const p=at(i,t);tile(p.x,p.y,i,inB(T[i]),1);}
+    // masses of the piles once they have settled
+    if(started){c.font=(s+2)+'px '+TB.serif;c.fillStyle=K.ink;
+      for(let v=V0;v<=V1;v++){const n=T.filter(x=>x===v).length;if(!n)continue;
+        if(cp.some((q,i)=>(T[i]===v||(q.from.k==='S'&&q.from.v===v))&&q.dur&&t<q.t0+q.dur))continue;
+        c.fillText(FR[n],AX+n*bw+6,Y(v)+s*0.38);}}
+    // readout
+    const fr=n=>n===0?'0':n===4?'1':n===2?TB.fr('1','2'):TB.fr(n,'4'),q4=TB.fr('1','4');
+    const Tm='<i>T</i><sup>−1</sup>(<i>B</i>)',Ts='<i>T</i><sub>*</sub><i>μ</i>(<i>B</i>)';
+    const sum=pre.length?(pre.length>1?pre.map(()=>q4).join(' + ')+' = ':'')+fr(pre.length):'<i>μ</i>(∅) = 0';
+    fx.innerHTML=TB.rows([['<i>B</i> = ['+TB.fmt(a,2)+'; '+TB.fmt(b,2)+'],',Tm+' = '+(pre.length?'{'+pre.map(i=>NM[i]).join(', ')+'}':'∅')],
+      [Ts+' = <i>μ</i>('+Tm+') = '+sum]]);
+    g.set(pre.length/4,K.warm);
+  }
+  const pt=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
+  function hitTile(p){if(!geo)return -1;const G=geo;for(let i=0;i<4;i++)if(p.x>=G.BX-6&&p.x<=G.BX+G.bw+6&&Math.abs(p.y-G.ly[i])<=G.bh/2+6)return i;return -1;}
+  function setEnd(y){const v=Math.max(LO,Math.min(HI,geo.Yi(y)));if(drag.e==='a')a=v;else b=v;if(a>b){const u=a;a=b;b=u;drag.e=drag.e==='a'?'b':'a';}}
+  cv.addEventListener('pointerdown',e=>{if(!geo)return;const p=pt(e),i=hitTile(p);
+    if(i>=0)drag={k:'t',i:i};else if(p.x>=geo.AX-40){const v=geo.Yi(p.y);drag={k:'b',e:Math.abs(v-a)<=Math.abs(v-b)?'a':'b'};setEnd(p.y);}else return;
+    try{cv.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();move(p);});
+  function move(p){if(!drag)return;
+    if(drag.k==='t'){const v=Math.max(V0,Math.min(V1,Math.round(geo.Yi(p.y))));if(!started)start();if(v!==T[drag.i]){T[drag.i]=v;relayout();}}
+    else setEnd(p.y);
+    draw();}
+  cv.addEventListener('pointermove',e=>{const p=pt(e);if(drag){move(p);return;}
+    cv.style.cursor=geo&&(hitTile(p)>=0||p.x>=geo.AX-40)?'ns-resize':'';});
+  ['pointerup','pointercancel'].forEach(k=>cv.addEventListener(k,()=>{if(drag){drag=null;draw();}}));
+  b0.addEventListener('click',()=>{T=HEADS.slice();a=0.5;b=2.5;if(started)relayout();draw();});
+  draw();TB.onTheme(()=>draw());TB.onResize(cv,()=>draw());
+  if(reduced()||!window.IntersectionObserver)start();
+  else{const io=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting)){io.disconnect();setTimeout(start,250);}},{threshold:0.45});io.observe(cv);}
 })();
 </script>
