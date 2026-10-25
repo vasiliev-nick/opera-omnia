@@ -1137,3 +1137,79 @@
   draw();TB.onTheme(()=>draw());TB.onResize(cv,()=>draw());
 })();
 </script>
+<script>
+(function(){
+  /* Figure #jnt (§∅.13): joint and marginal distributions of two coin tosses. The second toss repeats the first with probability c (c>0) or contradicts it with probability |c| (c<0); the joint masses flow between the diagonals while the marginals on the margins of the plot and of the table stay at ½. */
+  const cv=document.getElementById('jnt');if(!cv||!window.TB||!TB.fit)return;
+  const inp=document.getElementById('jnC'),out=document.getElementById('jnCOut'),fx=document.getElementById('jnFx'),g=new TB.Gauge('gJn');
+  const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+  let c0=+inp.value,c1=c0,t0=0,raf=0;const DUR=260,ease=u=>u<=0?0:u>=1?1:u*u*(3-2*u);
+  const joint=c=>[[(1+c)/4,(1-c)/4],[(1-c)/4,(1+c)/4]];   // joint[i][j] = P(ξ=i, η=j)
+  const f3=v=>TB.fmt(v,3);
+  function halo(c,t,x,y,col,K){c.lineJoin='round';c.strokeStyle=K.paper;c.lineWidth=3;c.strokeText(t,x,y);c.fillStyle=col;c.fillText(t,x,y);}
+  function draw(now){
+    const F=TB.fit(cv,W=>W<560?470:300),c=F.c,W=F.W,H=F.H,K=TB.cols(),sm=W<560,s=sm?12:13;
+    const u=reduced()?1:ease(((now||performance.now())-t0)/DUR),cc=c0+(c1-c0)*u,J=joint(cc);
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    // the plane of values with the joint masses
+    const S=180,D=S/2,ox=sm?Math.round((W-S)/2)+30:100,oy=30+S,xs=k=>ox+(k+0.5)*D,ys=k=>oy-(k+0.5)*D;
+    c.strokeStyle=K.ink;c.lineWidth=1.2;c.beginPath();c.moveTo(ox,oy);c.lineTo(ox+S+12,oy);c.moveTo(ox,oy);c.lineTo(ox,oy-S-12);c.stroke();
+    TB.rich(c,[['ξ','i']],ox+S+16,oy+s*0.35,s,K.muted);TB.rich(c,[['η','i']],ox-4,oy-S-18,s,K.muted,'center');
+    c.font=s+'px '+TB.ui;c.fillStyle=K.muted;c.strokeStyle=K.ink;c.lineWidth=1;
+    for(const k of [0,1]){c.beginPath();c.moveTo(xs(k),oy-4);c.lineTo(xs(k),oy+4);c.moveTo(ox-4,ys(k));c.lineTo(ox+4,ys(k));c.stroke();
+      c.textAlign='center';c.fillText(String(k),xs(k),oy+s+5);c.textAlign='right';c.fillText(String(k),ox-8,ys(k)+s*0.35);}
+    c.textAlign='start';
+    c.strokeStyle=TB.rgba(K.ink,0.18);c.setLineDash([3,4]);c.beginPath();c.moveTo(xs(0),ys(0));c.lineTo(xs(1),ys(1));c.stroke();c.setLineDash([]);
+    const Rm=D*0.4;c.font=(s+1)+'px '+TB.serif;
+    for(const i of [0,1])for(const j of [0,1]){const m=J[i][j],r=Rm*Math.sqrt(m/0.5),x=xs(i),y=ys(j);
+      if(r>0.4){c.fillStyle=TB.rgba(K.eth,0.32);c.strokeStyle=K.eth;c.lineWidth=1.4;c.beginPath();c.arc(x,y,r,0,7);c.fill();c.stroke();}
+      const t=f3(m),w=c.measureText(t).width;
+      if(r>=w/2+3)halo(c,t,x-w/2,y+s*0.35,K.ink,K);else halo(c,t,x+Math.max(r,2)+5,y-Math.max(r,2)-3,K.ink,K);}
+    // the marginals on the margins: P(ξ=k) under the ξ-axis, P(η=k) left of the η-axis
+    const Lm=72,P=[J[0][0]+J[0][1],J[1][0]+J[1][1]],Q=[J[0][0]+J[1][0],J[0][1]+J[1][1]];
+    c.strokeStyle=K.warm;c.fillStyle=K.warm;c.lineWidth=3;
+    for(const k of [0,1]){const y0=oy+s+12,y1=y0+P[k]*Lm;c.beginPath();c.moveTo(xs(k),y0);c.lineTo(xs(k),y1);c.stroke();c.beginPath();c.arc(xs(k),y1,3.6,0,7);c.fill();
+      const x0=ox-26,x1=x0-Q[k]*Lm;c.beginPath();c.moveTo(x0,ys(k));c.lineTo(x1,ys(k));c.stroke();c.beginPath();c.arc(x1,ys(k),3.6,0,7);c.fill();}
+    c.font=(s+1)+'px '+TB.serif;
+    for(const k of [0,1]){halo(c,f3(P[k]),xs(k)+7,oy+s+12+P[k]*Lm+s*0.35,K.warm,K);const t=f3(Q[k]);halo(c,t,ox-26-Q[k]*Lm-c.measureText(t).width/2,ys(k)-9,K.warm,K);}
+    TB.rich(c,[['P','i'],['ξ','s']],ox+S+16,oy+s+12+0.5*Lm,s,K.warm);
+    TB.rich(c,[['P','i'],['η','s']],ox-26-0.5*Lm,ys(1)-D*0.62,s,K.warm,'center');
+    // the table: columns ξ = 0, 1, rows η = 1, 0 as in the plot; sums on the margins
+    const TX=sm?10:ox+S+70,TR=W-(sm?10:16),TY=sm?oy+118:46,hw=sm?62:76,cw=(TR-TX-hw)/3,rh=sm?36:40,hh=30;
+    TB.rich(c,[['вероятности ','r'],['P','i'],['(','m'],['ξ','i'],[' = i, ','m'],['η','i'],[' = j)','m']],TX,TY-10,s,K.muted);
+    const cx=k=>TX+hw+k*cw,cy=r=>TY+hh+r*rh;
+    // cell backgrounds
+    for(const r of [0,1])for(const k of [0,1]){const m=J[k][1-r];c.fillStyle=TB.rgba(K.eth,0.06+0.5*m);c.fillRect(cx(k)+1,cy(r)+1,cw-2,rh-2);}
+    c.fillStyle=TB.rgba(K.warm,0.14);c.fillRect(cx(2)+1,cy(0)+1,cw-2,2*rh-2);c.fillRect(cx(0)+1,cy(2)+1,2*cw-2,rh-2);
+    c.fillStyle=TB.rgba(K.ink,0.06);c.fillRect(cx(2)+1,cy(2)+1,cw-2,rh-2);
+    // rules: a double rule separates the margins
+    c.strokeStyle=TB.rgba(K.ink,0.35);c.lineWidth=1;c.beginPath();
+    for(let r=0;r<=3;r++){c.moveTo(TX,cy(r)+0.5);c.lineTo(TR,cy(r)+0.5);}
+    for(let k=0;k<=3;k++){c.moveTo(cx(k)+0.5,TY+4);c.lineTo(cx(k)+0.5,cy(3));}c.stroke();
+    c.beginPath();c.moveTo(TX,cy(2)-2.5);c.lineTo(TR,cy(2)-2.5);c.moveTo(cx(2)-2.5,TY+4);c.lineTo(cx(2)-2.5,cy(3));c.stroke();
+    const mid=(k,r,t,col,font)=>{c.font=font;const w=c.measureText(t).width;c.fillStyle=col;c.fillText(t,cx(k)+(cw-w)/2,cy(r)+rh/2+s*0.38);};
+    for(const k of [0,1])TB.rich(c,[['ξ','i'],[' = '+k,'m']],cx(k)+cw/2,TY+hh-9,s,K.ink,'center');
+    TB.rich(c,[['сумма','r']],cx(2)+cw/2,TY+hh-9,s,K.warm,'center');
+    for(const r of [0,1])TB.rich(c,[['η','i'],[' = '+(1-r),'m']],TX+hw/2,cy(r)+rh/2+s*0.38,s,K.ink,'center');
+    TB.rich(c,[['сумма','r']],TX+hw/2,cy(2)+rh/2+s*0.38,s,K.warm,'center');
+    const fn=(s+2)+'px '+TB.serif;
+    for(const r of [0,1])for(const k of [0,1])mid(k,r,f3(J[k][1-r]),K.ink,fn);
+    for(const r of [0,1])mid(2,r,f3(Q[1-r]),K.warm,fn);
+    for(const k of [0,1])mid(k,2,f3(P[k]),K.warm,fn);
+    mid(2,2,'1',K.muted,fn);
+    if(u<1)raf=requestAnimationFrame(draw);else raf=0;
+  }
+  function readout(){
+    const c=c1,a=Math.abs(c),fa=TB.fmt(a,1);
+    const how=c===0?'второй бросок делается честно, без оглядки на первый':c===1?'второй бросок всегда повторяет первый: <i>η</i> = <i>ξ</i>':c===-1?'второй бросок всегда противоположен первому: <i>η</i> = 1 − <i>ξ</i>':
+      c>0?'с вероятностью '+fa+' второй бросок повторяет первый':'с вероятностью '+fa+' второй бросок противоположен первому';
+    const h=TB.fr('1','2'),R=rows=>rows.map(r=>'<span>'+r.map(g=>[].concat(g).map(x=>'<span class="nw">'+x+'</span>').join(' ')).join('&emsp;')+'</span>').join('');
+    /* the sentence about the second toss may wrap anywhere, the formulas only between their parts */
+    fx.innerHTML='<span>'+how+'</span>'+R([['<i>P</i>(<i>ξ</i> = 0) = <i>P</i>(<i>ξ</i> = 1) = '+h+',','<i>P</i>(<i>η</i> = 0) = <i>P</i>(<i>η</i> = 1) = '+h],
+      [['<i>P</i>(<i>ξ</i> = <i>η</i>) = <i>P</i>(0, 0) + <i>P</i>(1, 1)','= '+TB.fr('1 + <i>c</i>','2'),'= '+f3((1+c)/2)]]]);
+    g.set((1+c)/2,TB.cols().eth);}
+  inp.addEventListener('input',()=>{const v=Math.round(+inp.value*10)/10;c0=c0+(c1-c0)*(reduced()?1:ease((performance.now()-t0)/DUR));c1=v;t0=performance.now();
+    out.textContent=TB.fmt(v,v===0?0:1);readout();if(!raf)raf=requestAnimationFrame(draw);});
+  t0=-1e9;readout();draw();TB.onTheme(()=>{readout();draw();});TB.onResize(cv,()=>draw());
+})();
+</script>
