@@ -968,3 +968,172 @@
   else{const io=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting)){io.disconnect();setTimeout(start,250);}},{threshold:0.45});io.observe(cv);}
 })();
 </script>
+<script>
+(function(){
+  /* Figure #dgal (§∅.13): one uniform mass, many distributions. Threads run from 128 equally spaced points of [0,1] (or of the unit disc) to T(u) on the line, so every thread carries mass 1/128; below the line the exact mass T_*λ: atoms as stems, spread mass as columns mass/h. B=[a,b] lights up its preimage. */
+  const cv=document.getElementById('dgal');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('dgFx'),g=new TB.Gauge('gDg');
+  const nIn=document.getElementById('dgN'),nOut=document.getElementById('dgNOut'),qIn=document.getElementById('dgQ'),qOut=document.getElementById('dgQOut');
+  const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+  const N=128,GA=2.399963229728653,cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v)),ease=u=>u<=0?0:u>=1?1:u*u*(3-2*u);
+  const U=[...Array(N)].map((_,i)=>(i+0.5)/N);
+  const DR=U.map(u=>Math.sqrt(u)),DT=U.map((_,i)=>i*GA);
+  const ones=(u,n)=>{let s=0;for(let j=1;j<=n;j++)s+=Math.floor(u*Math.pow(2,j))%2;return s;};
+  const binom=(n,k)=>{let r=1;for(let j=1;j<=k;j++)r=r*(n-k+j)/j;return Math.round(r);};
+  const gcd=(a,b)=>b?gcd(b,a%b):a;
+  const UNI={'1/2':'½','1/4':'¼','3/4':'¾','1/8':'⅛','3/8':'⅜','5/8':'⅝','7/8':'⅞'};
+  const frT=(p,d)=>{if(!p)return '0';const k=gcd(p,d);p/=k;d/=k;if(d===1)return String(p);const s=p+'/'+d;return UNI[s]||s;};
+  const frH=(p,d)=>{if(!p)return '0';const k=gcd(p,d);p/=k;d/=k;return d===1?String(p):TB.fr(String(p),String(d));};
+  const ints=(a,b,lo,hi)=>{const r=[];for(let k=Math.max(lo,Math.ceil(a-1e-9));k<=Math.min(hi,Math.floor(b+1e-9));k++)r.push(k);return r;};
+  /* Each mode: axis range, ticks, the map T on [0,1] (or on the disc), atoms, the spread part as a distribution function, a default B and the exact preimage of B. */
+  const MODES={
+    D:{lo:-0.5,hi:3.5,B:()=>[1,2],ticks:()=>[0,1,2,3],T:()=>1.5,atoms:()=>[{x:1.5,p:1,d:1}],
+       pre:(a,b)=>a<=1.5&&b>=1.5?[[0,1]]:[]},
+    B:{lo:-0.6,hi:S=>S.n+0.6,B:S=>S.n>1?[0.5,S.n-0.5]:[0.5,1.5],ticks:S=>[...Array(S.n+1)].map((_,k)=>k),T:(u,S)=>ones(u,S.n),
+       atoms:S=>[...Array(S.n+1)].map((_,k)=>({x:k,p:binom(S.n,k),d:Math.pow(2,S.n)})),
+       pre:(a,b,S)=>{const m=Math.pow(2,S.n),r=[];for(let j=0;j<m;j++){const k=ones((j+0.5)/m,S.n);if(k>=a&&k<=b)r.push([j/m,(j+1)/m]);}return r;}},
+    G:{lo:0.4,hi:8.6,B:()=>[1.5,3.5],ticks:()=>[1,2,3,4,5,6,7,8],T:u=>Math.floor(-Math.log2(u))+1,
+       atoms:()=>[1,2,3,4,5,6,7,8].map(k=>({x:k,p:1,d:Math.pow(2,k)})),
+       pre:(a,b)=>ints(a,b,1,60).map(k=>[Math.pow(2,-k),Math.pow(2,1-k)])},
+    U:{lo:-0.5,hi:3.5,B:()=>[1,2],ticks:()=>[0,1,2,3],T:u=>0.5+2*u,atoms:()=>[],F:t=>cl((t-0.5)/2,0,1),
+       pre:(a,b)=>{const u0=cl((a-0.5)/2,0,1),u1=cl((b-0.5)/2,0,1);return u1>u0?[[u0,u1]]:[];}},
+    C:{lo:-0.15,hi:1.2,B:()=>[0.7,1],ticks:()=>[0,0.5,1],disc:true,atoms:()=>[],F:t=>{const r=cl(t,0,1);return r*r;},
+       pre:(a,b)=>{const r0=cl(a,0,1),r1=cl(b,0,1);return r1>r0?[[r0,r1]]:[];}},
+    M:{lo:-0.3,hi:1.3,B:()=>[-0.15,0.35],ticks:()=>[0,0.5,1],T:(u,S)=>u<=S.q?0:(u-S.q)/(1-S.q),
+       atoms:S=>S.q>0?[{x:0,q:S.q}]:[],F:(t,S)=>(1-S.q)*cl(t,0,1),
+       pre:(a,b,S)=>{const r=[];if(a<=0&&b>=0&&S.q>0)r.push([0,S.q]);const u0=S.q+(1-S.q)*cl(a,0,1),u1=S.q+(1-S.q)*cl(b,0,1);if(u1>u0)r.push([u0,u1]);return r;}}
+  };
+  const val=(f,S)=>typeof f==='function'?f(S):f;
+  let cur={md:TB.segs(cv,k=>setMode(k)),n:+nIn.value,q:+qIn.value,rest:false},prev=null,t0=0,dur=0,raf=0,started=false,geo=null,drag=null;
+  let [a,b]=MODES[cur.md].B(cur);
+  const range=S=>({lo:val(MODES[S.md].lo,S),hi:val(MODES[S.md].hi,S)});
+  /* Pixel geometry shared by all modes; X maps a value of state S to the line. */
+  function layout(W,H){const sm=W<520,s=sm?12:14,L=sm?10:24,R=W-(sm?10:24),ys=s+34,yA=sm?222:236,yM=yA+24,lane=H-yM-14,rD=sm?44:54;
+    return {sm:sm,s:s,L:L,R:R,ys:ys,yA:yA,yM:yM,lane:lane,rD:rD,cx:(L+R)/2,cy:s+18+rD,Xs:u=>L+16+u*(R-L-32)};}
+  const Xof=(S,G)=>{const r=range(S);return v=>G.L+(v-r.lo)/(r.hi-r.lo)*(G.R-G.L);};
+  /* Start and end of thread i in state S. */
+  function ends(S,i,G){const M=MODES[S.md];let x0,y0,v;
+    if(M.disc){x0=G.cx+G.rD*DR[i]*Math.cos(DT[i]);y0=G.cy-G.rD*DR[i]*Math.sin(DT[i]);v=DR[i];}
+    else{x0=G.Xs(U[i]);y0=G.ys+3;v=M.T(U[i],S);}
+    return {x0:x0,y0:y0,x1:S.rest?x0:Xof(S,G)(v),v:v};}
+  function massOf(S,lo,hi){const M=MODES[S.md];return M.F?M.F(hi,S)-M.F(lo,S):0;}
+  function exact(S){const M=MODES[S.md];let p=0;
+    for(const t of M.atoms(S)){if(t.x>=a&&t.x<=b)p+=t.q!==undefined?t.q:t.p/t.d;}
+    if(M.F)p+=massOf(S,a,b);
+    if(S.md==='G'&&b>=9)p+=0;return p;}
+  function setMode(k){snap();cur={md:k,n:cur.n,q:cur.q,rest:false};[a,b]=MODES[k].B(cur);
+    nIn.parentNode.hidden=k!=='B';qIn.parentNode.hidden=k!=='M';go(reduced()?0:750);}
+  function snap(){const t=performance.now();if(prev&&t<t0+dur){/* restart from the current picture: freeze it as the new start */frozen=frame(t);}else frozen=null;prev={...cur};}
+  let frozen=null;
+  function frame(t){return {e:dur?ease((t-t0)/dur):1};}
+  function go(d){t0=performance.now();dur=started?d:0;loop();}
+  function loop(){if(!raf)raf=requestAnimationFrame(tick);}
+  function tick(t){raf=0;draw(t);if(dur&&t<t0+dur)raf=requestAnimationFrame(tick);}
+  nIn.addEventListener('input',()=>{const n=+nIn.value;nOut.textContent=n;prev={...cur};cur={...cur,n:n};const r=range(cur);
+    a=cl(a,r.lo,r.hi);b=cl(b,r.lo,r.hi);go(reduced()?0:350);});
+  qIn.addEventListener('input',()=>{const q=+qIn.value;qOut.textContent=TB.fmt(q,2);prev=null;cur={...cur,q:q};dur=0;draw();});
+  function draw(t){
+    t=t||performance.now();
+    const F=TB.fit(cv,W=>W<520?400:420),c=F.c,W=F.W,H=F.H,K=TB.cols(),G=layout(W,H),s=G.s;geo=G;
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const e=prev&&dur?ease((t-t0)/dur):1,P=e<1?prev:null,X=Xof(cur,G),M=MODES[cur.md];
+    // the set B: a band over the line and the mass, a thick piece of the line
+    c.fillStyle=TB.rgba(K.warm,0.10);c.fillRect(X(a),G.yA-10,X(b)-X(a),H-G.yA+6);
+    // the source: the segment [0,1] or the unit disc, with the preimage of B
+    const pre=M.pre(a,b,cur),srcA=P&&!MODES[P.md].disc===!M.disc?1:e;
+    const title=M.disc?[['единичный круг ','r'],['D','i'],[', равномерная мера','r']]:[['отрезок [0, 1], мера ','r'],['λ','i'],['1','s']];
+    TB.rich(c,title,G.L,s+4,s,K.muted);
+    if(M.disc){c.globalAlpha=srcA;c.strokeStyle=K.ink;c.lineWidth=1.2;c.beginPath();c.arc(G.cx,G.cy,G.rD,0,7);c.stroke();
+      for(const [r0,r1] of pre){c.fillStyle=TB.rgba(K.warm,0.28);c.beginPath();c.arc(G.cx,G.cy,G.rD*r1,0,7);if(r0>0)c.arc(G.cx,G.cy,G.rD*r0,0,7,true);c.fill('evenodd');
+        c.strokeStyle=TB.rgba(K.warm,0.9);c.lineWidth=1.2;c.beginPath();c.arc(G.cx,G.cy,G.rD*r1,0,7);c.stroke();if(r0>0){c.beginPath();c.arc(G.cx,G.cy,G.rD*r0,0,7);c.stroke();}}
+      c.fillStyle=K.ink;c.beginPath();c.arc(G.cx,G.cy,2,0,7);c.fill();c.globalAlpha=1;}
+    else{c.globalAlpha=srcA;const x0=G.Xs(0),x1=G.Xs(1);c.strokeStyle=K.ink;c.lineWidth=2;c.beginPath();c.moveTo(x0,G.ys);c.lineTo(x1,G.ys);c.stroke();
+      c.font=s+'px '+TB.ui;c.fillStyle=K.muted;c.textAlign='right';c.fillText('0',x0-5,G.ys+s*0.35);c.textAlign='start';c.fillText('1',x1+5,G.ys+s*0.35);
+      const tk=cur.md==='B'?[...Array(Math.pow(2,cur.n)+1)].map((_,j)=>j/Math.pow(2,cur.n)):cur.md==='G'?[1,2,3,4,5,6,7,8].map(k=>Math.pow(2,-k)):cur.md==='M'?[cur.q]:[];
+      c.strokeStyle=TB.rgba(K.ink,0.55);c.lineWidth=1;c.beginPath();for(const u of tk){const x=G.Xs(u);c.moveTo(x,G.ys-5);c.lineTo(x,G.ys);}c.stroke();
+      c.strokeStyle=K.warm;c.lineWidth=5;c.lineCap='butt';for(const [u0,u1] of pre){c.beginPath();c.moveTo(G.Xs(u0),G.ys);c.lineTo(Math.max(G.Xs(u1),G.Xs(u0)+1.5),G.ys);c.stroke();}
+      c.globalAlpha=1;}
+    // the threads
+    c.save();c.beginPath();c.rect(0,0,G.R+6,H);c.clip();
+    const hotOf=i=>{if(cur.rest)return false;const v=ends(cur,i,G).v;return v>=a&&v<=b;};
+    for(const pass of [0,1])for(let i=0;i<N;i++){const hot=hotOf(i);if(hot!==(pass===1))continue;
+      const A=ends(cur,i,G),B0=P?ends(P,i,G):A,x0=B0.x0+(A.x0-B0.x0)*e,y0=B0.y0+(A.y0-B0.y0)*e,x1=B0.x1+(A.x1-B0.x1)*e,y1=G.yA-2,dy=y1-y0;
+      c.strokeStyle=hot?TB.rgba(K.warm,0.8):TB.rgba(K.eth,0.3);c.lineWidth=hot?1.2:0.9;
+      c.beginPath();c.moveTo(x0,y0);c.bezierCurveTo(x0,y0+dy*0.45,x1,y1-dy*0.45,x1,y1);c.stroke();}
+    c.restore();
+    // the line, its ticks and the mass below it; the previous state fades out while the new one fades in
+    c.strokeStyle=K.ink;c.lineWidth=1.2;c.beginPath();c.moveTo(G.L,G.yA);c.lineTo(G.R,G.yA);c.stroke();
+    TB.rich(c,[['ℝ','m']],G.R,G.yA-8,s,K.muted,'right');
+    if(P&&P.md!==cur.md)paint(P,1-e);
+    paint(cur,P&&P.md!==cur.md?e:1);
+    // B on the line
+    c.strokeStyle=K.warm;c.lineWidth=4;c.beginPath();c.moveTo(X(a),G.yA);c.lineTo(X(b),G.yA);c.stroke();
+    for(const v of [a,b]){c.fillStyle=K.warm;c.beginPath();c.arc(X(v),G.yA,5,0,7);c.fill();}
+    function paint(S,al){if(al<=0.01)return;const XS=Xof(S,G),MS=MODES[S.md],r=range(S);c.globalAlpha=al;
+      c.font=s+'px '+TB.ui;c.fillStyle=K.muted;c.textAlign='center';c.strokeStyle=K.ink;c.lineWidth=1;
+      for(const v of MS.ticks(S)){const x=XS(v);c.beginPath();c.moveTo(x,G.yA-4);c.lineTo(x,G.yA+4);c.stroke();c.fillText(TB.tickLabel(v),x,G.yA+s+5);}
+      c.textAlign='start';
+      const sh=S.rest?0:(S===cur?1:1)*e*(P&&P.md===cur.md?1:1);
+      const KD=G.lane*0.9/2.2,hot=v=>S===cur&&v>=a&&v<=b;
+      if(MS.F){const h=(r.hi-r.lo)/48;
+        for(const pass of [0,1]){c.save();if(pass){c.beginPath();c.rect(XS(a),0,XS(b)-XS(a),H);c.clip();}
+          c.fillStyle=pass?TB.rgba(K.warm,0.5):TB.rgba(K.eth,0.28);c.strokeStyle=pass?K.warm:K.eth;c.lineWidth=1.3;
+          c.beginPath();c.moveTo(XS(r.lo),G.yM);
+          for(let j=0;j<48;j++){const u0=r.lo+j*h,m=massOf(S,u0,u0+h)/h,y=G.yM+m*KD;c.lineTo(XS(u0),y);c.lineTo(XS(u0+h),y);}
+          c.lineTo(XS(r.hi),G.yM);c.closePath();c.fill();
+          c.beginPath();for(let j=0;j<48;j++){const u0=r.lo+j*h,m=massOf(S,u0,u0+h)/h;if(m<=0)continue;const y=G.yM+m*KD;c.moveTo(XS(u0),y);c.lineTo(XS(u0+h),y);}c.stroke();c.restore();}}
+      /* atoms: stems first, then mass labels with a paper halo, to the right of the dot, else to the left or under it, skipped where they would collide */
+      const ats=MS.atoms(S).map(t=>{const m=t.q!==undefined?t.q:t.p/t.d,x=XS(t.x);return {t:t,x:x,y:Math.max(G.yM+m*G.lane*0.92,G.yM+1),hot:hot(t.x)};});
+      const boxes=ats.map(A=>[A.x-4,G.yM,A.x+4,A.y+5]);
+      if(MS.F){const h=(r.hi-r.lo)/48;for(let j=0;j<48;j++){const u0=r.lo+j*h,m=massOf(S,u0,u0+h)/h;if(m>0)boxes.push([XS(u0),G.yM,XS(u0+h),G.yM+m*KD+3]);}}
+      for(const A of ats){c.strokeStyle=A.hot?K.warm:K.eth;c.fillStyle=c.strokeStyle;c.lineWidth=3;c.beginPath();c.moveTo(A.x,G.yM);c.lineTo(A.x,A.y);c.stroke();
+        c.beginPath();c.arc(A.x,A.y,3.6,0,7);c.fill();}
+      c.font=(s+1)+'px '+TB.serif;c.lineJoin='round';
+      for(const A of ats){const lab=A.t.q!==undefined?TB.fmt(A.t.q,2):frT(A.t.p,A.t.d),w=c.measureText(lab).width;
+        const ly0=Math.max(A.y,G.yM+s)+s*0.35;for(const [lx,ly] of [[A.x+7,ly0],[A.x-7-w,ly0],[A.x-w/2,A.y+s+6]]){const bx=[lx-2,ly-s,lx+w+2,ly+3];
+          if(bx[2]>G.R+8||bx[0]<G.L-8||bx[3]>H-1||boxes.some(B1=>bx[0]<B1[2]&&bx[2]>B1[0]&&bx[1]<B1[3]&&bx[3]>B1[1]))continue;
+          c.strokeStyle=K.paper;c.lineWidth=3;c.strokeText(lab,lx,ly);c.fillStyle=A.hot?K.warm:K.ink;c.fillText(lab,lx,ly);boxes.push(bx);break;}}
+      c.globalAlpha=1;}
+    // readout
+    readout(pre);
+  }
+  function readout(pre){
+    const Tm='<i>T</i><sup>−1</sup>(<i>B</i>)',f3=v=>TB.fmt(v,3),S=cur,M=MODES[S.md],p=exact(S);
+    const lam=M.disc?'<i>λ</i><sub>2</sub>('+Tm+')/<i>π</i>':'<i>λ</i><sub>1</sub>('+Tm+')';
+    const Pl='<i>P</i>(<i>T</i>('+(M.disc?'<i>v</i>':'<i>u</i>')+') ∈ <i>B</i>) = '+lam;
+    const iv=(u0,u1)=>'['+TB.fmt(u0,3)+'; '+TB.fmt(u1,3)+']';
+    /* d and v are lists of parts: a narrow screen breaks the lines only between them */
+    let d,v;
+    if(S.md==='D'){d=[pre.length?'[0; 1]':'∅'];v=[pre.length?'1':'0'];}
+    else if(S.md==='B'){const ks=ints(a,b,0,S.n),m=Math.pow(2,S.n),sum=ks.reduce((z,k)=>z+binom(S.n,k),0);
+      d=ks.length?['отрезки длины 2<sup>−'+S.n+'</sup>,','где число единиц ∈ {'+ks.join(', ')+'}']:['∅'];
+      v=ks.length?[...(ks.length>1?['('+ks.map(k=>binom(S.n,k)).join(' + ')+')/'+m]:[]),sum===m?'1':frH(sum,m)+' = '+f3(sum/m)]:['0'];}
+    else if(S.md==='G'){const ks=ints(a,b,1,60);
+      d=[ks.length?'⋃ (2<sup>−<i>k</i></sup>; 2<sup>1−<i>k</i></sup>], <i>k</i> ∈ {'+ks.join(', ')+'}':'∅'];
+      v=ks.length?[...(ks.length>1&&ks.length<5?[ks.map(k=>frH(1,Math.pow(2,k))).join(' + ')]:[]),f3(p)]:['0'];}
+    else if(S.md==='C'){d=[pre.length?'кольцо '+TB.fmt(pre[0][0],2)+' ≤ |<i>v</i>| ≤ '+TB.fmt(pre[0][1],2):'∅'];
+      v=pre.length?[TB.fmt(pre[0][1],2)+'<sup>2</sup> − '+TB.fmt(pre[0][0],2)+'<sup>2</sup>',f3(p)]:['0'];}
+    else{d=pre.length?pre.map((x,j)=>iv(x[0],x[1])+(j<pre.length-1?' ∪':'')):['∅'];v=pre.length>1?[pre.map(x=>f3(x[1]-x[0])).join(' + '),f3(p)]:[f3(p)];}
+    /* rows of groups: groups are set apart by an em space, the parts inside a group by a plain space */
+    const R=rows=>rows.map(r=>'<span>'+r.map(g=>[].concat(g).map(x=>'<span class="nw">'+x+'</span>').join(' ')).join('&emsp;')+'</span>').join('');
+    fx.innerHTML=R([['<i>B</i> = ['+TB.fmt(a,2)+'; '+TB.fmt(b,2)+'],',[Tm+' = '+d[0],...d.slice(1)]],[[Pl,...v.map(x=>'= '+x)]]]);
+    g.set(p,K0().warm);
+  }
+  const K0=()=>TB.cols();
+  const pt=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
+  const inLine=p=>geo&&p.y>=geo.yA-26;
+  function setEnd(x){const r=range(cur),G=geo,v=cl(r.lo+(x-G.L)/(G.R-G.L)*(r.hi-r.lo),r.lo,r.hi);
+    if(drag==='a')a=v;else b=v;if(a>b){const u=a;a=b;b=u;drag=drag==='a'?'b':'a';}}
+  cv.addEventListener('pointerdown',e=>{const p=pt(e);if(!inLine(p))return;const r=range(cur),G=geo,v=r.lo+(p.x-G.L)/(G.R-G.L)*(r.hi-r.lo);
+    drag=Math.abs(v-a)<=Math.abs(v-b)?'a':'b';try{cv.setPointerCapture(e.pointerId);}catch(_){}setEnd(p.x);draw();});
+  cv.addEventListener('pointermove',e=>{const p=pt(e);if(drag){setEnd(p.x);draw();return;}cv.style.cursor=inLine(p)?'ew-resize':'';});
+  ['pointerup','pointercancel'].forEach(k=>cv.addEventListener(k,()=>{drag=null;}));
+  nIn.parentNode.hidden=cur.md!=='B';qIn.parentNode.hidden=cur.md!=='M';
+  function start(){if(started)return;started=true;prev={...cur,rest:true};go(reduced()?0:1300);}
+  if(reduced()||!window.IntersectionObserver){started=true;}
+  else{cur.rest=false;prev=null;const io=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting)){io.disconnect();setTimeout(start,200);}},{threshold:0.4});io.observe(cv);
+    /* until the figure is seen, the threads hang straight down */
+    prev={...cur,rest:true};dur=1;t0=-1e9;}
+  draw();TB.onTheme(()=>draw());TB.onResize(cv,()=>draw());
+})();
+</script>

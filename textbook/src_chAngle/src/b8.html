@@ -45,7 +45,7 @@
 <p><b>Задача.</b> Пусть $\mathbb D\xi&gt;0$ и $\mathbb D\eta&gt;0$. Докажите, что $\rho(\xi,\eta)=1$ тогда и только тогда, когда $\eta=a\xi+b$ почти наверное с некоторыми $a&gt;0$, $b\in\mathbb R$, и $\rho(\xi,\eta)=-1$ — когда то же верно с $a&lt;0$. <span class="why">Подсказка: найдите длину разности отклонений, нормированных до единичной длины.</span></p></div>
 <div class="proof sol"><span class="lbl">Решение.</span>
 <div class="step"><span class="sh">Нормированные отклонения.</span> Пусть $u=(\xi-\mathbb E\xi)/\sqrt{\mathbb D\xi}$ и $v=(\eta-\mathbb E\eta)/\sqrt{\mathbb D\eta}$. Это единичные векторы, и $\langle u,v\rangle=\rho$. Поэтому $\|v-u\|^2=2-2\rho$ и $\|v+u\|^2=2+2\rho$.</div>
-<div class="step"><span class="sh">Необходимость.</span> Если $\rho=1$, то $\|v-u\|=0$, то есть $v=u$ п.н. (лемма ∅.43(б)), и $\eta=\mathbb E\eta+\sqrt{\mathbb D\eta/\mathbb D\xi}\,(\xi-\mathbb E\xi)$ п.н. — линейная функция $\xi$ с $a=\sqrt{\mathbb D\eta/\mathbb D\xi}&gt;0$. Случай $\rho=-1$ такой же, с $v=-u$.</div>
+<div class="step"><span class="sh">Необходимость.</span> Если $\rho=1$, то $\|v-u\|=0$, то есть $v=u$ п.н. (лемма ∅.45(б)), и $\eta=\mathbb E\eta+\sqrt{\mathbb D\eta/\mathbb D\xi}\,(\xi-\mathbb E\xi)$ п.н. — линейная функция $\xi$ с $a=\sqrt{\mathbb D\eta/\mathbb D\xi}&gt;0$. Случай $\rho=-1$ такой же, с $v=-u$.</div>
 <div class="step"><span class="sh">Достаточность.</span> Если $\eta=a\xi+b$ п.н., то по лемме ∠.2 $\operatorname{Cov}(\xi,\eta)=a\,\mathbb D\xi$ и $\mathbb D\eta=a^2\mathbb D\xi$, так что $\rho=a/|a|$.</div>
 </div>
 
