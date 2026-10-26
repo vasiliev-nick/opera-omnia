@@ -164,6 +164,17 @@ figure.exfig{margin:1rem 0 1.2rem}
 .boxrow .boxfig{min-width:0}
 .hier.nar{display:none;min-width:0}
 @media (max-width:560px){.boxrow{grid-template-columns:minmax(0,1fr);max-width:300px;margin:0 auto;gap:.6rem}.hier.wide{display:none}.hier.nar{display:block}}
+/* Catalogue of named examples (FORMAT.md «Примеры»): a group label with a hairline, then one card per example: number badge and name, text, its own figure. */
+.xgrp{display:flex;align-items:center;gap:.8rem;margin:2.2rem 0 .3rem;font-family:var(--font-ui);font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.xgrp::after{content:"";flex:1;height:1px;background:var(--rule)}
+.xmp{margin:1rem 0 1.4rem;padding:.9rem 1.1rem .2rem;border:1px solid var(--rule);border-radius:8px}
+.xmp .xh{display:flex;align-items:center;gap:.65rem;margin:0 0 .55rem}
+.xmp .xn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:50%;background:var(--ether-soft);color:var(--ether);font-family:var(--font-ui);font-weight:700;font-size:.86rem}
+.xmp .xt{font-family:var(--font-ui);font-weight:700;font-size:.92rem;letter-spacing:.02em;color:var(--ink)}
+.xmp>p:first-of-type{margin-top:0}
+.xmp figure{margin:1.2rem 0 .8rem}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:560px){.xmp{padding:.8rem .7rem .1rem;margin-left:-.3rem;margin-right:-.3rem}}
 </style>
 <script>
 window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none'},svg:{fontCache:'global'}};

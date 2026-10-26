@@ -1044,7 +1044,7 @@
     const title=M.disc?[['единичный круг ','r'],['D','i'],[', равномерная мера','r']]:[['отрезок [0, 1], мера ','r'],['λ','i'],['1','s']];
     TB.rich(c,title,G.L,s+4,s,K.muted);
     if(M.disc){c.globalAlpha=srcA;c.strokeStyle=K.ink;c.lineWidth=1.2;c.beginPath();c.arc(G.cx,G.cy,G.rD,0,7);c.stroke();
-      for(const [r0,r1] of pre){c.fillStyle=TB.rgba(K.warm,0.28);c.beginPath();c.arc(G.cx,G.cy,G.rD*r1,0,7);if(r0>0)c.arc(G.cx,G.cy,G.rD*r0,0,7,true);c.fill('evenodd');
+      for(const [r0,r1] of pre){c.fillStyle=TB.rgba(K.warm,0.28);c.beginPath();c.arc(G.cx,G.cy,G.rD*r1,0,2*Math.PI);if(r0>0){c.moveTo(G.cx+G.rD*r0,G.cy);c.arc(G.cx,G.cy,G.rD*r0,0,2*Math.PI);}c.fill('evenodd');
         c.strokeStyle=TB.rgba(K.warm,0.9);c.lineWidth=1.2;c.beginPath();c.arc(G.cx,G.cy,G.rD*r1,0,7);c.stroke();if(r0>0){c.beginPath();c.arc(G.cx,G.cy,G.rD*r0,0,7);c.stroke();}}
       c.fillStyle=K.ink;c.beginPath();c.arc(G.cx,G.cy,2,0,7);c.fill();c.globalAlpha=1;}
     else{c.globalAlpha=srcA;const x0=G.Xs(0),x1=G.Xs(1);c.strokeStyle=K.ink;c.lineWidth=2;c.beginPath();c.moveTo(x0,G.ys);c.lineTo(x1,G.ys);c.stroke();
@@ -1211,5 +1211,273 @@
   inp.addEventListener('input',()=>{const v=Math.round(+inp.value*10)/10;c0=c0+(c1-c0)*(reduced()?1:ease((performance.now()-t0)/DUR));c1=v;t0=performance.now();
     out.textContent=TB.fmt(v,v===0?0:1);readout();if(!raf)raf=requestAnimationFrame(draw);});
   t0=-1e9;readout();draw();TB.onTheme(()=>{readout();draw();});TB.onResize(cv,()=>draw());
+})();
+</script>
+<script>
+(function(){
+  /* Figures #dx1–#dx7 under the examples of distributions (§∅.13). A measure Q on the line: a point mass is a stem whose length is the mass, a spread mass is a layer whose thickness is the mass per unit of length, both read on the scale at the left. The warm band is a set B whose ends can be dragged; the readout gives Q(B). */
+  const TB=window.TB;if(!TB||!TB.fit)return;
+  const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+  const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v)),gcd=(a,b)=>b?gcd(b,a%b):a;
+  const binom=(n,k)=>{let r=1;for(let j=1;j<=k;j++)r=r*(n-k+j)/j;return Math.round(r);};
+  const frT=(p,d)=>{if(!p)return '0';const k=gcd(p,d);p/=k;d/=k;return d===1?String(p):p+'/'+d;};
+  const frH=(p,d)=>{if(!p)return '0';const k=gcd(p,d);p/=k;d/=k;return d===1?String(p):TB.fr(String(p),String(d));};
+  const f2=v=>TB.fmt(v,2),f3=v=>TB.fmt(v,3),Bs=(a,b)=>'<i>B</i> = ['+f2(a)+'; '+f2(b)+']',QB='<i>Q</i>(<i>B</i>)';
+  const inI=(v,a,b)=>v>=a-1e-9&&v<=b+1e-9,ov=(a,b,x0,x1)=>Math.max(0,Math.min(b,x1)-Math.max(a,x0));
+  /* rows of groups: groups are set apart by an em space, the parts inside a group by a plain space; a line breaks only between parts */
+  const R=rows=>rows.map(r=>'<span>'+r.map(g=>[].concat(g).map(x=>'<span class="nw">'+x+'</span>').join(' ')).join('&emsp;')+'</span>').join('');
+  function halo(c,t,x,y,col,K){c.lineJoin='round';c.strokeStyle=K.paper;c.lineWidth=3;c.strokeText(t,x,y);c.fillStyle=col;c.fillText(t,x,y);}
+  /* The line and its mass in the box G = {x0, x1, yT, yA}. o: lo, hi, ticks, amax (top of the scale), sticks (scale marks), slab (scale label),
+     atoms [{x, m, lab}], cols [{x0, x1, d}]: contiguous columns of one spread layer. */
+  function line(c,G,o,a,b,K,s){
+    const X=v=>G.x0+(v-o.lo)/(o.hi-o.lo)*(G.x1-G.x0),Y=m=>G.yA-m/o.amax*(G.yA-G.yT);
+    c.fillStyle=TB.rgba(K.warm,0.10);c.fillRect(X(a),G.yT-8,X(b)-X(a),G.yA-G.yT+8);
+    c.font=(s-1)+'px '+TB.ui;c.textAlign='right';c.lineWidth=1;
+    for(const t of o.sticks){const y=Y(t);c.strokeStyle=TB.rgba(K.ink,0.10);c.beginPath();c.moveTo(G.x0,y);c.lineTo(G.x1,y);c.stroke();c.fillStyle=K.muted;c.fillText(TB.tickLabel(t),G.x0-6,y+s*0.35);}
+    c.textAlign='start';TB.rich(c,o.slab,G.sx||4,G.yT-24,s-1,K.muted);
+    const C=o.cols||[];
+    if(C.length){const path=()=>{c.beginPath();c.moveTo(X(C[0].x0),G.yA);for(const q of C){c.lineTo(X(q.x0),Y(q.d));c.lineTo(X(q.x1),Y(q.d));}c.lineTo(X(C[C.length-1].x1),G.yA);};
+      for(const pass of [0,1]){c.save();if(pass){c.beginPath();c.rect(X(a),0,X(b)-X(a),G.yA+1);c.clip();}
+        path();c.fillStyle=pass?TB.rgba(K.warm,0.5):TB.rgba(K.eth,0.26);c.fill();path();c.strokeStyle=pass?K.warm:K.eth;c.lineWidth=1.4;c.stroke();c.restore();}}
+    c.strokeStyle=K.ink;c.lineWidth=1.2;c.beginPath();c.moveTo(G.x0,G.yA);c.lineTo(G.x1,G.yA);c.stroke();
+    c.font=s+'px '+TB.ui;c.fillStyle=K.muted;c.textAlign='center';c.lineWidth=1;
+    /* where the integer ticks crowd, only every fifth one is labelled */
+    const dense=o.ticks.length>1&&X(o.ticks[1])-X(o.ticks[0])<22;
+    for(const v of o.ticks){const x=X(v);c.beginPath();c.moveTo(x,G.yA-3);c.lineTo(x,G.yA+3);c.stroke();if(!dense||v%5===0)c.fillText(TB.tickLabel(v),x,G.yA+s+5);}
+    c.textAlign='start';
+    const A=(o.atoms||[]).map(t=>({t:t,x:X(t.x),y:Math.min(Y(t.m),G.yA-1),h:inI(t.x,a,b)})),boxes=A.map(q=>[q.x-4,q.y-4,q.x+4,G.yA]);
+    /* a stem standing in a layer gets a paper-coloured outline so that it stays visible */
+    for(const q of A){if(C.length){c.strokeStyle=K.paper;c.lineWidth=6;c.beginPath();c.moveTo(q.x,G.yA);c.lineTo(q.x,q.y);c.stroke();}
+      c.strokeStyle=q.h?K.warm:K.eth;c.fillStyle=c.strokeStyle;c.lineWidth=3;c.beginPath();c.moveTo(q.x,G.yA);c.lineTo(q.x,q.y);c.stroke();c.beginPath();c.arc(q.x,q.y,3.6,0,7);c.fill();}
+    c.font=(s+1)+'px '+TB.serif;
+    for(const q of A){const lab=q.t.lab;if(!lab)continue;const w=c.measureText(lab).width;
+      for(const [lx,ly] of [[q.x-w/2,q.y-8],[q.x+7,q.y+s*0.35],[q.x-7-w,q.y+s*0.35]]){const bx=[lx-2,ly-s,lx+w+2,ly+3];
+        if(bx[0]<2||bx[2]>G.x1+14||bx[1]<G.yT-18||boxes.some(B1=>bx[0]<B1[2]&&bx[2]>B1[0]&&bx[1]<B1[3]&&bx[3]>B1[1]))continue;
+        halo(c,lab,lx,ly,q.h?K.warm:K.ink,K);boxes.push(bx);break;}}
+    if(o.after)o.after(c,X,Y,K,s);
+    c.strokeStyle=K.warm;c.lineWidth=4;c.beginPath();c.moveTo(X(a),G.yA);c.lineTo(X(b),G.yA);c.stroke();
+    for(const v of [a,b]){c.fillStyle=K.warm;c.beginPath();c.arc(X(v),G.yA,5,0,7);c.fill();}
+  }
+  /* Dragging the nearer end of B anywhere over the line box. */
+  function dragB(cv,geo,get,set){let d=null;
+    const pt=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
+    const on=p=>{const G=geo();return !!G&&p.y>=G.yT-12&&p.y<=G.yA+26&&p.x>=G.x0-12&&p.x<=G.x1+12;};
+    const val=x=>{const G=geo();return cl(G.lo+(x-G.x0)/(G.x1-G.x0)*(G.hi-G.lo),G.lo,G.hi);};
+    const mv=v=>{let [a,b]=get();if(d===0)a=v;else b=v;if(a>b){const t=a;a=b;b=t;d=1-d;}set(a,b);};
+    cv.addEventListener('pointerdown',e=>{const p=pt(e);if(!on(p))return;const v=val(p.x),[a,b]=get();d=Math.abs(v-a)<=Math.abs(v-b)?0:1;try{cv.setPointerCapture(e.pointerId);}catch(_){}mv(v);});
+    cv.addEventListener('pointermove',e=>{const p=pt(e);if(d!==null){mv(val(p.x));return;}cv.style.cursor=on(p)?'ew-resize':'';});
+    ['pointerup','pointercancel'].forEach(k=>cv.addEventListener(k,()=>{d=null;}));}
+  /* A figure that is only the line: o.build() gives the atoms and the layer, o.read(a, b) writes the readout. */
+  function fig(id,o){const cv=document.getElementById(id);if(!cv)return null;let [a,b]=o.B,G=null;
+    function draw(){const F=TB.fit(cv,W=>W<520?210:200),c=F.c,W=F.W,H=F.H,K=TB.cols(),sm=W<520,s=sm?12:13;
+      c.fillStyle=K.paper;c.fillRect(0,0,W,H);const M=o.build();
+      G={x0:sm?34:44,x1:W-(sm?12:20),yT:40,yA:H-34,lo:o.lo,hi:o.hi};
+      line(c,G,Object.assign({},o,M),a,b,K,s);o.read(a,b);}
+    dragB(cv,()=>G,()=>[a,b],(x,y)=>{a=x;b=y;draw();});
+    draw();TB.onTheme(draw);TB.onResize(cv,draw);return {draw:draw};}
+  TB.massLine=line;TB.dragB=dragB;TB.halo=halo;
+  const K0=()=>TB.cols();
+  const gauge=id=>{try{return new TB.Gauge(id);}catch(e){return {set(){}};}};
+  const sumParts=(terms,tot)=>terms.length>4?[terms[0]+' + '+terms[1]+' + … + '+terms[terms.length-1]]:terms.length>1?[terms.join(' + ')]:[];
+
+  // 1. Dirac measure at a = 1,5
+  (function(){const fx=document.getElementById('dx1Fx'),g=gauge('gDx1'),A=1.5;if(!fx)return;
+    fig('dx1',{lo:-1,hi:4,ticks:[-1,0,1,2,3,4],amax:1.15,sticks:[0.5,1],slab:[['масса точки','r']],B:[1,2],
+      build:()=>({atoms:[{x:A,m:1,lab:'1'}]}),
+      read:(a,b)=>{const h=inI(A,a,b);fx.innerHTML=R([[Bs(a,b)+',','<i>a</i> = 1,5 '+(h?'∈':'∉')+' <i>B</i>'],[['<i>δ<sub>a</sub></i>(<i>B</i>) = '+(h?'1':'0')]]]);g.set(h?1:0,K0().warm);}});})();
+
+  // 2. binomial distribution: number of heads in n tosses
+  (function(){const fx=document.getElementById('dx2Fx'),g=gauge('gDx2'),nIn=document.getElementById('dx2N'),nOut=document.getElementById('dx2NOut');if(!fx)return;
+    const F=fig('dx2',{lo:-0.6,hi:10.6,ticks:[0,1,2,3,4,5,6,7,8,9,10],amax:0.55,sticks:[0.25,0.5],slab:[['масса точки','r']],B:[0.5,2.5],
+      build:()=>{const n=+nIn.value,m=Math.pow(2,n);return {atoms:[...Array(n+1)].map((_,k)=>({x:k,m:binom(n,k)/m,lab:frT(binom(n,k),m)}))};},
+      read:(a,b)=>{const n=+nIn.value,m=Math.pow(2,n),ks=[];for(let k=0;k<=n;k++)if(inI(k,a,b))ks.push(k);
+        const sum=ks.reduce((z,k)=>z+binom(n,k),0),v=ks.length?[...sumParts(ks.map(k=>String(binom(n,k)))).map(x=>'('+x+')/'+m),sum===m?'1':frH(sum,m)+' = '+f3(sum/m)]:['0'];
+        fx.innerHTML=R([[Bs(a,b)+',',ks.length?'в <i>B</i> лежат точки <i>k</i> = '+(ks.length>4?ks[0]+', …, '+ks[ks.length-1]:ks.join(', ')):'в <i>B</i> нет ни одной точки <i>k</i>'],[[QB,...v.map(x=>'= '+x)]]]);
+        g.set(sum/m,K0().warm);}});
+    nIn.addEventListener('input',()=>{nOut.textContent=nIn.value;F.draw();});})();
+
+  // 3. countably many points: geometric and Poisson
+  (function(){const fx=document.getElementById('dx3Fx'),g=gauge('gDx3'),cIn=document.getElementById('dx3C'),cOut=document.getElementById('dx3COut'),cv=document.getElementById('dx3');if(!fx||!cv)return;
+    let md=TB.segs(cv,k=>{md=k;cIn.parentNode.hidden=md!=='P';F.draw();});
+    const KMAX=15,fact=k=>{let r=1;for(let j=2;j<=k;j++)r*=j;return r;};
+    const pk=k=>md==='G'?(k>=1?Math.pow(2,-k):0):Math.exp(-(+cIn.value))*Math.pow(+cIn.value,k)/fact(k);
+    const GL={1:'1/2',2:'1/4',3:'1/8',4:'1/16'};
+    const F=fig('dx3',{lo:-0.6,hi:15.6,ticks:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],amax:0.65,sticks:[0.25,0.5],slab:[['масса точки','r']],B:[0.5,2.5],
+      build:()=>{const at=[];for(let k=md==='G'?1:0;k<=KMAX;k++){const m=pk(k);at.push({x:k,m:m,lab:md==='G'?GL[k]:(m>=0.03?f2(m):'')});}return {atoms:at};},
+      read:(a,b)=>{const ks=[];for(let k=md==='G'?1:0;k<=KMAX;k++)if(inI(k,a,b))ks.push(k);const p=ks.reduce((z,k)=>z+pk(k),0);
+        let shown=0;for(let k=0;k<=KMAX;k++)shown+=pk(k);
+        const terms=ks.map(k=>'<i>p</i><sub>'+k+'</sub>'),v=ks.length?[...sumParts(terms),...(ks.length>1&&ks.length<=4?[ks.map(k=>f3(pk(k))).join(' + ')]:[]),f3(p)]:['0'];
+        fx.innerHTML=R([[Bs(a,b)+',','масса всех точек <i>k</i> &gt; 15: '+f3(Math.max(0,1-shown))],[[QB,...v.map(x=>'= '+x)]]]);
+        g.set(p,K0().warm);}});
+    cIn.parentNode.hidden=md!=='P';
+    cIn.addEventListener('input',()=>{cOut.textContent=TB.fmt(+cIn.value,+cIn.value%1?1:0);F.draw();});})();
+
+  // 4. uniform distribution on [0, b]
+  (function(){const fx=document.getElementById('dx4Fx'),g=gauge('gDx4'),LIn=document.getElementById('dx4L'),LOut=document.getElementById('dx4LOut');if(!fx)return;
+    const F=fig('dx4',{lo:-0.5,hi:4.5,ticks:[0,1,2,3,4],amax:2.2,sticks:[0.5,1,1.5,2],slab:[['толщина слоя (масса на единицу длины)','r']],B:[0.25,0.75],
+      build:()=>{const L=+LIn.value;return {cols:[{x0:0,x1:L,d:1/L}],after:(c,X,Y,K,s)=>{const t='толщина 1/b = '+f2(1/L)+', площадь 1';c.font=s+'px '+TB.ui;const w=c.measureText(t).width;
+        halo(c,t,Math.min(X(L)+8,X(4.5)-w),Math.min(Y(1/L)-8,Y(1/L)+(X(L)+8+w>X(4.5)?-8:s*0.35)),K.muted,K);}};},
+      read:(a,b)=>{const L=+LIn.value,o=ov(a,b,0,L),q=o/L;
+        fx.innerHTML=R([[Bs(a,b)+',','<i>λ</i><sub>1</sub>(<i>B</i> ∩ [0; <i>b</i>]) = '+f3(o)],[[QB+' = <i>λ</i><sub>1</sub>(<i>B</i> ∩ [0; <i>b</i>])/<i>b</i>','= '+f3(o)+'/'+TB.fmt(L,L%1?2:0),'= '+f3(q)]]]);g.set(q,K0().warm);}});
+    LIn.addEventListener('input',()=>{LOut.textContent=TB.fmt(+LIn.value,+LIn.value%1?2:0);F.draw();});})();
+
+  // 6. R = |V| for a uniform point V of the unit disc
+  (function(){const cv=document.getElementById('dx6'),fx=document.getElementById('dx6Fx'),g=gauge('gDx6');if(!cv||!fx)return;
+    const N=600,GA=2.399963229728653,PR=[...Array(N)].map((_,i)=>Math.sqrt((i+0.5)/N)),PT=[...Array(N)].map((_,i)=>i*GA);
+    const NC=40,cols=[...Array(NC)].map((_,j)=>{const r0=j/NC,r1=(j+1)/NC;return {x0:r0,x1:r1,d:(r1*r1-r0*r0)*NC};});
+    const o={lo:-0.1,hi:1.1,ticks:[0,0.5,1],amax:2.3,sticks:[1,2],slab:[['толщина слоя (масса на единицу длины)','r']],cols:cols};
+    let a=0.8,b=1,G=null;
+    function draw(){const F=TB.fit(cv,W=>W<560?430:230),c=F.c,W=F.W,H=F.H,K=TB.cols(),sm=W<560,s=sm?12:13;
+      c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+      const rD=sm?82:92,cx=sm?W/2:rD+16,cy=sm?rD+14:H/2;
+      G=sm?{x0:34,x1:W-12,yT:2*rD+28+40,yA:H-34,lo:o.lo,hi:o.hi,sx:4}:{x0:2*rD+80,x1:W-20,yT:40,yA:H-34,lo:o.lo,hi:o.hi,sx:2*rD+40};
+      const r0=cl(a,0,1),r1=cl(b,0,1);
+      if(r1>r0){c.fillStyle=TB.rgba(K.warm,0.18);c.beginPath();c.arc(cx,cy,rD*r1,0,2*Math.PI);if(r0>0){c.moveTo(cx+rD*r0,cy);c.arc(cx,cy,rD*r0,0,2*Math.PI);}c.fill('evenodd');
+        c.strokeStyle=TB.rgba(K.warm,0.9);c.lineWidth=1.2;for(const r of [r0,r1])if(r>0){c.beginPath();c.arc(cx,cy,rD*r,0,7);c.stroke();}}
+      c.strokeStyle=K.ink;c.lineWidth=1.3;c.beginPath();c.arc(cx,cy,rD,0,7);c.stroke();
+      for(let i=0;i<N;i++){const h=PR[i]>=r0&&PR[i]<=r1&&r1>r0;c.fillStyle=h?K.warm:TB.rgba(K.eth,0.65);c.beginPath();c.arc(cx+rD*PR[i]*Math.cos(PT[i]),cy-rD*PR[i]*Math.sin(PT[i]),h?1.9:1.5,0,7);c.fill();}
+      c.fillStyle=K.ink;c.beginPath();c.arc(cx,cy,2.2,0,7);c.fill();
+      TB.rich(c,[['D','i']],cx+rD*0.74,cy-rD*0.74-6,s,K.muted);
+      line(c,G,o,a,b,K,s);
+      const q=r1*r1-r0*r0;
+      fx.innerHTML=R([[Bs(a,b)+',',r1>r0?'кольцо '+f2(r0)+' ≤ |<i>v</i>| ≤ '+f2(r1):'кольцо пустое'],[['<i>P</i>(<i>R</i> ∈ <i>B</i>) = <i>λ</i><sub>2</sub>(кольца)/<i>π</i>','= '+f2(r1)+'<sup>2</sup> − '+f2(r0)+'<sup>2</sup>','= '+f3(q)]]]);
+      g.set(q,K.warm);}
+    dragB(cv,()=>G,()=>[a,b],(x,y)=>{a=x;b=y;draw();});
+    draw();TB.onTheme(draw);TB.onResize(cv,draw);})();
+
+  // 7. mixture q·δ0 + (1 − q)·uniform on [0, 1]
+  (function(){const fx=document.getElementById('dx7Fx'),g=gauge('gDx7'),qIn=document.getElementById('dx7Q'),qOut=document.getElementById('dx7QOut');if(!fx)return;
+    const F=fig('dx7',{lo:-0.5,hi:1.5,ticks:[-0.5,0,0.5,1,1.5],amax:1.15,sticks:[0.5,1],slab:[['масса точки и толщина слоя','r']],B:[-0.2,0.5],
+      build:()=>{const q=+qIn.value;return {atoms:q>0?[{x:0,m:q,lab:f2(q)}]:[],cols:q<1?[{x0:0,x1:1,d:1-q}]:[]};},
+      read:(a,b)=>{const q=+qIn.value,d0=inI(0,a,b)?1:0,o=ov(a,b,0,1),p=q*d0+(1-q)*o;
+        fx.innerHTML=R([[Bs(a,b)+',','<i>δ</i><sub>0</sub>(<i>B</i>) = '+d0+',','<i>λ</i><sub>1</sub>(<i>B</i> ∩ [0; 1]) = '+f3(o)],
+          [[QB+' = <i>q</i>·<i>δ</i><sub>0</sub>(<i>B</i>) + (1 − <i>q</i>)·<i>λ</i><sub>1</sub>(<i>B</i> ∩ [0; 1])','= '+f2(q)+'·'+d0+' + '+f2(1-q)+'·'+f3(o),'= '+f3(p)]]]);g.set(p,K0().warm);}});
+    qIn.addEventListener('input',()=>{qOut.textContent=f2(+qIn.value);F.draw();});})();
+
+  // 5. a point thrown at random into a set A of the plane
+  (function(){const cv=document.getElementById('dx5'),fx=document.getElementById('dx5Fx');if(!cv||!fx)return;
+    const gQ=gauge('gDx5a'),gF=gauge('gDx5b'),rIn=document.getElementById('dx5R'),rOut=document.getElementById('dx5ROut'),btn=document.getElementById('dx5Go');
+    const WR=1.45,rA=t=>1+0.22*Math.cos(3*t+0.4)+0.1*Math.sin(2*t-0.3),inA=(x,y)=>Math.hypot(x,y)<=rA(Math.atan2(y,x));
+    const NG=220,cell=2*WR/NG,mask=new Uint8Array(NG*NG);let nA=0;
+    for(let j=0;j<NG;j++)for(let i=0;i<NG;i++)if(inA(-WR+(i+0.5)*cell,-WR+(j+0.5)*cell)){mask[j*NG+i]=1;nA++;}
+    const areaA=nA*cell*cell,SB=0.5,asp=()=>Math.pow(4,+rIn.value),dims=()=>{const r=asp();return [Math.sqrt(SB*r),Math.sqrt(SB/r)];};
+    let bx=0.2,by=0.15;
+    function areaBA(){const [w,h]=dims(),x0=bx-w/2,x1=bx+w/2,y0=by-h/2,y1=by+h/2;let n=0;
+      const i0=Math.max(0,Math.floor((x0+WR)/cell)),i1=Math.min(NG-1,Math.floor((x1+WR)/cell)),j0=Math.max(0,Math.floor((y0+WR)/cell)),j1=Math.min(NG-1,Math.floor((y1+WR)/cell));
+      for(let j=j0;j<=j1;j++){const y=-WR+(j+0.5)*cell;if(y<y0||y>y1)continue;for(let i=i0;i<=i1;i++){const x=-WR+(i+0.5)*cell;if(x>=x0&&x<=x1&&mask[j*NG+i])n++;}}
+      return n*cell*cell;}
+    const NMAX=800,P=[];let raf=0,geo=null,drag=null;
+    function more(k){while(k-->0&&P.length<NMAX){let x,y;do{x=(Math.random()*2-1)*WR;y=(Math.random()*2-1)*WR;}while(!inA(x,y));P.push([x,y]);}}
+    function draw(){const F=TB.fit(cv,W=>W<520?320:300),c=F.c,W=F.W,H=F.H,K=TB.cols(),s=W<520?12:13;
+      c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+      const S=H-16,ox=(W-S)/2,oy=8,k=S/(2*WR),X=x=>ox+(x+WR)*k,Y=y=>oy+(WR-y)*k;geo={X:X,Y:Y,k:k,ox:ox,oy:oy,S:S};
+      c.beginPath();for(let t=0;t<=240;t++){const th=t/240*2*Math.PI,r=rA(th),x=X(r*Math.cos(th)),y=Y(r*Math.sin(th));if(t)c.lineTo(x,y);else c.moveTo(x,y);}c.closePath();
+      c.fillStyle=TB.rgba(K.eth,0.12);c.fill();c.strokeStyle=K.eth;c.lineWidth=1.5;c.stroke();
+      const tA=2.35,rr=rA(tA)+0.1;TB.rich(c,[['A','i']],X(rr*Math.cos(tA)),Y(rr*Math.sin(tA)),s+2,K.eth,'center');
+      const [w,h]=dims(),rx=X(bx-w/2),ry=Y(by+h/2);
+      c.fillStyle=TB.rgba(K.warm,0.14);c.fillRect(rx,ry,w*k,h*k);
+      let inn=0;for(const [x,y] of P){const hot=Math.abs(x-bx)<=w/2&&Math.abs(y-by)<=h/2;if(hot)inn++;c.fillStyle=hot?K.warm:TB.rgba(K.ink,0.5);c.beginPath();c.arc(X(x),Y(y),hot?1.9:1.6,0,7);c.fill();}
+      c.strokeStyle=K.warm;c.lineWidth=1.8;c.strokeRect(rx,ry,w*k,h*k);
+      TB.rich(c,[['B','i']],rx+5,ry-6>12?ry-6:ry+s+6,s+2,K.warm);
+      const ab=areaBA(),q=ab/areaA,n=P.length;
+      fx.innerHTML=R([['<i>λ</i><sub>2</sub>(<i>A</i>) ≈ '+f2(areaA)+',','<i>λ</i><sub>2</sub>(<i>B</i>) = '+f2(SB)+',','<i>λ</i><sub>2</sub>(<i>B</i> ∩ <i>A</i>) ≈ '+f2(ab)],
+        [[QB+' = <i>λ</i><sub>2</sub>(<i>B</i> ∩ <i>A</i>)/<i>λ</i><sub>2</sub>(<i>A</i>)','≈ '+f3(q)]],
+        [n?['в <i>B</i> попало '+inn+' из '+n+' точек,','доля '+f3(inn/n)]:['точки ещё не брошены']]]);
+      gQ.set(q,K.warm);gF.set(n?inn/n:0,K.eth);}
+    function tick(){raf=0;more(4);draw();if(P.length<NMAX)raf=requestAnimationFrame(tick);}
+    function go(){P.length=0;if(reduced()){more(NMAX);draw();}else if(!raf)raf=requestAnimationFrame(tick);}
+    const pt=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
+    const toW=p=>[(p.x-geo.ox)/geo.k-WR,WR-(p.y-geo.oy)/geo.k];
+    const overB=p=>{if(!geo)return false;const [x,y]=toW(p),[w,h]=dims();return Math.abs(x-bx)<=w/2+0.06&&Math.abs(y-by)<=h/2+0.06;};
+    cv.addEventListener('pointerdown',e=>{const p=pt(e);if(!overB(p))return;const [x,y]=toW(p);drag=[x-bx,y-by];try{cv.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();});
+    cv.addEventListener('pointermove',e=>{const p=pt(e);if(drag){const [x,y]=toW(p);bx=cl(x-drag[0],-WR+0.1,WR-0.1);by=cl(y-drag[1],-WR+0.1,WR-0.1);if(!raf)draw();return;}cv.style.cursor=overB(p)?'move':'';});
+    ['pointerup','pointercancel'].forEach(k=>cv.addEventListener(k,()=>{drag=null;}));
+    rIn.addEventListener('input',()=>{rOut.textContent=f2(asp());if(!raf)draw();});
+    btn.addEventListener('click',go);
+    draw();TB.onTheme(()=>{if(!raf)draw();});TB.onResize(cv,()=>{if(!raf)draw();});
+    if(reduced()||!window.IntersectionObserver)go();
+    else{const io=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting)){io.disconnect();go();}},{threshold:0.4});io.observe(cv);}
+  })();
+})();
+</script>
+<script>
+(function(){
+  /* Figures #dz1–#dz3 in the examples of §∅.14: the normal law as a layer of thickness φ, an atom as the limit of ever thinner layers, the Cantor law as the image of the uniform mass under K. They reuse the line of the figures in §∅.13. */
+  const TB=window.TB;if(!TB||!TB.massLine)return;
+  const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v)),f2=v=>TB.fmt(v,2),f3=v=>TB.fmt(v,3);
+  const R=rows=>rows.map(r=>'<span>'+r.map(g=>[].concat(g).map(x=>'<span class="nw">'+x+'</span>').join(' ')).join('&emsp;')+'</span>').join('');
+  const gauge=id=>{try{return new TB.Gauge(id);}catch(e){return {set(){}};}};
+  /* Φ, the distribution function of N(0,1), from erf (Abramowitz–Stegun 7.1.26, error below 2·10⁻⁷) */
+  const Phi=x=>{const z=Math.abs(x)/Math.SQRT2,t=1/(1+0.3275911*z),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-z*z);return x>=0?0.5*(1+y):0.5*(1-y);};
+
+  // (а) the normal law N(m, σ²)
+  (function(){const cv=document.getElementById('dz1'),fx=document.getElementById('dz1Fx'),g=gauge('gDz1');if(!cv||!fx)return;
+    const mIn=document.getElementById('dz1M'),sIn=document.getElementById('dz1S'),mOut=document.getElementById('dz1MOut'),sOut=document.getElementById('dz1SOut');
+    let a=-1,b=1,G=null;
+    function draw(){const F=TB.fit(cv,W=>W<520?220:210),c=F.c,W=F.W,H=F.H,K=TB.cols(),sm=W<520,s=sm?12:13,m=+mIn.value,sg=+sIn.value;
+      c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+      G={x0:sm?34:44,x1:W-(sm?12:20),yT:40,yA:H-34,lo:-5,hi:5};
+      const NC=160,h=10/NC,cols=[...Array(NC)].map((_,j)=>{const x0=-5+j*h,x1=x0+h;return {x0:x0,x1:x1,d:(Phi((x1-m)/sg)-Phi((x0-m)/sg))/h};});
+      TB.massLine(c,G,{lo:-5,hi:5,ticks:[-4,-3,-2,-1,0,1,2,3,4],amax:1.7,sticks:[0.5,1,1.5],slab:[['толщина слоя (плотность)','r']],cols:cols,
+        after:(c,X,Y,K,s)=>{c.strokeStyle=TB.rgba(K.ink,0.45);c.setLineDash([4,4]);c.lineWidth=1;c.beginPath();c.moveTo(X(m),G.yA);c.lineTo(X(m),Y(1/(sg*Math.sqrt(2*Math.PI)))-6);c.stroke();c.setLineDash([]);
+          c.strokeStyle=K.ink;c.lineWidth=1.6;for(const v of [m-sg,m+sg]){c.beginPath();c.moveTo(X(v),G.yA-7);c.lineTo(X(v),G.yA+7);c.stroke();}
+          /* the points m ± σ on the curve, labelled outside the bell so the text never sits on the layer */
+          const ph=1/(sg*Math.sqrt(2*Math.PI))*Math.exp(-0.5),yp=Y(ph);c.font=(s-1)+'px '+TB.ui;
+          for(const [v,t,sd] of [[m-sg,'m − σ',-1],[m+sg,'m + σ',1]]){c.fillStyle=K.ink;c.beginPath();c.arc(X(v),yp,2.6,0,2*Math.PI);c.fill();
+            const w=c.measureText(t).width,x=sd<0?Math.max(2,X(v)-7-w):Math.min(W-2-w,X(v)+7);TB.halo(c,t,x,yp-5,K.muted,K);}}},a,b,K,s);
+      const p=Phi((b-m)/sg)-Phi((a-m)/sg);
+      fx.innerHTML=R([['<i>B</i> = ['+f2(a)+'; '+f2(b)+'],','<i>m</i> = '+TB.fmt(m,2)+',','<i>σ</i> = '+f2(sg)],[['<i>P</i>(<i>ξ</i> ∈ <i>B</i>) = ∫<sub><i>B</i></sub> <i>φ</i><sub><i>m</i>,<i>σ</i></sub> <i>dλ</i><sub>1</sub>','= '+f3(p)]]]);
+      g.set(p,K.warm);}
+    TB.dragB(cv,()=>G,()=>[a,b],(x,y)=>{a=x;b=y;draw();});
+    mIn.addEventListener('input',()=>{mOut.textContent=TB.fmt(+mIn.value,+mIn.value%1?2:0);draw();});
+    sIn.addEventListener('input',()=>{sOut.textContent=f2(+sIn.value);draw();});
+    draw();TB.onTheme(draw);TB.onResize(cv,draw);})();
+
+  // (б) an atom as the limit of ever thinner uniform layers
+  (function(){const cv=document.getElementById('dz2'),fx=document.getElementById('dz2Fx'),g=gauge('gDz2');if(!cv||!fx)return;
+    const eIn=document.getElementById('dz2E'),eOut=document.getElementById('dz2EOut'),EPS=[1,0.5,0.25,0.1,0.05,0.02,0],A=1,AM=6;
+    function draw(){const F=TB.fit(cv,W=>W<520?220:210),c=F.c,W=F.W,H=F.H,K=TB.cols(),sm=W<520,s=sm?12:13,e=EPS[+eIn.value];
+      c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+      const G={x0:sm?34:44,x1:W-(sm?12:20),yT:40,yA:H-34,lo:-0.5,hi:2.5},d=e>0?1/(2*e):0;
+      TB.massLine(c,G,{lo:-0.5,hi:2.5,ticks:[0,0.5,1,1.5,2],amax:AM,sticks:e>0?[1,2,3,4,5]:[],slab:[[e>0?'толщина слоя (масса на единицу длины)':'масса точки','r']],
+        cols:e>0?[{x0:A-e,x1:A+e,d:Math.min(d,AM*1.08)}]:[],atoms:e>0?[]:[{x:A,m:AM*0.92,lab:'масса 1'}],
+        after:(c,X,Y,K,s)=>{if(e>0&&d>AM){const x=X(A+e)+6;c.font=s+'px '+TB.ui;TB.halo(c,'высота '+TB.fmt(d,0)+' ↑',x,G.yT+s,K.muted,K);}
+          else if(e>0){c.font=s+'px '+TB.ui;TB.halo(c,'высота '+TB.fmt(d,d%1?2:0),X(A+e)+6,Y(d)+s*0.35,K.muted,K);}}},-1,-1,K,s);
+      fx.innerHTML=e>0?R([['отрезок ['+TB.fmt(A-e,2)+'; '+TB.fmt(A+e,2)+'],','длина 2<i>ε</i> = '+TB.fmt(2*e,2)+','],[['толщина слоя 1/(2<i>ε</i>) = '+TB.fmt(d,d%1?2:0)+',','площадь 1']]])
+        :R([['<i>ε</i> = 0: вся масса в точке <i>a</i> = 1,'],[['<i>δ<sub>a</sub></i>({<i>a</i>}) = 1, но <i>λ</i><sub>1</sub>({<i>a</i>}) = 0']]]);
+      g.set(2*e,K.eth);}
+    eIn.addEventListener('input',()=>{const e=EPS[+eIn.value];eOut.textContent=TB.fmt(e,e===0?0:(e*10%1?2:1));draw();});
+    draw();TB.onTheme(draw);TB.onResize(cv,draw);})();
+
+  // (в) the Cantor law: threads from x to K(x)
+  (function(){const cv=document.getElementById('dz3'),fx=document.getElementById('dz3Fx'),g=gauge('gDz3');if(!cv||!fx)return;
+    const kIn=document.getElementById('dz3K'),kOut=document.getElementById('dz3KOut'),N=256;
+    const Kx=x=>{let v=0,p=1;for(let j=1;j<=30;j++){p/=3;const d=Math.floor(x*Math.pow(2,j))%2;v+=2*d*p;}return v;};
+    const U=[...Array(N)].map((_,i)=>(i+0.5)/N),KU=U.map(Kx);
+    const pl=(n,a,b,d)=>{const r=n%100,q=n%10;return r>10&&r<20?d:q===1?a:q>=2&&q<=4?b:d;};
+    function draw(){const F=TB.fit(cv,W=>320),c=F.c,W=F.W,H=F.H,K=TB.cols(),sm=W<520,s=sm?12:13,k=+kIn.value,M=Math.pow(2,k);
+      c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+      const L=sm?14:30,Rr=W-(sm?14:30),ys=s+28,yA=H-80,X=v=>L+v*(Rr-L);
+      const col=j=>j%2?K.warm:K.eth;
+      c.font=s+'px '+TB.ui;c.fillStyle=K.muted;TB.rich(c,[['отрезок [0, 1], мера ','r'],['λ','i'],['1','s']],L,s+4,s,K.muted);
+      // the segment, cut into 2^k pieces
+      for(let j=0;j<M;j++){c.strokeStyle=col(j);c.lineWidth=5;c.beginPath();c.moveTo(X(j/M)+0.5,ys);c.lineTo(X((j+1)/M)-0.5,ys);c.stroke();}
+      c.textAlign='right';c.fillText('0',X(0)-5,ys+s*0.35);c.textAlign='start';c.fillText('1',X(1)+5,ys+s*0.35);
+      // threads
+      for(let i=0;i<N;i++){const j=Math.floor(U[i]*M),x0=X(U[i]),x1=X(KU[i]),y0=ys+4,y1=yA-3,dy=y1-y0;
+        c.strokeStyle=TB.rgba(col(j),0.45);c.lineWidth=0.9;c.beginPath();c.moveTo(x0,y0);c.bezierCurveTo(x0,y0+dy*0.45,x1,y1-dy*0.45,x1,y1);c.stroke();}
+      // the line with C_k
+      c.strokeStyle=K.ink;c.lineWidth=1.2;c.beginPath();c.moveTo(L,yA);c.lineTo(Rr,yA);c.stroke();
+      for(let j=0;j<M;j++){let lo=0;for(let t=1;t<=k;t++){const d=Math.floor(j/Math.pow(2,k-t))%2;lo+=2*d/Math.pow(3,t);}
+        c.strokeStyle=col(j);c.lineWidth=6;c.beginPath();c.moveTo(X(lo),yA+8);c.lineTo(Math.max(X(lo+Math.pow(3,-k)),X(lo)+1.5),yA+8);c.stroke();}
+      c.font=s+'px '+TB.ui;c.fillStyle=K.muted;c.textAlign='center';for(const v of [0,1/3,2/3,1]){c.strokeStyle=K.ink;c.lineWidth=1;c.beginPath();c.moveTo(X(v),yA-4);c.lineTo(X(v),yA+4);c.stroke();}
+      c.fillText('0',X(0),yA+s+20);c.fillText('1/3',X(1/3),yA+s+20);c.fillText('2/3',X(2/3),yA+s+20);c.fillText('1',X(1),yA+s+20);c.textAlign='start';
+      TB.rich(c,[['множество ','r'],['C','i'],[String(k),'s'],[' на прямой, мера ','r'],['μ','i'],['C','s']],L,H-8,s,K.muted);
+      const len=Math.pow(2/3,k);
+      fx.innerHTML=R([[M+' '+pl(M,'кусок','куска','кусков')+' длины 2<sup>−'+k+'</sup> → '+M+' '+pl(M,'отрезок','отрезка','отрезков')+' длины 3<sup>−'+k+'</sup>,','масса каждого 2<sup>−'+k+'</sup>'],
+        [['длина <i>C</i><sub>'+k+'</sub> = (2/3)<sup>'+k+'</sup> = '+f3(len)+',','<i>μ</i><sub><i>C</i></sub>(<i>C</i><sub>'+k+'</sub>) = 1']]]);
+      g.set(len,K.eth);}
+    kIn.addEventListener('input',()=>{kOut.textContent=kIn.value;draw();});
+    draw();TB.onTheme(draw);TB.onResize(cv,draw);})();
 })();
 </script>
