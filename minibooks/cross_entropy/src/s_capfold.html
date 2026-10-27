@@ -7,6 +7,11 @@ figcaption.cap-open .cap-more{display:inline}
 .cap-tog:focus-visible{outline:2px solid var(--ether);outline-offset:1px}
 .cap-tog::after{content:'';display:inline-block;width:.36em;height:.36em;margin-left:.45em;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-.22em) rotate(45deg);transition:transform .2s}
 figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
+/* Lists inside captions (FORMAT.md «Подписи к рисункам»): parallel modes, cases or panels, each item opens with a bold lead-in. */
+figcaption ul.capl{list-style:none;margin:.45rem 0 .35rem;padding:0 0 0 1.1rem}
+figcaption ul.capl>li{position:relative;margin:.3rem 0}
+figcaption ul.capl>li::before{content:"";position:absolute;left:-.88rem;top:.6em;width:.32rem;height:.32rem;border-radius:50%;background:var(--ether);opacity:.6}
+figcaption ul.capl b{font-weight:650;color:var(--ink)}
 @media print{figcaption .cap-more{display:inline}.cap-tog{display:none}}
 </style>
 <script>

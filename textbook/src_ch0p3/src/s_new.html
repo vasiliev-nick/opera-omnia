@@ -970,14 +970,16 @@
 </script>
 <script>
 (function(){
-  /* Figure #dgal (§∅.13): one uniform mass, many distributions. Threads run from 128 equally spaced points of [0,1] (or of the unit disc) to T(u) on the line, so every thread carries mass 1/128; below the line the exact mass T_*λ: atoms as stems, spread mass as columns mass/h. B=[a,b] lights up its preimage. */
+  /* Figure #dgal (§∅.13): one uniform mass, many distributions. Threads run from 128 equally spaced points of [0,1] (or from 512 points of the unit disc, drawn fainter) to T(u) on the line, so every thread carries mass 1/128 (1/512 in the disc); below the line the exact mass T_*λ: atoms as stems, spread mass as columns mass/h. B=[a,b] lights up its preimage. */
   const cv=document.getElementById('dgal');if(!cv||!window.TB||!TB.fit)return;
   const fx=document.getElementById('dgFx'),g=new TB.Gauge('gDg');
   const nIn=document.getElementById('dgN'),nOut=document.getElementById('dgNOut'),qIn=document.getElementById('dgQ'),qOut=document.getElementById('dgQOut');
   const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
-  const N=128,GA=2.399963229728653,cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v)),ease=u=>u<=0?0:u>=1?1:u*u*(3-2*u);
+  const N=128,ND=512,GA=2.399963229728653,cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v)),ease=u=>u<=0?0:u>=1?1:u*u*(3-2*u);
   const U=[...Array(N)].map((_,i)=>(i+0.5)/N);
-  const DR=U.map(u=>Math.sqrt(u)),DT=U.map((_,i)=>i*GA);
+  /* The disc has ND=4N threads; thread i of the disc continues thread i/4 of the segment when i is divisible by 4, the other disc threads fade in and out. */
+  const DR=[...Array(ND)].map((_,i)=>Math.sqrt((i+0.5)/ND)),DT=[...Array(ND)].map((_,i)=>i*GA);
+  const has=(S,i)=>MODES[S.md].disc||i%4===0;
   const ones=(u,n)=>{let s=0;for(let j=1;j<=n;j++)s+=Math.floor(u*Math.pow(2,j))%2;return s;};
   const binom=(n,k)=>{let r=1;for(let j=1;j<=k;j++)r=r*(n-k+j)/j;return Math.round(r);};
   const gcd=(a,b)=>b?gcd(b,a%b):a;
@@ -1014,7 +1016,7 @@
   /* Start and end of thread i in state S. */
   function ends(S,i,G){const M=MODES[S.md];let x0,y0,v;
     if(M.disc){x0=G.cx+G.rD*DR[i]*Math.cos(DT[i]);y0=G.cy-G.rD*DR[i]*Math.sin(DT[i]);v=DR[i];}
-    else{x0=G.Xs(U[i]);y0=G.ys+3;v=M.T(U[i],S);}
+    else{const u=U[i>>2];x0=G.Xs(u);y0=G.ys+3;v=M.T(u,S);}
     return {x0:x0,y0:y0,x1:S.rest?x0:Xof(S,G)(v),v:v};}
   function massOf(S,lo,hi){const M=MODES[S.md];return M.F?M.F(hi,S)-M.F(lo,S):0;}
   function exact(S){const M=MODES[S.md];let p=0;
@@ -1056,9 +1058,12 @@
     // the threads
     c.save();c.beginPath();c.rect(0,0,G.R+6,H);c.clip();
     const hotOf=i=>{if(cur.rest)return false;const v=ends(cur,i,G).v;return v>=a&&v<=b;};
-    for(const pass of [0,1])for(let i=0;i<N;i++){const hot=hotOf(i);if(hot!==(pass===1))continue;
-      const A=ends(cur,i,G),B0=P?ends(P,i,G):A,x0=B0.x0+(A.x0-B0.x0)*e,y0=B0.y0+(A.y0-B0.y0)*e,x1=B0.x1+(A.x1-B0.x1)*e,y1=G.yA-2,dy=y1-y0;
-      c.strokeStyle=hot?TB.rgba(K.warm,0.8):TB.rgba(K.eth,0.3);c.lineWidth=hot?1.2:0.9;
+    const dc=S=>MODES[S.md].disc,fade=S=>dc(S)?{h:0.26,c:0.1,wh:0.7,wc:0.55}:{h:0.8,c:0.3,wh:1.2,wc:0.9};
+    for(const pass of [0,1])for(let i=0;i<ND;i++){const inC=has(cur,i),inP=P?has(P,i):inC;if(!inC&&!inP)continue;
+      const hot=inC&&hotOf(i);if(hot!==(pass===1))continue;
+      const A=inC?ends(cur,i,G):ends(P,i,G),B0=P&&inP&&inC?ends(P,i,G):A,x0=B0.x0+(A.x0-B0.x0)*e,y0=B0.y0+(A.y0-B0.y0)*e,x1=B0.x1+(A.x1-B0.x1)*e,y1=G.yA-2,dy=y1-y0;
+      const fc=fade(cur),fp=P?fade(P):fc,k=inC&&inP?1:inC?e:1-e,al=(hot?fc.h:fp.c+(fc.c-fp.c)*e)*k;if(al<=0.003)continue;
+      c.strokeStyle=hot?TB.rgba(K.warm,al):TB.rgba(K.eth,al);c.lineWidth=hot?fc.wh:fp.wc+(fc.wc-fp.wc)*e;
       c.beginPath();c.moveTo(x0,y0);c.bezierCurveTo(x0,y0+dy*0.45,x1,y1-dy*0.45,x1,y1);c.stroke();}
     c.restore();
     // the line, its ticks and the mass below it; the previous state fades out while the new one fades in

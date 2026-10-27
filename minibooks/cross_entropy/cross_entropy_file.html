@@ -347,7 +347,12 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
     <button type="button" class="act" data-pre="u">равномерное</button><button type="button" class="act" data-pre="d">в вершину</button><button type="button" class="act" data-pre="r">случайное</button>
   </div>
   <div id="dlFx" class="fx" aria-live="polite"></div>
-  <figcaption>Рис. 2. Множество $\Delta(\mathcal X)$ всех распределений. Для двух исходов это отрезок прямой $p_1+p_2=1$ в первой четверти плоскости. Штриховые продолжения прямой состоят из точек с суммой координат <span class="nw">$1$,</span> но с отрицательной координатой, и распределениями не являются. Для трёх исходов это треугольник в пространстве; тонкие линии внутри соединяют точки, у которых одна из координат равна <span class="nw">$0{,}2$,</span> <span class="nw">$0{,}4$,</span> $0{,}6$ или <span class="nw"><span class="nw">$0{,}8$.</span></span> Точку $p$ можно перетаскивать; штриховые линии показывают её координаты на осях, а столбики справа — те же числа как вероятности исходов. Треугольник поворачивается, если тянуть фон рисунка в сторону. В вершинах один исход достоверен, на сторонах вероятность одного из исходов равна <span class="nw"><span class="nw">$0$,</span></span> в центре лежит равномерное распределение.</figcaption>
+  <figcaption>Рис. 2. Множество $\Delta(\mathcal X)$ всех распределений.
+<ul class="capl">
+<li><b>Два исхода</b> — отрезок прямой $p_1+p_2=1$ в первой четверти плоскости. Штриховые продолжения прямой состоят из точек с суммой координат <span class="nw">$1$,</span> но с отрицательной координатой, и распределениями не являются.</li>
+<li><b>Три исхода</b> — треугольник в пространстве; тонкие линии внутри соединяют точки, у которых одна из координат равна <span class="nw">$0{,}2$,</span> <span class="nw">$0{,}4$,</span> $0{,}6$ или <span class="nw"><span class="nw">$0{,}8$.</span></span></li>
+</ul>
+Точку $p$ можно перетаскивать; штриховые линии показывают её координаты на осях, а столбики справа — те же числа как вероятности исходов. Треугольник поворачивается, если тянуть фон рисунка в сторону. В вершинах один исход достоверен, на сторонах вероятность одного из исходов равна <span class="nw"><span class="nw">$0$,</span></span> в центре лежит равномерное распределение.</figcaption>
 </figure>
 
 <div class="stmt"><span class="lbl">Определение 2 (носитель, вырожденное распределение)</span>
@@ -475,7 +480,13 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
   <div class="ro" style="--lw:12rem">
     <div class="rr"><span class="rl">$\max_x\bigl|\hat p_N(x)-p_x\bigr|$</span><span class="gauge" id="gEm" data-min="0" data-max="0.5" data-d="3"></span><output class="gv"></output></div>
   </div>
-  <figcaption>Рис. 4. Выборка из распределения $p$ на трёх исходах. Сверху — первые члены выборки. Слева — треугольник распределений из рисунка 2, повёрнутый к нам лицом: вершина с номером $x$ — вырожденное распределение <span class="nw"><span class="nw">$\delta_x$.</span></span> Холодная точка — распределение <span class="nw"><span class="nw">$p$,</span></span> её можно перетаскивать. Тёплая точка — эмпирическое распределение <span class="nw"><span class="nw">$\hat p_N$,</span></span> а тёплая линия — путь, который проходят $\hat p_1,\hat p_2,\dots,\hat p_N$ по мере роста выборки; чем раньше участок пути, тем он бледнее. Первые шаги большие: $\hat p_1$ всегда вершина. Справа — доли исходов в выборке (столбики) и вероятности $p_x$ (штриховые рамки). Шкала показывает наибольшее расхождение долей с вероятностями; по теореме 11 оно стремится к нулю по вероятности.</figcaption>
+  <figcaption>Рис. 4. Выборка из распределения $p$ на трёх исходах.
+<ul class="capl">
+<li><b>Сверху</b> — первые члены выборки.</li>
+<li><b>Слева</b> — треугольник распределений из рисунка 2, повёрнутый к нам лицом: вершина с номером $x$ — вырожденное распределение <span class="nw"><span class="nw">$\delta_x$.</span></span> Холодная точка — распределение <span class="nw"><span class="nw">$p$,</span></span> её можно перетаскивать. Тёплая точка — эмпирическое распределение <span class="nw"><span class="nw">$\hat p_N$,</span></span> а тёплая линия — путь, который проходят $\hat p_1,\hat p_2,\dots,\hat p_N$ по мере роста выборки; чем раньше участок пути, тем он бледнее. Первые шаги большие: $\hat p_1$ всегда вершина.</li>
+<li><b>Справа</b> — доли исходов в выборке (столбики) и вероятности $p_x$ (штриховые рамки).</li>
+</ul>
+Шкала показывает наибольшее расхождение долей с вероятностями; по теореме 11 оно стремится к нулю по вероятности.</figcaption>
 </figure>
 </section>
 
@@ -505,7 +516,13 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
     <div class="seg" role="group" aria-label="Модель"><button type="button" data-k="two" aria-pressed="false">два кандидата</button><button type="button" data-k="curve" aria-pressed="true">число гербов</button><button type="button" data-k="full" aria-pressed="false">полная модель</button></div>
   </div>
   <div id="mdFx" class="fx" aria-live="polite"></div>
-  <figcaption>Рис. 5. Модели для числа гербов в двух бросках, <span class="nw">$\mathcal X=\{0,1,2\}$.</span> Тёплым цветом выделено множество кандидатов <span class="nw"><span class="nw">$\{q_\theta:\ \theta\in\Theta\}$.</span></span> В режиме «два кандидата» это два распределения, которые получаются, если дважды бросить честную монету или монету с вероятностью герба <span class="nw"><span class="nw">$0{,}9$.</span></span> В режиме «число гербов» это кривая из примера 3: при $\theta=0$ она начинается в вершине «$0$ гербов», при $\theta=1$ заканчивается в вершине «$2$ герба». В режиме «полная модель» кандидат — любая точка треугольника. Тёплую точку $q_\theta$ можно перетаскивать, но только по множеству кандидатов; столбики справа — её вероятности. Холодный крестик — истинное распределение $p$ из примера ниже: оно не лежит ни на кривой, ни среди двух кандидатов, а в полной модели, как и любое распределение, лежит.</figcaption>
+  <figcaption>Рис. 5. Модели для числа гербов в двух бросках, <span class="nw">$\mathcal X=\{0,1,2\}$.</span> Тёплым цветом выделено множество кандидатов <span class="nw"><span class="nw">$\{q_\theta:\ \theta\in\Theta\}$.</span></span> Три режима:
+<ul class="capl">
+<li><b>«два кандидата»</b> — два распределения, которые получаются, если дважды бросить честную монету или монету с вероятностью герба <span class="nw"><span class="nw">$0{,}9$;</span></span></li>
+<li><b>«число гербов»</b> — кривая из примера 3: при $\theta=0$ она начинается в вершине «$0$ гербов», при $\theta=1$ заканчивается в вершине «$2$ герба»;</li>
+<li><b>«полная модель»</b> — кандидатом может быть любая точка треугольника.</li>
+</ul>
+Тёплую точку $q_\theta$ можно перетаскивать, но только по множеству кандидатов; столбики справа — её вероятности. Холодный крестик — истинное распределение $p$ из примера ниже: оно не лежит ни на кривой, ни среди двух кандидатов, а в полной модели, как и любое распределение, лежит.</figcaption>
 </figure>
 
 <p>Истинное распределение <span class="nw">$p$,</span> порождающее данные, может принадлежать модели, а может и не принадлежать: модель — это наш выбор, а не свойство мира. Самый простой пример: если монета на самом деле выпадает гербом с вероятностью <span class="nw"><span class="nw">$0{,}7$,</span></span> то модель «два кандидата» её не содержит. Пример тоньше: модель числа гербов предполагает, что оба раза бросают одну и ту же монету. Пусть на самом деле бросают две разные монеты, с вероятностями герба $\tfrac12$ и <span class="nw"><span class="nw">$\tfrac9{10}$.</span></span> Тогда
@@ -570,7 +587,12 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
   <div class="ro" style="--lw:12rem">
     <div class="rr"><span class="rl">ширина кривой на половине высоты</span><span class="gauge" id="gLik" data-min="0" data-max="1" data-d="3"></span><output class="gv"></output></div>
   </div>
-  <figcaption>Рис. 7. Сверху — результаты $N$ бросков монеты, у которой вероятность герба задана вторым ползунком: закрашенный кружок — герб. Щелчок по кружку меняет результат этого броска, так что выборку можно задать и вручную; кнопка «Новые броски» отменяет ручные изменения. Снизу — правдоподобие $L(\theta)={}$<wbr>$\theta^k(1-\theta)^{N-k}$ как функция <span class="nw">$\theta$,</span> делённое на своё наибольшее значение <span class="nw">$L(\hat\theta)$:</span> сами значения ничтожно малы, их порядок показан в строке под рисунком. Сплошная вертикаль — оценка <span class="nw">$\hat\theta=k/N$,</span> штриховая — истинная вероятность. С ростом $N$ кривая сужается вокруг истинного значения; шкала показывает ширину той части кривой, где $L(\theta)\ge{}$<wbr><span class="nw">$\tfrac12L(\hat\theta)$.</span></figcaption>
+  <figcaption>Рис. 7. Правдоподобие как функция вероятности герба <span class="nw">$\theta$.</span>
+<ul class="capl">
+<li><b>Сверху</b> — результаты $N$ бросков монеты, у которой вероятность герба задана вторым ползунком: закрашенный кружок — герб. Щелчок по кружку меняет результат этого броска, так что выборку можно задать и вручную; кнопка «Новые броски» отменяет ручные изменения.</li>
+<li><b>Снизу</b> — правдоподобие $L(\theta)={}$<wbr>$\theta^k(1-\theta)^{N-k}$ как функция <span class="nw">$\theta$,</span> делённое на своё наибольшее значение <span class="nw">$L(\hat\theta)$:</span> сами значения ничтожно малы, их порядок показан в строке под рисунком. Сплошная вертикаль — оценка <span class="nw">$\hat\theta=k/N$,</span> штриховая — истинная вероятность.</li>
+</ul>
+С ростом $N$ кривая сужается вокруг истинного значения; шкала показывает ширину той части кривой, где $L(\theta)\ge{}$<wbr><span class="nw">$\tfrac12L(\hat\theta)$.</span></figcaption>
 </figure>
 </section>
 
@@ -658,7 +680,11 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
     <label for="suB">$P(B)$ <input id="suB" type="range" min="0.1" max="1" step="0.01" value="0.25"><output id="suBOut">0,25</output></label>
   </div>
   <div id="suFx" class="fx" aria-live="polite"></div>
-  <figcaption>Рис. 9. Слева — единичный квадрат, площадь части которого есть её вероятность. Событие $A$ — вертикальная полоса ширины <span class="nw"><span class="nw">$P(A)$,</span></span> событие $B$ — горизонтальная полоса высоты <span class="nw"><span class="nw">$P(B)$;</span></span> их пересечение — прямоугольник площади <span class="nw"><span class="nw">$P(A)P(B)$,</span></span> так что события независимы. Границы полос можно перетаскивать; вероятности $P(A)$ и $P(B)$ не меньше <span class="nw"><span class="nw">$0{,}1$,</span></span> поэтому удивление пересечения не превосходит $\log_2100\approx6{,}6$ бита и шкала графика не меняется. Справа — график удивления $\log_2\frac1t$ в битах с отмеченными вероятностями <span class="nw"><span class="nw">$P(A)$,</span></span> $P(B)$ и <span class="nw"><span class="nw">$P(A\cap B)$.</span></span> Столбик справа от графика сложен из двух отрезков длиной $I(A)$ и <span class="nw"><span class="nw">$I(B)$;</span></span> его верх всегда совпадает с уровнем <span class="nw"><span class="nw">$I(A\cap B)$.</span></span></figcaption>
+  <figcaption>Рис. 9. Удивления независимых событий складываются.
+<ul class="capl">
+<li><b>Слева</b> — единичный квадрат, площадь части которого есть её вероятность. Событие $A$ — вертикальная полоса ширины <span class="nw"><span class="nw">$P(A)$,</span></span> событие $B$ — горизонтальная полоса высоты <span class="nw"><span class="nw">$P(B)$;</span></span> их пересечение — прямоугольник площади <span class="nw"><span class="nw">$P(A)P(B)$,</span></span> так что события независимы. Границы полос можно перетаскивать; вероятности $P(A)$ и $P(B)$ не меньше <span class="nw"><span class="nw">$0{,}1$,</span></span> поэтому удивление пересечения не превосходит $\log_2100\approx6{,}6$ бита и шкала графика не меняется.</li>
+<li><b>Справа</b> — график удивления $\log_2\frac1t$ в битах с отмеченными вероятностями <span class="nw"><span class="nw">$P(A)$,</span></span> $P(B)$ и <span class="nw"><span class="nw">$P(A\cap B)$.</span></span> Столбик справа от графика сложен из двух отрезков длиной $I(A)$ и <span class="nw"><span class="nw">$I(B)$;</span></span> его верх всегда совпадает с уровнем <span class="nw"><span class="nw">$I(A\cap B)$.</span></span></li>
+</ul></figcaption>
 </figure>
 </section>
 
@@ -748,7 +774,11 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
     <span class="lnpre" hidden><button type="button" class="act" data-pre="ex">$p$ и $q$ из примера в начале параграфа</button> <button type="button" class="act" data-pre="eq">$q=p$</button> <button type="button" class="act" data-pre="rnd">случайные $p$ и $q$</button></span>
   </div>
   <div id="lnFx" class="fx" aria-live="polite"></div>
-  <figcaption>Рис. 11. Режим «касательная»: график <span class="nw">$y=\ln x$,</span> прямая <span class="nw">$y=x-1$,</span> касающаяся его в точке <span class="nw"><span class="nw">$(1,0)$,</span></span> и пунктиром график разности <span class="nw"><span class="nw">$g(x)=x-1-\ln x$.</span></span> Вертикальную линию можно перетаскивать; выделенный отрезок между прямой и логарифмом имеет длину <span class="nw"><span class="nw">$g(x)$,</span></span> и такой же высоты точка на пунктирном графике. Слева от касания $g$ убывает, справа возрастает, ноль только в точке касания — это шаги доказательства леммы 25. Режим «средние по <span class="nw">$p$»</span> показывает, зачем лемма нужна; в нём появляются кнопки выбора распределений, сначала взяты $p$ и $q$ из примера в начале параграфа. Для распределений $p$ и $q$ на трёх исходах, у которых все вероятности положительны, отложены отношения <span class="nw">$t_x=q_x/p_x$;</span> над каждым — точка на прямой и точка на логарифме, площадь кружков пропорциональна <span class="nw"><span class="nw">$p_x$.</span></span> Кольца — центры масс этих точек с весами <span class="nw"><span class="nw">$p_x$:</span></span> у точек на прямой это $(\mathbb E_pt,\ \mathbb E_pt-1)={}$<wbr><span class="nw">$(1,0)$,</span> у точек на логарифме <span class="nw"><span class="nw">$(1,\ \mathbb E_p\ln t)$.</span></span> Каждая точка на логарифме лежит не выше своей точки на прямой, поэтому и центр масс лежит не выше: <span class="nw">$H(p)-H(p,q)={}$<wbr>$\mathbb E_p\ln t\le{}$<wbr><span class="nw">$0$.</span></span> При $q=p$ все отношения равны $1$ и точки сливаются в точку касания.</figcaption>
+  <figcaption>Рис. 11. Неравенство $\ln x\le x-1$ и зачем оно нужно. Два режима:
+<ul class="capl">
+<li><b>«касательная»</b> — график <span class="nw">$y=\ln x$,</span> прямая <span class="nw">$y=x-1$,</span> касающаяся его в точке <span class="nw"><span class="nw">$(1,0)$,</span></span> и пунктиром график разности <span class="nw"><span class="nw">$g(x)=x-1-\ln x$.</span></span> Вертикальную линию можно перетаскивать; выделенный отрезок между прямой и логарифмом имеет длину <span class="nw"><span class="nw">$g(x)$,</span></span> и такой же высоты точка на пунктирном графике. Слева от касания $g$ убывает, справа возрастает, ноль только в точке касания — это шаги доказательства леммы 25.</li>
+<li><b>«средние по <span class="nw">$p$»</span></b> — зачем лемма нужна. В этом режиме появляются кнопки выбора распределений, сначала взяты $p$ и $q$ из примера в начале параграфа. Для распределений $p$ и $q$ на трёх исходах, у которых все вероятности положительны, отложены отношения <span class="nw">$t_x=q_x/p_x$;</span> над каждым — точка на прямой и точка на логарифме, площадь кружков пропорциональна <span class="nw"><span class="nw">$p_x$.</span></span> Кольца — центры масс этих точек с весами <span class="nw"><span class="nw">$p_x$:</span></span> у точек на прямой это $(\mathbb E_pt,\ \mathbb E_pt-1)={}$<wbr><span class="nw">$(1,0)$,</span> у точек на логарифме <span class="nw"><span class="nw">$(1,\ \mathbb E_p\ln t)$.</span></span> Каждая точка на логарифме лежит не выше своей точки на прямой, поэтому и центр масс лежит не выше: <span class="nw">$H(p)-H(p,q)={}$<wbr>$\mathbb E_p\ln t\le{}$<wbr><span class="nw">$0$.</span></span> При $q=p$ все отношения равны $1$ и точки сливаются в точку касания.</li>
+</ul></figcaption>
 </figure>
 
 <div class="stmt"><span class="lbl">Теорема 26 (неравенство Гиббса)</span>
@@ -884,7 +914,12 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
     <div class="rr"><span class="rl">$D_{\mathrm{KL}}(p\,\|\,q)$</span><span class="gauge" id="gSp1" data-min="0" data-max="3" data-d="3"></span><output class="gv"></output></div>
     <div class="rr"><span class="rl">$D_{\mathrm{KL}}(q\,\|\,p)$</span><span class="gauge" id="gSp2" data-min="0" data-max="3" data-d="3"></span><output class="gv"></output></div>
   </div>
-  <figcaption>Рис. 14. Треугольник <span class="nw">$\Delta(\{1,2,3\})$:</span> точка с координатами $(q_1,q_2,q_3)$ — распределение; у вершины $x$ вероятность исхода $x$ равна <span class="nw"><span class="nw">$1$,</span></span> на противоположной стороне — <span class="nw"><span class="nw">$0$.</span></span> Точки $p$ (холодная) и $q$ (тёплая) перетаскиваются. В режиме <span class="nw">$D_{\mathrm{KL}}(p\,\|\,\cdot)$</span> цвет и линии уровня показывают расхождение $D_{\mathrm{KL}}(p\,\|\,r)$ как функцию точки <span class="nw"><span class="nw">$r$:</span></span> вокруг $p$ — малые значения, у сторон треугольника, где модель отказывает какому-то исходу в вероятности, — неограниченный рост. В режиме $D_{\mathrm{KL}}(\cdot\,\|\,q)$ показано $D_{\mathrm{KL}}(r\,\|\,q)$ как функция <span class="nw"><span class="nw">$r$.</span></span> Линии уровня проведены при значениях <span class="nw">$0{,}05$,</span> <span class="nw">$0{,}1$,</span> <span class="nw">$0{,}2$,</span> <span class="nw">$0{,}4$,</span> <span class="nw">$0{,}8$,</span> $1{,}6$ бита; насыщенность цвета растёт с расхождением. Тонкий отрезок соединяет $p$ и <span class="nw"><span class="nw">$q$;</span></span> вдоль него расхождение $D_{\mathrm{KL}}(p\,\|\,\cdot)$ растёт (предложение 30).</figcaption>
+  <figcaption>Рис. 14. Треугольник <span class="nw">$\Delta(\{1,2,3\})$:</span> точка с координатами $(q_1,q_2,q_3)$ — распределение; у вершины $x$ вероятность исхода $x$ равна <span class="nw"><span class="nw">$1$,</span></span> на противоположной стороне — <span class="nw"><span class="nw">$0$.</span></span> Точки $p$ (холодная) и $q$ (тёплая) перетаскиваются. Два режима:
+<ul class="capl">
+<li><b><span class="nw">$D_{\mathrm{KL}}(p\,\|\,\cdot)$</span></b> — цвет и линии уровня показывают расхождение $D_{\mathrm{KL}}(p\,\|\,r)$ как функцию точки <span class="nw"><span class="nw">$r$:</span></span> вокруг $p$ — малые значения, у сторон треугольника, где модель отказывает какому-то исходу в вероятности, — неограниченный рост;</li>
+<li><b>$D_{\mathrm{KL}}(\cdot\,\|\,q)$</b> — показано $D_{\mathrm{KL}}(r\,\|\,q)$ как функция <span class="nw"><span class="nw">$r$.</span></span></li>
+</ul>
+Линии уровня проведены при значениях <span class="nw">$0{,}05$,</span> <span class="nw">$0{,}1$,</span> <span class="nw">$0{,}2$,</span> <span class="nw">$0{,}4$,</span> <span class="nw">$0{,}8$,</span> $1{,}6$ бита; насыщенность цвета растёт с расхождением. Тонкий отрезок соединяет $p$ и <span class="nw"><span class="nw">$q$;</span></span> вдоль него расхождение $D_{\mathrm{KL}}(p\,\|\,\cdot)$ растёт (предложение 30).</figcaption>
 </figure>
 </section>
 
@@ -1112,7 +1147,13 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
     <div class="rr"><span class="rl">$|c'(t)|$</span><span class="gauge" id="gMs1" data-min="0" data-max="1" data-d="3"></span><output class="gv"></output></div>
     <div class="rr"><span class="rl">$|m'(t)|$</span><span class="gauge" id="gMs2" data-min="0" data-max="1" data-d="3"></span><output class="gv"></output></div>
   </div>
-  <figcaption>Рис. 18. Два класса, правильный — первый. По горизонтали — разность логитов <span class="nw">$t=z_1-z_2$;</span> цветная полоса сверху напоминает, что слева модель уверенно ошибается, в середине не знает ответа, справа уверенно права. Верхняя панель — вероятность правильного класса <span class="nw"><span class="nw">$s(t)$.</span></span> Средняя панель — потери: кросс-энтропия $c(t)=\ln\frac1{s(t)}$ (тёплая) и квадрат ошибки $m(t)=(1-s(t))^2$ (холодная). Нижняя панель — модули их производных, то есть сила, с которой градиентный спуск двигает логит. Вертикаль — положение ползунка. При уверенной ошибке сила кросс-энтропии близка к <span class="nw">$1$,</span> а квадрата ошибки — к нулю.</figcaption>
+  <figcaption>Рис. 18. Два класса, правильный — первый. По горизонтали — разность логитов <span class="nw">$t=z_1-z_2$;</span> цветная полоса сверху напоминает, что слева модель уверенно ошибается, в середине не знает ответа, справа уверенно права.
+<ul class="capl">
+<li><b>Верхняя панель</b> — вероятность правильного класса <span class="nw"><span class="nw">$s(t)$.</span></span></li>
+<li><b>Средняя панель</b> — потери: кросс-энтропия $c(t)=\ln\frac1{s(t)}$ (тёплая) и квадрат ошибки $m(t)=(1-s(t))^2$ (холодная).</li>
+<li><b>Нижняя панель</b> — модули их производных, то есть сила, с которой градиентный спуск двигает логит.</li>
+</ul>
+Вертикаль — положение ползунка. При уверенной ошибке сила кросс-энтропии близка к <span class="nw">$1$,</span> а квадрата ошибки — к нулю.</figcaption>
 </figure>
 </section>
 
@@ -1336,6 +1377,11 @@ figcaption.cap-open .cap-more{display:inline}
 .cap-tog:focus-visible{outline:2px solid var(--ether);outline-offset:1px}
 .cap-tog::after{content:'';display:inline-block;width:.36em;height:.36em;margin-left:.45em;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-.22em) rotate(45deg);transition:transform .2s}
 figcaption.cap-open .cap-tog::after{transform:translateY(.06em) rotate(-135deg)}
+/* Lists inside captions (FORMAT.md «Подписи к рисункам»): parallel modes, cases or panels, each item opens with a bold lead-in. */
+figcaption ul.capl{list-style:none;margin:.45rem 0 .35rem;padding:0 0 0 1.1rem}
+figcaption ul.capl>li{position:relative;margin:.3rem 0}
+figcaption ul.capl>li::before{content:"";position:absolute;left:-.88rem;top:.6em;width:.32rem;height:.32rem;border-radius:50%;background:var(--ether);opacity:.6}
+figcaption ul.capl b{font-weight:650;color:var(--ink)}
 @media print{figcaption .cap-more{display:inline}.cap-tog{display:none}}
 </style>
 <script>
