@@ -24,13 +24,29 @@
 <li><span class="gs">$\operatorname{sign}g$</span><span class="gd">Вектор знаков координат $g$. <a class="gref" href="#" data-t="{{@three}}">{{~three}}</a></span></li>
 <li><span class="gs">$\langle x,y\rangle_A,\ \|x\|_A$</span><span class="gd">Скалярное произведение $x^\top Ay$ и его длина $\sqrt{x^\top Ax}$. <a class="gref" href="#" data-t="#s6three">§6</a></span></li>
 <li><span class="gs">$A^p$</span><span class="gd">Степень положительно определённой матрицы: $Q\Lambda^pQ^\top$. <a class="gref" href="#" data-t="{{@mpow}}">{{~mpow}}</a></span></li>
+<li><span class="gs">$\nabla^2f(x),\ H$</span><span class="gd">Гессиан: матрица вторых производных. <a class="gref" href="#" data-t="{{@hess}}">{{~hess}}</a></span></li>
+<li><span class="gs">$p_\theta,\ \theta$</span><span class="gd">Распределение, предсказываемое моделью с параметрами $\theta$. <a class="gref" href="#" data-t="{{@pmodel}}">{{~pmodel}}</a></span></li>
+<li><span class="gs">$D_{\mathrm{KL}}(p\,\|\,q)$</span><span class="gd">Расхождение (дивергенция) Кульбака–Лейблера. <a class="gref" href="#" data-t="{{@klopt}}">{{~klopt}}</a></span></li>
+<li><span class="gs">$s_\theta(x),\ F(\theta)$</span><span class="gd">Вклад исхода $\nabla_\theta\ln p_\theta(x)$ и информация Фишера. <a class="gref" href="#" data-t="{{@fisher}}">{{~fisher}}</a></span></li>
+<li><span class="gs">$\widetilde\nabla L$</span><span class="gd">Натуральный градиент $F^{-1}\nabla L$. <a class="gref" href="#" data-t="{{@natgrad}}">{{~natgrad}}</a></span></li>
+<li><span class="gs">$\beta,\ v_k$</span><span class="gd">Коэффициент инерции и скорость метода тяжёлого шара. <a class="gref" href="#" data-t="{{@hb}}">{{~hb}}</a></span></li>
+<li><span class="gs">$f_i,\ n$</span><span class="gd">Потери на $i$-м из $n$ обучающих примеров; $f$ — их среднее. <a class="gref" href="#" data-t="#s10">§10</a></span></li>
+<li><span class="gs">$\mathbb E,\ \mathbb E_k$</span><span class="gd">Среднее по всем случайным выборам и только по выбору на шаге $k$. <a class="gref" href="#" data-t="#s10">§10</a></span></li>
+<li><span class="gs">$\sigma^2$</span><span class="gd">Граница разброса градиентов отдельных примеров. <a class="gref" href="#" data-t="{{@sgdvar}}">{{~sgdvar}}</a></span></li>
+<li><span class="gs">$b,\ g_k$</span><span class="gd">Размер порции и стохастический градиент по порции. <a class="gref" href="#" data-t="{{@minibatch}}">{{~minibatch}}</a></span></li>
+<li><span class="gs">$\delta_k$</span><span class="gd">Ошибка по значению $f(x_k)-f(x_*)$. <a class="gref" href="#" data-t="{{@sgdconst}}">{{~sgdconst}}</a></span></li>
+<li><span class="gs">$g^2,\ \sqrt v,\ g/v$</span><span class="gd">Покоординатные операции с векторами. <a class="gref" href="#" data-t="#s11">§11</a></span></li>
+<li><span class="gs">$G_k$</span><span class="gd">Сумма квадратов градиентов в AdaGrad. <a class="gref" href="#" data-t="{{@adagrad}}">{{~adagrad}}</a></span></li>
+<li><span class="gs">$e_k,\ \hat e_k$</span><span class="gd">Экспоненциальное скользящее среднее и оно же с поправкой на смещение. <a class="gref" href="#" data-t="{{@ema}}">{{~ema}}</a></span></li>
+<li><span class="gs">$m_k,\ v_k,\ \beta_1,\ \beta_2$</span><span class="gd">Скользящие средние градиентов и их квадратов в Adam и их параметры. <a class="gref" href="#" data-t="{{@adam}}">{{~adam}}</a></span></li>
+<li><span class="gs">$S_k$</span><span class="gd">Сумма матриц $g_jg_j^\top$ в полноматричном AdaGrad. <a class="gref" href="#" data-t="{{@fullada}}">{{~fullada}}</a></span></li>
 </ol></div></nav>
 <article class="book">
 <header class="ch">
   <div class="eyebrow">Мини-учебник</div>
   <h1>Оптимизаторы: от случайного перебора до Muon и Shampoo</h1>
   <p class="lead">Обучение нейросети — это спуск по рельефу функции потерь в густом тумане: видно только, куда склон уходит под ногами. Здесь мы честно разберём, куда и как далеко шагать, и увидим, что «самое крутое направление» зависит от того, как мерить длину шага. Из этой одной мысли вырастают градиентный спуск, знак градиента и Adam, метод Ньютона, натуральный градиент, а в конце — Shampoo и Muon, которые обращаются с градиентом-матрицей как с матрицей. Нужны анализ функций многих переменных, линейная алгебра и начала теории вероятностей.</p>
-  <p class="lead">Сейчас готовы §1–§6, до главной идеи книги; следующие параграфы появятся следующими частями.</p>
+  <p class="lead">Сейчас готовы §1–§11: главная идея книги и все методы для векторов, от метода Ньютона до Adam. Матричные методы, Shampoo и Muon, появятся в следующей части.</p>
   <ul class="toc">
     <li><a href="#s1">§1. Откуда вопрос</a></li>
     <li><a href="#s2">§2. Напоминание и обозначения</a></li>
@@ -38,5 +54,10 @@
     <li><a href="#s4">§4. Градиент — направление наискорейшего роста</a></li>
     <li><a href="#s5">§5. Градиентный спуск</a></li>
     <li><a href="#s6">§6. Самое крутое направление зависит от нормы</a></li>
+    <li><a href="#s7">§7. Метод Ньютона и предобусловливание</a></li>
+    <li><a href="#s8">§8. Натуральный градиент: шаг, измеренный в распределениях</a></li>
+    <li><a href="#s9">§9. Инерция: тяжёлый шар и метод Нестерова</a></li>
+    <li><a href="#s10">§10. Стохастический градиент</a></li>
+    <li><a href="#s11">§11. Адаптивные шаги: AdaGrad, RMSProp, Adam, AdamW</a></li>
   </ul>
 </header>

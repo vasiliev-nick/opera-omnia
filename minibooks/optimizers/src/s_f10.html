@@ -1,0 +1,110 @@
+<script>
+(function(){
+  /* Fig. sgd: a cloud of stochastic gradient runs for least squares with n = 200 points, mean error by steps and the noise level bound L eta sigma^2 / (2 mu b). */
+  const cv=document.getElementById('sgd');if(!cv||!window.TB||!TB.fit)return;
+  const sE=document.getElementById('sgE'),oE=document.getElementById('sgEOut'),sB=document.getElementById('sgB'),oB=document.getElementById('sgBOut'),bS=document.getElementById('sgSch'),fx=document.getElementById('sgFx');
+  const n=200,RUNS=40,NS=400;
+  /* the data: t_i around 1, y_i near a line */
+  const T=[],Yd=[];{const r=TB.rng(5);for(let i=0;i<n;i++){const t=1+TB.gauss(r);T.push(t);Yd.push(0.5+0.8*t+0.5*TB.gauss(r));}}
+  let s1=0,s2=0,sy=0,sty=0;for(let i=0;i<n;i++){s1+=T[i];s2+=T[i]*T[i];sy+=Yd[i];sty+=T[i]*Yd[i];}
+  const h11=1,h12=s1/n,h22=s2/n,det=h11*h22-h12*h12,XS=[(h22*sy/n-h12*sty/n)/det,(h11*sty/n-h12*sy/n)/det];
+  const tr=h11+h22,dsc=Math.sqrt((h11-h22)**2/4+h12*h12),LL=tr/2+dsc,MU=tr/2-dsc;
+  /* f(x) - f(x*) is exactly the quadratic form of the mean Hessian */
+  const fe=x=>{const a=x[0]-XS[0],b=x[1]-XS[1];return 0.5*(h11*a*a+2*h12*a*b+h22*b*b);};
+  /* the scatter of single-example gradients at the minimum */
+  let SIG=0;for(let i=0;i<n;i++){const e=XS[0]+XS[1]*T[i]-Yd[i];SIG+=e*e*(1+T[i]*T[i]);}SIG/=n;
+  let x0=[XS[0]-2.2,XS[1]+1.6],decay=false,shown=NS,geo=null,data=null;
+  const bOf=()=>Math.pow(2,+sB.value);
+  function simulate(){const eta=Math.pow(10,+sE.value),b=bOf();
+    const pos=[],err=new Float64Array(NS+1);let P=[];for(let r=0;r<RUNS;r++)P.push(x0.slice());
+    const rng=TB.rng(17);pos.push(P.map(p=>p.slice()));err[0]=fe(x0);
+    for(let k=0;k<NS;k++){const e=decay?eta/(1+eta*MU*k/2):eta;let tot=0;
+      for(let r=0;r<RUNS;r++){const p=P[r];let g0=0,g1=0;
+        for(let j=0;j<b;j++){const i=Math.floor(rng()*n),d=p[0]+p[1]*T[i]-Yd[i];g0+=d;g1+=d*T[i];}
+        p[0]-=e*g0/b;p[1]-=e*g1/b;tot+=fe(p);}
+      err[k+1]=tot/RUNS;pos.push(P.map(p=>p.slice()));}
+    data={pos:pos,err:err,eta:eta,b:b,bound:LL*eta*SIG/(2*MU*b)};}
+  function draw(){
+    if(!data)simulate();
+    oE.textContent='η = '+TB.fmt(data.eta,data.eta<0.01?4:3);oB.textContent=String(data.b);bS.textContent=decay?'шаг: убывающий':'шаг: постоянный';
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.35):Math.max(300,Math.round(W*0.5))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,R=3,pw=sm?W-8:W*0.52,ph=sm?Math.round((W-8)*0.66):H-8,sc=Math.min(pw/(2*R),ph/(2*R*0.66)),ox=4+pw/2,oy=4+ph/2;
+    const X=v=>ox+(v-XS[0])*sc,Y=v=>oy-(v-XS[1])*sc;geo={X:X,Y:Y,ux:p=>XS[0]+(p-ox)/sc,uy:p=>XS[1]+(oy-p)/sc};
+    c.save();c.beginPath();c.rect(4,4,pw,ph);c.clip();
+    c.fillStyle=TB.rgba(K.eth,0.04);c.fillRect(4,4,pw,ph);
+    TB.contours(c,(u,v)=>fe([u,v]),XS[0]-R,XS[0]+R,XS[1]-R*0.7,XS[1]+R*0.7,X,Y,[0.003,0.02,0.08,0.2,0.45,0.9,1.6,2.6,4],70,()=>{c.strokeStyle=TB.rgba(K.ink,0.22);c.lineWidth=1;});
+    const m=Math.min(shown,NS),P=data.pos;
+    /* trails of three runs */
+    for(let r=0;r<3;r++){c.strokeStyle=TB.rgba(K.warm,0.35);c.lineWidth=1;c.beginPath();for(let k=0;k<=m;k++){const p=P[k][r];k?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1]));}c.stroke();}
+    for(const p of P[m]){c.fillStyle=TB.rgba(K.warm,0.85);c.beginPath();c.arc(X(p[0]),Y(p[1]),2.6,0,7);c.fill();}
+    c.restore();
+    c.strokeStyle=K.ink;c.lineWidth=1.4;c.beginPath();c.moveTo(ox-5,oy-5);c.lineTo(ox+5,oy+5);c.moveTo(ox+5,oy-5);c.lineTo(ox-5,oy+5);c.stroke();
+    TB.dot(c,X(x0[0]),Y(x0[1]),K.ink,K,6);TB.tag(c,[['x','i'],['0','s']],X(x0[0])+9,Y(x0[1])-9,s+1,K.ink,K);
+    const gL=sm?44:W*0.52+56,gR=W-12,gB=H-30;
+    const lgB=TB.legend(c,[{k:'line',col:K.warm,t:[['средняя ошибка','r']]},{k:'dash',col:K.ink,t:[['оценка уровня шума','r']]}],gL,gR,sm?ph+10:6,s-1);
+    const A=TB.axes(c,{L:gL,T:lgB+14,R:gR,B:gB,x0:0,x1:NS,y0:-6,y1:1,xt:[0,100,200,300,400],yt:[-6,-4,-2,0],s:s,xl:[['шаг ','r'],['k','i']],yl:[['lg(','r'],['f','i'],['−','m'],['f','i'],['*','s'],[')','r']]},K);
+    c.save();c.beginPath();c.rect(gL,lgB+14,gR-gL,gB-lgB-14);c.clip();
+    if(!decay){c.strokeStyle=K.ink;c.lineWidth=1.3;c.setLineDash([5,4]);c.beginPath();c.moveTo(gL,A.Y(Math.log10(data.bound)));c.lineTo(gR,A.Y(Math.log10(data.bound)));c.stroke();c.setLineDash([]);}
+    c.strokeStyle=K.warm;c.lineWidth=2;c.beginPath();for(let k=0;k<=m;k++){const y=A.Y(Math.max(-7,Math.log10(Math.max(1e-9,data.err[k]))));k?c.lineTo(A.X(k),y):c.moveTo(A.X(k),y);}c.stroke();
+    c.restore();
+    let tail=0;for(let k=NS-49;k<=NS;k++)tail+=data.err[k];tail/=50;
+    const sci=v=>{if(v>=0.01)return TB.fmt(v,3);const e=Math.floor(Math.log10(v)),mm=v/Math.pow(10,e);return TB.fmt(mm,1)+'·10'+TB.sup(e);};
+    fx.innerHTML=TB.rows([['κ = '+TB.fmt(LL/MU,1)+',','1/<i>L</i> = '+TB.fmt(1/LL,2)+',','<i>σ</i>² ≈ '+TB.fmt(SIG,2)],
+      [decay?'средняя ошибка в конце: '+sci(tail):'уровень шума: на деле ≈ '+sci(tail)+',',decay?'':'оценка теоремы '+sci(data.bound)]]);
+  }
+  const pl=TB.player(()=>{shown+=4;draw();return shown<NS;},30);
+  const full=()=>{pl.stop();data=null;shown=NS;draw();};
+  document.getElementById('sgRun').addEventListener('click',()=>{shown=0;draw();pl.start();});
+  bS.addEventListener('click',()=>{decay=!decay;full();});
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(x0[0]),py-geo.Y(x0[1]))<(t?26:14)?1:null;},
+    move:(h,px,py)=>{pl.stop();shown=NS;x0=[Math.max(XS[0]-2.9,Math.min(XS[0]+2.9,geo.ux(px))),Math.max(XS[1]-1.9,Math.min(XS[1]+1.9,geo.uy(py)))];data=null;redraw();}});
+  sE.addEventListener('input',full);sB.addEventListener('input',full);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. saddle: f(x) = x1^2/2 - x2^2/2 + x2^4/4; plain descent from the ridge x2 = 0 runs into the saddle, noisy descent rolls off into a well. */
+  const cv=document.getElementById('saddle');if(!cv||!window.TB||!TB.fit)return;
+  const sN=document.getElementById('sdN'),oN=document.getElementById('sdNOut'),fx=document.getElementById('sdFx');
+  const ETA=0.1,NS=200,X0=[-1.8,0],f=p=>0.5*p[0]*p[0]-0.5*p[1]*p[1]+0.25*p[1]**4;
+  let seed=3,shown=NS,data=null;
+  function simulate(){const nz=+sN.value,r=TB.rng(seed);let a=X0.slice(),b=X0.slice();const gd=[a.slice()],sg=[b.slice()];
+    for(let k=0;k<NS;k++){a=[a[0]-ETA*a[0],a[1]-ETA*(-a[1]+a[1]**3)];gd.push(a);
+      b=[b[0]-ETA*(b[0]+nz*TB.gauss(r)),b[1]-ETA*(-b[1]+b[1]**3+nz*TB.gauss(r))];sg.push(b);}
+    data={gd:gd,sg:sg,nz:nz};}
+  function draw(){
+    if(!data)simulate();oN.textContent=TB.fmt(data.nz,2);
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.3):Math.max(280,Math.round(W*0.46))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,pw=sm?W-8:W*0.52,ph=sm?Math.round((W-8)*0.72):H-8,sc=Math.min(pw/4.4,ph/3.4),ox=4+pw/2,oy=4+ph/2;
+    const X=v=>ox+v*sc,Y=v=>oy-v*sc;
+    c.save();c.beginPath();c.rect(4,4,pw,ph);c.clip();c.fillStyle=TB.rgba(K.eth,0.04);c.fillRect(4,4,pw,ph);
+    const lev=[-0.22,-0.15,-0.05,0.1,0.3,0.6,1,1.5,2.1];
+    TB.contours(c,(u,v)=>f([u,v]),-2.3,2.3,-1.8,1.8,X,Y,lev,90,(i,v)=>{c.strokeStyle=TB.rgba(v<0?K.eth:K.ink,v<0?0.5:0.22);c.lineWidth=1;});
+    c.strokeStyle=TB.rgba(K.muted,0.6);c.setLineDash([4,4]);c.lineWidth=1;c.beginPath();c.moveTo(X(-2.3),Y(0));c.lineTo(X(2.3),Y(0));c.stroke();c.setLineDash([]);
+    const m=Math.min(shown,NS),cols=[K.ink,K.warm];
+    [data.gd,data.sg].forEach((T,j)=>{c.strokeStyle=cols[j];c.lineWidth=j?1.8:2.4;c.beginPath();for(let k=0;k<=m;k++){const p=T[k];k?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1]));}c.stroke();
+      TB.dot(c,X(T[m][0]),Y(T[m][1]),cols[j],K,4.5);});
+    c.restore();
+    for(const v of [-1,1]){c.strokeStyle=K.eth;c.lineWidth=1.4;const px=X(0),py=Y(v);c.beginPath();c.moveTo(px-4,py-4);c.lineTo(px+4,py+4);c.moveTo(px+4,py-4);c.lineTo(px-4,py+4);c.stroke();}
+    TB.tag(c,[['седло','r']],X(0)+6,Y(0)+s+6,s-1,K.muted,K);
+    const gL=sm?44:W*0.52+56,gR=W-12,gB=H-30;
+    const lgB=TB.legend(c,[{k:'line',col:K.ink,t:[['градиентный','r']]},{k:'line',col:K.warm,t:[['стохастический','r']]}],gL,gR,sm?ph+10:6,s-1);
+    const A=TB.axes(c,{L:gL,T:lgB+14,R:gR,B:gB,x0:0,x1:NS,y0:-0.55,y1:1.8,xt:[0,50,100,150,200],yt:[0,1],s:s,xl:[['шаг ','r'],['k','i']],yl:[['f','i']]},K);
+    c.save();c.beginPath();c.rect(gL,lgB+14,gR-gL,gB-lgB-14);c.clip();
+    c.strokeStyle=TB.rgba(K.muted,0.6);c.setLineDash([4,4]);c.lineWidth=1;c.beginPath();c.moveTo(gL,A.Y(-0.25));c.lineTo(gR,A.Y(-0.25));c.stroke();c.setLineDash([]);
+    [data.gd,data.sg].forEach((T,j)=>{c.strokeStyle=cols[j];c.lineWidth=2;c.beginPath();for(let k=0;k<=m;k++){const y=A.Y(f(T[k]));k?c.lineTo(A.X(k),y):c.moveTo(A.X(k),y);}c.stroke();});
+    c.restore();
+    let off=-1;for(let k=0;k<=NS;k++)if(Math.abs(data.sg[k][1])>0.5){off=k;break;}
+    const end=data.sg[NS];
+    fx.innerHTML=TB.rows([['градиентный спуск:','<i>x</i><sub>2</sub> = 0 на всех шагах,','<i>f</i> → 0'],
+      off<0?['стохастический за '+NS+' шагов','не ушёл с гребня']:['стохастический ушёл с гребня','(|<i>x</i><sub>2</sub>| &gt; 0,5) на шаге '+off+','],off<0?[]:['скатился к минимуму (0; '+(end[1]>0?'1':'−1')+')']].filter(r=>r.length));
+  }
+  const pl=TB.player(()=>{shown+=2;draw();return shown<NS;},30);
+  document.getElementById('sdRun').addEventListener('click',()=>{seed++;data=null;shown=0;draw();pl.start();});
+  sN.addEventListener('input',()=>{pl.stop();data=null;shown=NS;draw();});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>

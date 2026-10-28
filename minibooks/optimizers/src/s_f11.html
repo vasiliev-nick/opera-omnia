@@ -1,0 +1,84 @@
+<script>
+(function(){
+  /* Fig. bias: the exponential moving average of noisy numbers with mean 1, with and without the bias correction, step by step. */
+  const cv=document.getElementById('bias');if(!cv||!window.TB||!TB.fit)return;
+  const sB=document.getElementById('bsB'),oB=document.getElementById('bsBOut'),fx=document.getElementById('bsFx');
+  const NS=60;let seed=8,shown=NS,a=null;
+  const make=()=>{const r=TB.rng(seed);a=[];for(let j=0;j<NS;j++)a.push(1+0.6*TB.gauss(r));};
+  function draw(){
+    if(!a)make();const beta=+sB.value;oB.textContent=TB.fmt(beta,2);
+    const F=TB.fit(cv,W=>Math.max(280,Math.min(380,Math.round(W*0.5)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13;
+    const lgB=TB.legend(c,[{k:'line',col:K.warm,t:[['без поправки ','r'],['e','i'],['k','s']]},{k:'line',col:K.eth,t:[['с поправкой ','r'],['ê','i'],['k','s']]},{k:'dash',col:K.muted,t:[['ожидание ','r'],['e','i'],['k','s']]}],sm?36:46,W-10,4,s-1);
+    const A=TB.axes(c,{L:sm?36:46,T:lgB+12,R:W-10,B:H-28,x0:0,x1:NS,y0:-0.6,y1:2.6,xt:[0,10,20,30,40,50,60],yt:[0,1,2],s:s,xl:[['шаг ','r'],['k','i']]},K);
+    c.save();c.beginPath();c.rect(A.X(0),lgB+12,A.X(NS)-A.X(0),A.Y(-0.6)-lgB-12);c.clip();
+    c.strokeStyle=TB.rgba(K.ink,0.5);c.lineWidth=1.2;c.setLineDash([6,4]);c.beginPath();c.moveTo(A.X(0),A.Y(1));c.lineTo(A.X(NS),A.Y(1));c.stroke();
+    c.strokeStyle=TB.rgba(K.muted,0.9);c.beginPath();for(let k=0;k<=NS;k++){const y=A.Y(1-Math.pow(beta,k));k?c.lineTo(A.X(k),y):c.moveTo(A.X(k),y);}c.stroke();c.setLineDash([]);
+    const m=Math.min(shown,NS);
+    for(let j=0;j<m;j++){c.fillStyle=TB.rgba(K.muted,0.75);c.beginPath();c.arc(A.X(j+1),A.Y(a[j]),2.6,0,7);c.fill();}
+    let e=0;const E=[0],Eh=[null];for(let j=0;j<m;j++){e=beta*e+(1-beta)*a[j];E.push(e);Eh.push(e/(1-Math.pow(beta,j+1)));}
+    c.strokeStyle=K.warm;c.lineWidth=2.2;c.beginPath();E.forEach((v,k)=>{k?c.lineTo(A.X(k),A.Y(v)):c.moveTo(A.X(k),A.Y(v));});c.stroke();
+    c.strokeStyle=K.eth;c.lineWidth=2.2;c.beginPath();for(let k=1;k<=m;k++){k>1?c.lineTo(A.X(k),A.Y(Eh[k])):c.moveTo(A.X(k),A.Y(Eh[k]));}c.stroke();
+    c.restore();
+    fx.innerHTML=m?TB.rows([['шаг <i>k</i> = '+m+':','<i>e<sub>k</sub></i> = '+TB.fmt(E[m],3)+',','<i>ê<sub>k</sub></i> = '+TB.fmt(Eh[m],3)+',','1 − <i>β</i><sup><i>k</i></sup> = '+TB.fmt(1-Math.pow(beta,m),3)]]):TB.rows([['шаг <i>k</i> = 0']]);
+  }
+  const pl=TB.player(()=>{shown++;draw();return shown<NS;},110);
+  document.getElementById('bsRun').addEventListener('click',()=>{seed++;a=null;shown=0;draw();pl.start();});
+  sB.addEventListener('input',()=>{pl.stop();shown=NS;draw();});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. adam: a quadratic ravine f = (u^2/kappa + v^2)/2 whose flat axis is turned by an angle; gradient descent with step 1/L and Adam with a cosine step. The start is kept in the ravine's own coordinates (u, v), so it turns with the ravine. */
+  const cv=document.getElementById('adam');if(!cv||!window.TB||!TB.fit)return;
+  const sK=document.getElementById('adK'),oK=document.getElementById('adKOut'),sA=document.getElementById('adA'),oA=document.getElementById('adAOut'),fx=document.getElementById('adFx');
+  const NS=150,ETA=0.1,B1=0.9,B2=0.999,EPS=1e-8;
+  let u0=[-2.6,1.0],shown=NS,geo=null;
+  function setup(){const k=Math.pow(10,+sK.value),a=+sA.value*Math.PI/180,q1=[Math.cos(a),Math.sin(a)],q2=[-Math.sin(a),Math.cos(a)];
+    const grad=p=>{const u=(p[0]*q1[0]+p[1]*q1[1])/k,v=p[0]*q2[0]+p[1]*q2[1];return [u*q1[0]+v*q2[0],u*q1[1]+v*q2[1]];};
+    const f=p=>{const u=p[0]*q1[0]+p[1]*q1[1],v=p[0]*q2[0]+p[1]*q2[1];return 0.5*(u*u/k+v*v);};
+    return {k:k,a:a,grad:grad,f:f,to:w=>[w[0]*q1[0]+w[1]*q2[0],w[0]*q1[1]+w[1]*q2[1]],from:p=>[p[0]*q1[0]+p[1]*q1[1],p[0]*q2[0]+p[1]*q2[1]]};}
+  function runs(S){const x0=S.to(u0),gd=[x0.slice()],ad=[x0.slice()];let a=x0.slice(),z=x0.slice();const m=[0,0],v=[0,0];
+    for(let t=0;t<NS;t++){let g=S.grad(a);a=[a[0]-g[0],a[1]-g[1]];gd.push(a);
+      g=S.grad(z);const e=ETA*0.5*(1+Math.cos(Math.PI*t/NS)),z2=z.slice();
+      for(let i=0;i<2;i++){m[i]=B1*m[i]+(1-B1)*g[i];v[i]=B2*v[i]+(1-B2)*g[i]*g[i];z2[i]-=e*(m[i]/(1-Math.pow(B1,t+1)))/(Math.sqrt(v[i]/(1-Math.pow(B2,t+1)))+EPS);}
+      z=z2;ad.push(z);}
+    return [gd,ad];}
+  function draw(){
+    const S=setup();oK.textContent='κ = '+TB.fmt(S.k,S.k<10?1:0);oA.textContent=sA.value+'°';
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.3):Math.max(300,Math.round(W*0.5))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,R=3,pw=sm?W-8:W*0.52,ph=sm?Math.round((W-8)*0.62):H-8,sc=Math.min(pw/(2*R),ph/(2*R*0.62)),ox=4+pw/2,oy=4+ph/2;
+    const X=v=>ox+v*sc,Y=v=>oy-v*sc;geo={ux:p=>(p-ox)/sc,uy:p=>(oy-p)/sc,X:X,Y:Y};
+    c.save();c.beginPath();c.rect(4,4,pw,ph);c.clip();c.fillStyle=TB.rgba(K.eth,0.04);c.fillRect(4,4,pw,ph);
+    for(const v of [0.005,0.02,0.08,0.2,0.45,0.9,1.6,2.6,4]){c.beginPath();c.ellipse(ox,oy,Math.sqrt(2*v*S.k)*sc,Math.sqrt(2*v)*sc,-S.a,0,7);c.strokeStyle=TB.rgba(K.ink,0.25);c.lineWidth=1;c.stroke();}
+    /* the coordinate axes, along which Adam scales its steps */
+    c.strokeStyle=TB.rgba(K.muted,0.5);c.setLineDash([3,4]);c.beginPath();c.moveTo(4,oy);c.lineTo(4+pw,oy);c.moveTo(ox,4);c.lineTo(ox,4+ph);c.stroke();c.setLineDash([]);
+    const tr=runs(S),cols=[K.warm,K.eth],m=Math.min(shown,NS),x0=tr[0][0];
+    tr.forEach((T,j)=>{c.strokeStyle=cols[j];c.lineWidth=j?2.2:1.6;c.beginPath();
+      for(let i=0;i<=m;i++){const p=[X(T[i][0]),Y(T[i][1])];i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]);}c.stroke();
+      for(let i=1;i<=Math.min(m,50);i++){c.fillStyle=cols[j];c.beginPath();c.arc(X(T[i][0]),Y(T[i][1]),2.1,0,7);c.fill();}});
+    c.restore();
+    c.strokeStyle=K.ink;c.lineWidth=1.4;c.beginPath();c.moveTo(ox-4,oy-4);c.lineTo(ox+4,oy+4);c.moveTo(ox+4,oy-4);c.lineTo(ox-4,oy+4);c.stroke();
+    TB.dot(c,X(x0[0]),Y(x0[1]),K.ink,K,6);TB.tag(c,[['x','i'],['0','s']],X(x0[0])+9,Y(x0[1])-9,s+1,K.ink,K);
+    const gL=sm?44:W*0.52+56,gR=W-12,gB=H-30;
+    const lgB=TB.legend(c,[{k:'line',col:K.warm,t:[['градиентный спуск','r']]},{k:'line',col:K.eth,t:[['Adam','r']]}],gL,gR,sm?ph+10:6,s-1);
+    const A=TB.axes(c,{L:gL,T:lgB+14,R:gR,B:gB,x0:0,x1:NS,y0:-12,y1:1,xt:[0,50,100,150],yt:[-12,-8,-4,0],s:s,xl:[['шаг ','r'],['k','i']],yl:[['lg ','r'],['f','i']]},K);
+    c.save();c.beginPath();c.rect(gL,lgB+14,gR-gL,gB-lgB-14);c.clip();
+    tr.forEach((T,j)=>{c.strokeStyle=cols[j];c.lineWidth=2;c.beginPath();
+      for(let i=0;i<=m;i++){const y=A.Y(Math.max(-13,Math.min(2,Math.log10(Math.max(1e-300,S.f(T[i]))))));i?c.lineTo(A.X(i),y):c.moveTo(A.X(i),y);}c.stroke();});
+    c.restore();
+    const sci=v=>{if(v>=0.01)return TB.fmt(v,3);const e=Math.floor(Math.log10(v)),mm=v/Math.pow(10,e);return TB.fmt(mm,1)+'·10'+TB.sup(e);};
+    fx.innerHTML=TB.rows([['<i>f</i> после '+NS+' шагов:'],['градиентный спуск '+sci(S.f(tr[0][NS]))+',','Adam '+sci(S.f(tr[1][NS]))]]);
+  }
+  const pl=TB.player(()=>{shown+=2;draw();return shown<NS;},40);
+  const full=()=>{pl.stop();shown=NS;draw();};
+  document.getElementById('adRun').addEventListener('click',()=>{shown=0;draw();pl.start();});
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;const x0=setup().to(u0);return Math.hypot(px-geo.X(x0[0]),py-geo.Y(x0[1]))<(t?26:14)?1:null;},
+    move:(h,px,py)=>{pl.stop();shown=NS;u0=setup().from([Math.max(-2.9,Math.min(2.9,geo.ux(px))),Math.max(-1.75,Math.min(1.75,geo.uy(py)))]);redraw();}});
+  sK.addEventListener('input',full);sA.addEventListener('input',full);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>

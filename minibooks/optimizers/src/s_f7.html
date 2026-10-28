@@ -1,0 +1,53 @@
+<script>
+(function(){
+  /* Fig. newton: Newton's method in one variable; the quadratic model at the current point, the jump to its vertex, the errors of all steps made. */
+  const cv=document.getElementById('newton');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('nwFx');
+  const X0=-4,X1=5,Y0=-0.6,Y1=4.2;
+  const f=t=>{const u=t-1;return Math.sqrt(1+u*u)+0.15*u-0.6*Math.exp(-3*(t+2)**2);};
+  const d1=t=>{const u=t-1;return u/Math.sqrt(1+u*u)+0.15+3.6*(t+2)*Math.exp(-3*(t+2)**2);};
+  const d2=t=>{const u=t-1,e=Math.exp(-3*(t+2)**2);return Math.pow(1+u*u,-1.5)+3.6*e*(1-6*(t+2)**2);};
+  /* the local minima, found on a grid and polished by bisection on f' */
+  const MINS=[];{let p=d1(X0);for(let i=1;i<=3000;i++){const t=X0+(X1-X0)*i/3000,q=d1(t);if(p<0&&q>=0){let a=t-(X1-X0)/3000,b=t;for(let k=0;k<60;k++){const m=(a+b)/2;d1(m)<0?a=m:b=m;}MINS.push((a+b)/2);}p=q;}}
+  let path=[1.8],geo=null;
+  const sci=v=>{if(v===0)return '0';if(v>=0.01)return TB.fmt(v,3);const e=Math.floor(Math.log10(v)),m=v/Math.pow(10,e);return TB.fmt(m,1)+'·10'+TB.sup(e);};
+  const near=t=>MINS.reduce((b,m)=>Math.abs(m-t)<Math.abs(b-t)?m:b,MINS[0]);
+  function draw(){
+    const F=TB.fit(cv,W=>Math.max(300,Math.min(430,Math.round(W*0.56)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:13;
+    const A=TB.axes(c,{L:sm?30:40,T:12,R:W-10,B:H-28,x0:X0,x1:X1,y0:Y0,y1:Y1,xt:[-4,-2,0,2,4],yt:[0,2,4],s:s,xl:[['t','i']]},K);geo=A;
+    c.save();c.beginPath();c.rect(A.X(X0),A.Y(Y1),A.X(X1)-A.X(X0),A.Y(Y0)-A.Y(Y1));c.clip();
+    const n=500,ts=[];for(let i=0;i<=n;i++)ts.push(X0+(X1-X0)*i/n);
+    /* stretches where f''<0 */
+    c.fillStyle=TB.rgba(K.warm,0.13);let run=null;
+    ts.forEach((t,i)=>{const bad=d2(t)<0;if(bad&&run===null)run=t;if((!bad||i===n)&&run!==null){c.fillRect(A.X(run),A.Y(Y1),A.X(t)-A.X(run),A.Y(Y0)-A.Y(Y1));run=null;}});
+    const x=path[path.length-1],fx0=f(x),g=d1(x),h=d2(x),mod=t=>fx0+g*(t-x)+h/2*(t-x)**2;
+    c.strokeStyle=K.eth;c.lineWidth=2;c.setLineDash([]);c.beginPath();ts.forEach((t,i)=>{const y=A.Y(Math.max(Y0-3,Math.min(Y1+3,mod(t))));i?c.lineTo(A.X(t),y):c.moveTo(A.X(t),y);});c.stroke();
+    c.strokeStyle=K.ink;c.lineWidth=2.4;c.beginPath();ts.forEach((t,i)=>{i?c.lineTo(A.X(t),A.Y(f(t))):c.moveTo(A.X(t),A.Y(f(t)));});c.stroke();
+    /* earlier points */
+    for(let i=0;i+1<path.length;i++){const a=path[i];if(a<X0||a>X1)continue;c.fillStyle=TB.rgba(K.muted,0.7);c.beginPath();c.arc(A.X(a),A.Y(f(a)),3.2,0,7);c.fill();}
+    c.restore();
+    for(const m of MINS){c.strokeStyle=K.muted;c.lineWidth=1.2;const px=A.X(m),py=A.Y(Y0);c.beginPath();c.moveTo(px,py-5);c.lineTo(px,py);c.stroke();}
+    const xn=Math.abs(h)>1e-9?x-g/h:NaN;
+    if(isFinite(xn)){const vx=Math.max(X0,Math.min(X1,xn)),vy=mod(xn);
+      if(xn>=X0&&xn<=X1&&vy>=Y0&&vy<=Y1){TB.ring(c,A.X(xn),A.Y(vy),K.eth,K,4.5);
+        c.strokeStyle=TB.rgba(K.eth,0.8);c.setLineDash([3,3]);c.lineWidth=1.2;c.beginPath();c.moveTo(A.X(xn),A.Y(vy));c.lineTo(A.X(xn),A.Y(f(xn)));c.stroke();c.setLineDash([]);}
+      else{const yy=A.Y(Y1)+12;TB.arrow(c,A.X(x),yy,xn<X0?A.X(X0)+4:A.X(X1)-4,yy,K.eth,1.8);}}
+    TB.dot(c,A.X(x),A.Y(fx0),h<0?K.warm:K.ink,K,6);
+    TB.tag(c,[['x','i']],A.X(x),A.Y(Y0)-8,s+1,K.ink,K,'center');
+    const errs=path.map(t=>sci(Math.abs(t-near(t))));
+    const shown=errs.length>7?['…'].concat(errs.slice(-6)):errs;
+    fx.innerHTML=TB.rows([['<i>f</i>′(<i>x</i>) = '+TB.fmt(g,3)+',','<i>f</i>″(<i>x</i>) = '+TB.fmt(h,3)+(h<0?' — вершина параболы будет максимумом':'')],
+      ['расстояния до ближайшего минимума:'].concat(shown.map((e,i)=>e+(i<shown.length-1?';':'')))]);
+    document.getElementById('nwStep').disabled=!(isFinite(xn)&&Math.abs(xn)<1e6);
+  }
+  document.getElementById('nwStep').addEventListener('click',()=>{const x=path[path.length-1],xn=x-d1(x)/d2(x);if(isFinite(xn))path.push(xn);draw();});
+  document.getElementById('nwReset').addEventListener('click',()=>{path=[path[0]];draw();});
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;const x=path[path.length-1];if(x<X0||x>X1)return Math.abs(py-geo.Y(Y0))<30?1:null;
+      return Math.hypot(px-geo.X(x),py-geo.Y(f(x)))<(t?26:14)||Math.abs(px-geo.X(x))<(t?20:10)?1:null;},
+    move:(h,px)=>{const t=X0+(px-geo.X(X0))/(geo.X(X1)-geo.X(X0))*(X1-X0);path=[Math.max(X0+0.1,Math.min(X1-0.1,t))];redraw();}});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>

@@ -1,0 +1,105 @@
+<script>
+(function(){
+  /* Fig. kl: KL balls {theta' : KL(p_theta || p_theta') <= r} in the (mu, sigma) plane of normal laws, the Fisher ellipse, and the bells of theta and of the two horizontal extreme points. */
+  const cv=document.getElementById('kl');if(!cv||!window.TB||!TB.fit)return;
+  const sR=document.getElementById('klR'),oR=document.getElementById('klROut'),fx=document.getElementById('klFx');
+  const M0=-3,M1=3,S0=0,S1=2.6,SMIN=0.15;
+  const KL=(m1,s1,m2,s2)=>Math.log(s2/s1)+(s1*s1+(m1-m2)**2)/(2*s2*s2)-0.5;
+  const FIX=[[-2,0.35],[-2,1.6],[2,0.7],[2,2]];
+  let th=[0,0.6],geo=null;
+  function draw(){
+    const r=+sR.value;oR.textContent=TB.fmt(r,2);
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.45):Math.max(300,Math.round(W*0.55))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13;
+    const pR=sm?W-10:Math.round(W*0.56),pB=sm?Math.round(H*0.6):H-28;
+    const AX={L:sm?34:42,T:12,R:pR,B:pB,x0:M0,x1:M1,y0:S0,y1:S1,xt:[-3,-2,-1,0,1,2,3],yt:[0,1,2],s:s,xl:[['μ','i']],yl:[['σ','i']]},A=TB.axes(c,AX,K);
+    geo=A;
+    c.save();c.beginPath();c.rect(A.X(M0),A.Y(S1),A.X(M1)-A.X(M0),A.Y(S0)-A.Y(S1));c.clip();
+    /* the ball around theta: an image of the region under everything else */
+    const n=160,out=TB.mixa(K.paper,K.eth,0.04),inn=TB.mixa(K.paper,K.eth,0.26);
+    const img=TB.heat(n,(i,j)=>{const u=M0+(M1-M0)*(i+0.5)/n,v=S0+(S1-S0)*(j+0.5)/n;return v>0.005&&KL(th[0],th[1],u,v)<=r?inn:out;});
+    c.imageSmoothingEnabled=true;c.drawImage(img,A.X(M0),A.Y(S1),A.X(M1)-A.X(M0),A.Y(S0)-A.Y(S1));
+    const N=130,ball=(m,sg,style)=>TB.contours(c,(u,v)=>v<=0.005?99:KL(m,sg,u,v),M0,M1,S0,S1,A.X,A.Y,[r],N,style);
+    for(const p of FIX)ball(p[0],p[1],()=>{c.strokeStyle=TB.rgba(K.muted,0.75);c.lineWidth=1.3;c.setLineDash([]);});
+    ball(th[0],th[1],()=>{c.strokeStyle=K.eth;c.lineWidth=2.2;c.setLineDash([]);});
+    /* Fisher ellipse a^2 + 2 b^2 <= 2 r sigma^2 */
+    c.strokeStyle=K.ink;c.lineWidth=1.5;c.setLineDash([5,4]);c.beginPath();
+    c.ellipse(A.X(th[0]),A.Y(th[1]),th[1]*Math.sqrt(2*r)*(A.X(1)-A.X(0)),th[1]*Math.sqrt(r)*(A.Y(0)-A.Y(1)),0,0,7);c.stroke();c.setLineDash([]);
+    c.restore();TB.axes(c,AX,K);
+    const a=th[1]*Math.sqrt(2*r);
+    for(const sg of [-1,1]){const px=A.X(th[0]+sg*a);if(px>A.X(M0)&&px<A.X(M1))TB.ring(c,px,A.Y(th[1]),K.warm,K,4);}
+    TB.dot(c,A.X(th[0]),A.Y(th[1]),K.ink,K,5.5);
+    TB.tag(c,[['θ','i']],A.X(th[0])+9,A.Y(th[1])-9,s+1,K.ink,K);
+    /* the bells */
+    const bL=sm?34:pR+44,bR=W-10,bT=sm?pB+62:30,bB=H-28;
+    const B=TB.axes(c,{L:bL,T:bT,R:bR,B:bB,x0:-4,x1:4,y0:0,y1:2.7,xt:[-4,-2,0,2,4],yt:[0,1,2],s:s,xl:[['t','i']]},K);
+    const bell=(m,sg,col,w,dash)=>{c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.beginPath();
+      for(let i=0;i<=300;i++){const t=-4+8*i/300,y=Math.exp(-(((t-m)/sg)**2)/2)/(sg*Math.sqrt(2*Math.PI));i?c.lineTo(B.X(t),B.Y(Math.min(2.75,y))):c.moveTo(B.X(t),B.Y(Math.min(2.75,y)));}c.stroke();c.setLineDash([]);};
+    c.save();c.beginPath();c.rect(bL,bT-4,bR-bL,bB-bT+4);c.clip();
+    bell(th[0]-a,th[1],K.warm,1.6,[5,3]);bell(th[0]+a,th[1],K.warm,1.6,[5,3]);bell(th[0],th[1],K.ink,2.3);
+    c.restore();
+    TB.legend(c,[{k:'line',col:K.ink,t:[['p','i'],['θ','s']]},{k:'dash',col:K.warm,t:[['сдвиги среднего на ±','r'],['a','i']]}],bL,bR,bT-26,s-1);
+    fx.innerHTML=TB.rows([['θ = (<i>μ</i>, <i>σ</i>) = ('+TB.fmt(th[0],2)+'; '+TB.fmt(th[1],2)+'),','<i>r</i> = '+TB.fmt(r,2)],
+      ['ширина шара по <i>μ</i>: 2<i>a</i> = 2<i>σ</i>√(2<i>r</i>) = '+TB.fmt(2*a,3)]]);
+  }
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(th[0]),py-geo.Y(th[1]))<(t?26:14)?1:null;},
+    move:(h,px,py)=>{const u=M0+(px-geo.X(M0))/(geo.X(M1)-geo.X(M0))*(M1-M0),v=S0+(geo.Y(S0)-py)/(geo.Y(S0)-geo.Y(S1))*(S1-S0);
+      th=[Math.max(-2.7,Math.min(2.7,u)),Math.max(SMIN,Math.min(2.3,v))];redraw();}});
+  sR.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. natfit: fitting N(mu, sigma^2) to data with mean 1.5 and sd 0.4; ordinary and natural gradient descent on the (mu, sigma) plane, KL(data || model) by steps. */
+  const cv=document.getElementById('natfit');if(!cv||!window.TB||!TB.fit)return;
+  const sE=document.getElementById('nfE'),oE=document.getElementById('nfEOut'),fx=document.getElementById('nfFx');
+  const MT=1.5,ST=0.4,M0=-1.5,M1=3.5,S0=0,S1=2.6,NS=60;
+  const loss=(m,s)=>Math.log(s)+(ST*ST+(m-MT)**2)/(2*s*s);
+  const kl=(m,s)=>Math.log(s/ST)+(ST*ST+(MT-m)**2)/(2*s*s)-0.5;
+  let x0=[-0.8,2.1],shown=NS,geo=null;
+  function runs(eta){const gd=[x0.slice()],nt=[x0.slice()];let a=x0.slice(),b=x0.slice();
+    for(let i=0;i<NS;i++){
+      if(a){const d=a[0]-MT,s=a[1],gm=d/(s*s),gs=1/s-(ST*ST+d*d)/(s*s*s);const n=[a[0]-eta*gm,a[1]-eta*gs];
+        if(!(n[1]>0)||Math.abs(n[0])>50||n[1]>50){a=null;}else{a=n;gd.push(a);}}
+      const d=b[0]-MT,s=b[1];b=[b[0]-eta*d,b[1]-eta*(s*s-ST*ST-d*d)/(2*s)];nt.push(b);}
+    return [gd,nt];}
+  function draw(){
+    const eta=Math.pow(10,+sE.value);oE.textContent='η = '+TB.fmt(eta,2);
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.4):Math.max(300,Math.round(W*0.55))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,pR=sm?W-10:Math.round(W*0.56),pB=sm?Math.round(H*0.58):H-28;
+    const AX={L:sm?34:42,T:12,R:pR,B:pB,x0:M0,x1:M1,y0:S0,y1:S1,xt:[-1,0,1,2,3],yt:[0,1,2],s:s,xl:[['μ','i']],yl:[['σ','i']]},A=TB.axes(c,AX,K);geo=A;
+    c.save();c.beginPath();c.rect(A.X(M0),A.Y(S1),A.X(M1)-A.X(M0),A.Y(S0)-A.Y(S1));c.clip();
+    c.fillStyle=TB.rgba(K.eth,0.04);c.fillRect(A.X(M0),A.Y(S1),A.X(M1)-A.X(M0),A.Y(S0)-A.Y(S1));
+    const Lmin=loss(MT,ST),lev=[0.02,0.08,0.2,0.4,0.7,1.1,1.6,2.3,3.2].map(v=>Lmin+v);
+    TB.contours(c,(u,v)=>v<=0.01?99:loss(u,v),M0,M1,S0,S1,A.X,A.Y,lev,120,()=>{c.strokeStyle=TB.rgba(K.ink,0.22);c.lineWidth=1;});
+    const tr=runs(eta),cols=[K.warm,K.eth],m=Math.min(shown,NS);
+    tr.forEach((T,j)=>{c.strokeStyle=cols[j];c.lineWidth=j?2.2:1.7;c.beginPath();
+      for(let i=0;i<=Math.min(m,T.length-1);i++){const P=[A.X(T[i][0]),A.Y(T[i][1])];i?c.lineTo(P[0],P[1]):c.moveTo(P[0],P[1]);}c.stroke();
+      for(let i=1;i<=Math.min(m,T.length-1);i++){c.fillStyle=cols[j];c.beginPath();c.arc(A.X(T[i][0]),A.Y(T[i][1]),2.3,0,7);c.fill();}});
+    c.restore();TB.axes(c,AX,K);
+    c.strokeStyle=K.ink;c.lineWidth=1.4;const tx=A.X(MT),ty=A.Y(ST);c.beginPath();c.moveTo(tx-5,ty-5);c.lineTo(tx+5,ty+5);c.moveTo(tx+5,ty-5);c.lineTo(tx-5,ty+5);c.stroke();
+    TB.dot(c,A.X(x0[0]),A.Y(x0[1]),K.ink,K,6);
+    /* KL by steps */
+    const gL=sm?44:pR+56,gR=W-12,gB=H-30;
+    const lgB=TB.legend(c,[{k:'line',col:K.warm,t:[['обычный','r']]},{k:'line',col:K.eth,t:[['натуральный','r']]}],gL,gR,sm?pB+26:6,s-1);
+    const G=TB.axes(c,{L:gL,T:lgB+14,R:gR,B:gB,x0:0,x1:NS,y0:-8,y1:1,xt:[0,20,40,60],yt:[-8,-6,-4,-2,0],s:s,xl:[['шаг ','r'],['k','i']],yl:[['lg ','r'],['D','i'],['KL','s']]},K);
+    c.save();c.beginPath();c.rect(gL,lgB+14,gR-gL,gB-lgB-14);c.clip();
+    tr.forEach((T,j)=>{c.strokeStyle=cols[j];c.lineWidth=2;c.beginPath();
+      for(let i=0;i<=Math.min(m,T.length-1);i++){const y=G.Y(Math.max(-9,Math.log10(Math.max(1e-12,kl(T[i][0],T[i][1])))));i?c.lineTo(G.X(i),y):c.moveTo(G.X(i),y);}c.stroke();});
+    c.restore();
+    const hit=T=>{for(let i=0;i<T.length;i++)if(kl(T[i][0],T[i][1])<1e-3)return String(i);return T.length<=NS?'вылетел за σ &gt; 0 на шаге '+T.length:'&gt; '+NS;};
+    fx.innerHTML=TB.rows([['шагов до <i>D</i><sub>KL</sub> &lt; 10⁻³:'],['обычный: '+hit(tr[0])+',','натуральный: '+hit(tr[1])]]);
+  }
+  const pl=TB.player(()=>{shown++;draw();return shown<NS;},80);
+  const full=()=>{pl.stop();shown=NS;draw();};
+  document.getElementById('nfRun').addEventListener('click',()=>{shown=0;draw();pl.start();});
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(x0[0]),py-geo.Y(x0[1]))<(t?26:14)?1:null;},
+    move:(h,px,py)=>{pl.stop();shown=NS;const u=M0+(px-geo.X(M0))/(geo.X(M1)-geo.X(M0))*(M1-M0),v=S0+(geo.Y(S0)-py)/(geo.Y(S0)-geo.Y(S1))*(S1-S0);
+      x0=[Math.max(-1.3,Math.min(3.3,u)),Math.max(0.15,Math.min(2.45,v))];redraw();}});
+  sE.addEventListener('input',full);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
