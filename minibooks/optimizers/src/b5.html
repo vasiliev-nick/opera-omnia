@@ -1,0 +1,174 @@
+<section id="s5">
+<h2>§5. Градиентный спуск</h2>
+<p>Направление мы знаем: против градиента функция убывает быстрее всего. Самый простой алгоритм — раз за разом делать шаг в этом направлении. Остаются вопросы, которые теорема {{#steep}} не решает. Она говорит о скорости убывания в самой точке, то есть о бесконечно малом шаге, а делать приходится шаги конечной длины. Насколько длинные? И сколько их понадобится, чтобы подойти к минимуму? В этом параграфе мы ответим на оба вопроса, и ответ упрётся в одно число — насколько вытянут овраг, по которому идёт спуск.</p>
+
+<h3>Шаг как минимум модели</h3>
+<p>Стоя в точке <span class="nw">$x$,</span> мы знаем значение $f(x)$ и градиент <span class="nw">$g=\nabla f(x)$.</span> По определению дифференцируемости вблизи $x$ функция почти совпадает с линейной моделью <span class="nw">$f(x)+\langle g,h\rangle$,</span> где $h$ — сдвиг. Но искать минимум самой линейной модели бессмысленно: она убывает неограниченно, и «лучший» шаг оказался бы бесконечным. Модель хороша только рядом с <span class="nw">$x$,</span> поэтому разумно добавить к ней штраф за дальность шага — плату за то, что мы уходим туда, где модели нельзя доверять.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:gdmodel}} (шаг против градиента — минимум модели со штрафом)</span>
+Пусть $g\in\mathbb R^d$ и <span class="nw">$\eta\gt0$.</span> Функция
+<span class="math-wrap">$$m(h)=\langle g,h\rangle+\frac1{2\eta}\|h\|^2$$</span>
+принимает наименьшее значение в единственной точке <span class="nw">$h=-\eta g$,</span> и это значение равно <span class="nw">$-\frac\eta2\|g\|^2$.</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Выделить полный квадрат, как для квадратного трёхчлена.</div>
+<div class="step"><span class="sh">Шаг 1.</span> Раскрывая квадрат длины, получаем
+<span class="math-wrap">$$\frac1{2\eta}\|h+\eta g\|^2=\frac1{2\eta}\|h\|^2+\langle g,h\rangle+\frac\eta2\|g\|^2,$$</span>то есть<span class=\"math-wrap\">$$m(h)=\frac1{2\eta}\|h+\eta g\|^2-\frac\eta2\|g\|^2.$$</span></div>
+<div class="step"><span class="sh">Шаг 2.</span> Первое слагаемое неотрицательно и равно нулю только при <span class="nw">$h=-\eta g$.</span></div>
+</div>
+<p>Число $\eta$ здесь отвечает за то, насколько далеко мы доверяем модели: чем оно больше, тем слабее штраф и тем длиннее шаг. Его называют <b>длиной шага</b> или, в машинном обучении, <b>скоростью обучения</b> (learning rate). Заметим, что штраф мы взяли в евклидовой норме, не задумываясь. В §6 мы поставим вместо неё другую норму, и тот же рецепт даст совсем другие методы.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:gd}} (градиентный спуск)</span>
+Пусть $f$ дифференцируема, $x_0\in\mathbb R^d$ — начальная точка и $\eta\gt0$ — длина шага. <b>Градиентный спуск</b> строит последовательность
+<span class="math-wrap">$$x_{k+1}=x_k-\eta\nabla f(x_k),\qquad k=0,1,2,\dots$$</span></div>
+
+<h3>Гладкость: насколько можно доверять модели</h3>
+<p>Насколько далеко модель остаётся хорошей, зависит от функции. Линейная модель построена по градиенту в точке <span class="nw">$x$,</span> и она ошибается ровно потому, что градиент по дороге меняется. Если он меняется медленно, модели можно доверять далеко; если быстро — только рядом. Это и измеряет следующее определение.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:smooth}} ($L$-гладкая функция)</span>
+Пусть <span class="nw">$L\gt0$.</span> Дифференцируемая функция $f$ называется <b>$L$-гладкой</b>, если её градиент удовлетворяет условию Липшица с константой $L$:
+<span class="math-wrap">$$\|\nabla f(x)-\nabla f(y)\|\le L\|x-y\|\qquad\text{для всех }x,y.$$</span></div>
+<p>Число $L$ — это наибольшая «кривизна» функции: для функции одной переменной с непрерывной второй производной условие означает, что <span class="nw">$|f''|\le L$.</span> Главный пример, на котором мы всё будем проверять, — квадратичная функция. Для неё и градиент, и константа $L$ находятся точно.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:quadgrad}} (квадратичная функция)</span>
+Пусть $A$ — симметричная матрица, $b\in\mathbb R^d$ и <span class="nw">$f(x)=\frac12x^\top Ax-b^\top x$.</span> Тогда для всех $x,h$
+<span class="math-wrap">$$f(x+h)=f(x)+\langle Ax-b,h\rangle+\tfrac12h^\top Ah,$$</span>
+функция $f$ дифференцируема, <span class="nw">$\nabla f(x)=Ax-b$,</span> и если $A\ne0$, то $f$ является $L$-гладкой с <span class="nw">$L=\max_i|\lambda_i|$.</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Раскрыть скобки; остаток квадратичен по <span class="nw">$h$,</span> а лемма {{#rayleigh}} оценивает его через собственные числа.</div>
+<div class="step"><span class="sh">Шаг 1. Формула приращения.</span> Раскрывая скобки и пользуясь тем, что $x^\top Ah=h^\top Ax$ для симметричной <span class="nw">$A$,</span> получаем
+<span class="math-wrap">$$\begin{aligned}&\tfrac12(x+h)^\top A(x+h)-b^\top(x+h)\\&\qquad=f(x)+h^\top Ax-b^\top h+\tfrac12h^\top Ah.\end{aligned}$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Градиент.</span> По лемме {{#rayleigh}} <span class="nw">$|h^\top Ah|\le\max_i|\lambda_i|\,\|h\|^2$,</span> поэтому остаток $\tfrac12h^\top Ah$ есть <span class="nw">$o(\|h\|)$,</span> и по определению {{#diff}} $\nabla f(x)=Ax-b$.</div>
+<div class="step"><span class="sh">Шаг 3. Гладкость.</span> $\|\nabla f(x)-\nabla f(y)\|=\|A(x-y)\|\le\max_i|\lambda_i|\,\|x-y\|$ по второй оценке леммы {{#rayleigh}}.</div>
+</div>
+
+<p>Теперь главное: что гладкость даёт для модели. Если градиент не может измениться быстрее, чем на $L$ на единицу пути, то и ошибка линейной модели не может расти быстрее, чем квадрат длины шага.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:upper}} (функция зажата между двумя параболами)</span>
+Если $f$ является $L$-гладкой, то для всех $x,h$
+<span class="math-wrap">$$\bigl|f(x+h)-f(x)-\langle\nabla f(x),h\rangle\bigr|\le\frac L2\|h\|^2.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Посмотреть на функцию вдоль отрезка от $x$ до <span class="nw">$x+h$,</span> записать приращение как интеграл от производной и заметить, что производная отличается от своего значения в начале не больше чем на <span class="nw">$Lt\|h\|^2$.</span></div>
+<div class="step"><span class="sh">Шаг 1. Функция на отрезке.</span> Положим $\varphi(t)=f(x+th)$ при <span class="nw">$t\in[0,1]$.</span> Применим лемму {{#chain}} к кривой $s\mapsto x+(t+s)h$, проходящей при $s=0$ через точку $x+th$ со скоростью <span class="nw">$h$:</span> получаем <span class="nw">$\varphi'(t)=\langle\nabla f(x+th),h\rangle$.</span></div>
+<div class="step"><span class="sh">Шаг 2. Производная меняется медленно.</span> По неравенству Коши–Буняковского и гладкости
+<span class="math-wrap">$$\begin{aligned}|\varphi'(t)-\varphi'(s)|&=\bigl|\langle\nabla f(x+th)-\nabla f(x+sh),h\rangle\bigr|\\&\le L|t-s|\,\|h\|^2.\end{aligned}$$</span>
+В частности, $\varphi'$ непрерывна на <span class="nw">$[0,1]$.</span></div>
+<div class="step"><span class="sh">Шаг 3. Формула Ньютона–Лейбница.</span> Так как $\varphi'$ непрерывна, <span class="nw">$\varphi(1)-\varphi(0)=\int_0^1\varphi'(t)\,dt$,</span> и потому
+<span class="math-wrap">$$f(x+h)-f(x)-\langle\nabla f(x),h\rangle=\int_0^1\bigl(\varphi'(t)-\varphi'(0)\bigr)\,dt.$$</span></div>
+<div class="step"><span class="sh">Шаг 4. Оценка.</span> По шагу 2 модуль подынтегральной функции не больше <span class="nw">$Lt\|h\|^2$,</span> а <span class="nw">$\int_0^1Lt\|h\|^2\,dt=\frac L2\|h\|^2$.</span></div>
+</div>
+<p>Смысл леммы хорошо виден на графике функции одной переменной. Через точку графика проведём касательную и две параболы с ветвями вверх и вниз, отходящие от касательной на <span class="nw">$\frac L2h^2$.</span> Лемма говорит, что весь график, на всём своём протяжении, а не только рядом с точкой, лежит между этими параболами. Верхняя парабола
+<span class="math-wrap">$$f(x)+\langle\nabla f(x),h\rangle+\frac L2\|h\|^2$$</span>
+— ровно модель со штрафом из леммы {{#gdmodel}} при <span class="nw">$\eta=1/L$.</span> Значит, при таком $\eta$ модель со штрафом — не просто приближение, а <i>гарантированная оценка сверху</i>: настоящая функция нигде не выше её. Если сделать шаг в минимум оценки сверху, функция заведомо уменьшится не меньше, чем уменьшилась оценка.</p>
+
+<figure>
+  <div class="fig1"><canvas id="upper" width="760" height="420" aria-label="График функции одной переменной, касательная, две параболы вокруг неё и шаг в минимум верхней параболы"></canvas></div>
+  <div class="controls">
+    <label for="upL">$L$ <input id="upL" type="range" min="0.4" max="4" step="0.05" value="2.5"><output id="upLOut">2,50</output></label>
+  </div>
+  <div id="upFx" class="fx" aria-live="polite"></div>
+  <figcaption>{{Рис:fupper}}. Функция между двумя параболами. Тёмная кривая — функция одной переменной, у которой наибольший модуль второй производной примерно равен <span class="nw">$1{,}95$.</span> В точке $x$ (её можно перетаскивать) проведена касательная и две параболы, отходящие от неё на <span class="nw">$\pm\frac L2(t-x)^2$;</span> ползунок задаёт <span class="nw">$L$.</span> Стрелка ведёт из $x$ в минимум верхней параболы, то есть делает шаг градиентного спуска с длиной <span class="nw">$1/L$.</span> Пока $L$ не меньше настоящей кривизны, график целиком лежит между параболами, и шаг гарантированно уменьшает функцию. Если сделать $L$ меньше, найдутся места, где график вылезает за параболы (они подсвечены), и оценка перестаёт быть гарантией: при больших шагах функция может даже вырасти.</figcaption>
+</figure>
+
+<div class="stmt"><span class="lbl">{{Теорема:decr}} (убывание за один шаг)</span>
+Пусть $f$ является $L$-гладкой, $x\in\mathbb R^d$, $g=\nabla f(x)$ и <span class="nw">$\eta\gt0$.</span> Тогда
+<span class="math-wrap">$$f(x-\eta g)\le f(x)-\eta\Bigl(1-\frac{L\eta}2\Bigr)\|g\|^2.$$</span>
+В частности, при $0\lt\eta\lt2/L$ шаг не увеличивает функцию, а при $\eta=1/L$
+<span class="math-wrap">$$f(x-\tfrac1Lg)\le f(x)-\frac1{2L}\|g\|^2.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Подставить $h=-\eta g$ в верхнюю оценку леммы {{#upper}}.</div>
+<div class="step"><span class="sh">Шаг 1.</span> По лемме {{#upper}} при <span class="nw">$h=-\eta g$</span>
+<span class="math-wrap">$$\begin{aligned}f(x-\eta g)&\le f(x)-\eta\|g\|^2+\frac{L\eta^2}2\|g\|^2\\&=f(x)-\eta\Bigl(1-\frac{L\eta}2\Bigr)\|g\|^2.\end{aligned}$$</span></div>
+<div class="step"><span class="sh">Шаг 2.</span> При $0\lt\eta\lt2/L$ множитель $\eta(1-L\eta/2)$ положителен. При $\eta=1/L$ он равен <span class="nw">$\frac1{2L}$</span> — это наибольшее его значение, поэтому $\eta=1/L$ даёт лучшую гарантию.</div>
+</div>
+<p>Теорема даёт два ориентира. Длина шага $1/L$ — самая выгодная с точки зрения гарантии: она ведёт ровно в минимум верхней параболы. А граница $2/L$ — предел, за которым гарантии нет. Это не слабость оценки: ниже мы увидим, что на квадратичной функции спуск с шагом больше $2/L$ действительно разлетается. Ещё одно наблюдение: выигрыш за шаг пропорционален <span class="nw">$\|g\|^2$.</span> Пока склон крутой, спуск быстр; когда градиент мал, мал и выигрыш.</p>
+<p>Уже отсюда следует, что спуск куда-то приходит, если функция ограничена снизу: он не может вечно выигрывать заметную величину. Сложим выигрыши за $K$ шагов.</p>
+
+<div class="stmt"><span class="lbl">{{Следствие:gsmall}} (градиент становится малым)</span>
+Пусть $f$ является $L$-гладкой и ограничена снизу числом <span class="nw">$f_*$,</span> а $x_k$ — градиентный спуск с длиной шага <span class="nw">$\eta=1/L$.</span> Тогда для любого $K\ge1$
+<span class="math-wrap">$$\min_{0\le k\lt K}\|\nabla f(x_k)\|^2\le\frac{2L\bigl(f(x_0)-f_*\bigr)}K.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Сложить неравенства теоремы {{#decr}} для шагов от $0$ до <span class="nw">$K-1$:</span> слева сумма сократится до <span class="nw">$f(x_0)-f(x_K)$.</span></div>
+<div class="step"><span class="sh">Шаг 1.</span> По теореме {{#decr}} <span class="nw">$\frac1{2L}\|\nabla f(x_k)\|^2\le f(x_k)-f(x_{k+1})$.</span> Складывая по <span class="nw">$k=0,\dots,K-1$,</span> получаем
+<span class="math-wrap">$$\frac1{2L}\sum_{k=0}^{K-1}\|\nabla f(x_k)\|^2\le f(x_0)-f(x_K)\le f(x_0)-f_*.$$</span></div>
+<div class="step"><span class="sh">Шаг 2.</span> Наименьшее из $K$ слагаемых не больше их среднего, то есть суммы, делённой на <span class="nw">$K$.</span></div>
+</div>
+<p>Это всё, что можно сказать без дополнительных предположений: спуск находит точку, где градиент мал. Минимум ли это, седло или широкое плато — неизвестно, и для функций потерь нейросетей это действительно трудный вопрос. Чтобы говорить о близости к минимуму, нужно знать, что функция везде изгибается вверх.</p>
+
+<h3>Сильная выпуклость и линейная скорость</h3>
+<p>Лемма {{#upper}} зажимает функцию сверху параболой с кривизной <span class="nw">$L$.</span> Теперь потребуем, чтобы она и снизу была подпёрта параболой — с какой-то положительной кривизной <span class="nw">$\mu$.</span> Тогда у функции не может быть плато и ложных ям: где бы мы ни стояли, она уходит вверх во все стороны хотя бы как парабола.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:strong}} (сильно выпуклая функция)</span>
+Пусть <span class="nw">$\mu\gt0$.</span> Дифференцируемая функция $f$ называется <b>$\mu$-сильно выпуклой</b>, если для всех $x,y$
+<span class="math-wrap">$$f(y)\ge f(x)+\langle\nabla f(x),y-x\rangle+\frac\mu2\|y-x\|^2$$</span></div>
+<p>Если функция одновременно $L$-гладкая и $\mu$-сильно выпуклая, то в каждой точке её график лежит между двумя параболами, касающимися его в этой точке: нижней с кривизной $\mu$ и верхней с кривизной <span class="nw">$L$.</span> Отсюда сразу <span class="nw">$\mu\le L$:</span> нижняя парабола не может идти выше верхней. Для квадратичной функции из леммы {{#quadgrad}} с положительно определённой матрицей $A$ формула приращения и лемма {{#rayleigh}} дают <span class="nw">$\tfrac12\lambda_{\min}\|h\|^2\le f(x+h)-f(x)-\langle\nabla f(x),h\rangle\le\tfrac12\lambda_{\max}\|h\|^2$,</span> то есть <span class="nw">$\mu=\lambda_{\min}$</span> и <span class="nw">$L=\lambda_{\max}$:</span> пологость и крутизна функции — это её наименьшее и наибольшее собственные числа.</p>
+<p>Можно доказать, что у сильно выпуклой функции всегда есть точка минимума. Нам это не понадобится: мы будем предполагать её существование. А единственность видна сразу. Если $x_*$ — точка минимума, то <span class="nw">$\nabla f(x_*)=0$</span> (см. §4), и определение при $x=x_*$ даёт <span class="nw">$f(y)\ge f(x_*)+\frac\mu2\|y-x_*\|^2\gt f(x_*)$</span> для всех <span class="nw">$y\ne x_*$.</span></p>
+<p>Следующая лемма — ключ к скорости спуска. Она говорит, что для сильно выпуклой функции маленький градиент означает близость к минимуму по значению: «склон почти плоский» здесь бывает только у самого дна.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:pl}} (малый градиент — близко ко дну)</span>
+Пусть $f$ является $\mu$-сильно выпуклой и $x_*$ — её точка минимума. Тогда для всех $x$
+<span class="math-wrap">$$f(x)-f(x_*)\le\frac1{2\mu}\|\nabla f(x)\|^2.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Нижняя парабола в точке $x$ лежит под графиком всюду, в том числе в точке <span class="nw">$x_*$;</span> а её наименьшее значение мы знаем из леммы {{#gdmodel}}.</div>
+<div class="step"><span class="sh">Шаг 1.</span> Обозначим $g=\nabla f(x)$. По определению {{#strong}} при $y=x_*$ и затем по лемме {{#gdmodel}} с <span class="nw">$\eta=1/\mu$,</span> применённой к сдвигу <span class="nw">$h=x_*-x$,</span>
+<span class="math-wrap">$$f(x_*)\ge f(x)+\langle g,h\rangle+\frac\mu2\|h\|^2\ge f(x)-\frac1{2\mu}\|g\|^2.$$</span></div>
+</div>
+
+<div class="stmt"><span class="lbl">{{Теорема:linrate}} (линейная скорость сходимости)</span>
+Пусть $f$ является $L$-гладкой и $\mu$-сильно выпуклой, $x_*$ — её точка минимума, а $x_k$ — градиентный спуск с длиной шага <span class="nw">$\eta=1/L$.</span> Тогда
+<span class="math-wrap">$$f(x_k)-f(x_*)\le\Bigl(1-\frac\mu L\Bigr)^k\bigl(f(x_0)-f(x_*)\bigr).$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Теорема {{#decr}} говорит, что за шаг выигрываем не меньше <span class="nw">$\|g\|^2/(2L)$,</span> а лемма {{#pl}} — что $\|g\|^2/(2L)$ не меньше доли $\mu/L$ от оставшегося расстояния до дна.</div>
+<div class="step"><span class="sh">Шаг 1. Один шаг.</span> Обозначим <span class="nw">$\delta_k=f(x_k)-f(x_*)$</span> и <span class="nw">$g_k=\nabla f(x_k)$.</span> По теореме {{#decr}} и лемме {{#pl}}
+<span class="math-wrap">$$\delta_{k+1}\le\delta_k-\frac1{2L}\|g_k\|^2\le\delta_k-\frac{2\mu\delta_k}{2L}=\Bigl(1-\frac\mu L\Bigr)\delta_k.$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Индукция.</span> Так как $0\le1-\mu/L\lt1$, применяя шаг 1 $k$ раз, получаем утверждение.</div>
+</div>
+<p>Такую сходимость называют <b>линейной</b>: ошибка убывает как геометрическая прогрессия, и на графике в логарифмической шкале это прямая линия. Знаменатель прогрессии зависит только от отношения двух кривизн.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:kappa}} (число обусловленности)</span>
+Для $L$-гладкой и $\mu$-сильно выпуклой функции число $\kappa=L/\mu\ge1$ называется её <b>числом обусловленности</b>. Для квадратичной функции с положительно определённой матрицей <span class="nw">$\kappa=\lambda_{\max}/\lambda_{\min}$.</span></div>
+<p>Сколько шагов нужно, чтобы уменьшить ошибку в $1/\varepsilon$ раз? Так как <span class="nw">$1-1/\kappa\le e^{-1/\kappa}$,</span> после $k$ шагов ошибка не больше <span class="nw">$e^{-k/\kappa}\delta_0$,</span> и достаточно <span class="nw">$k\ge\kappa\ln(1/\varepsilon)$</span> шагов. Число шагов растёт пропорционально <span class="nw">$\kappa$.</span> Для квадратичной функции $\kappa$ — это ровно то, насколько вытянуты эллипсы её линий уровня (§2): длинная ось в $\sqrt\kappa$ раз длиннее короткой. Чем уже и длиннее овраг, тем медленнее спуск. Почему именно так, лучше всего видно на квадратичной функции, где спуск можно проследить точно.</p>
+
+<h3 id="s5quad">Квадратичная функция: всё видно точно</h3>
+<p>Возьмём $f(x)=\frac12x^\top Ax$ с положительно определённой матрицей <span class="nw">$A$.</span> Её минимум — в нуле, а любая квадратичная функция с положительно определённой матрицей сдвигом переменной приводится к такому виду. По лемме {{#quadgrad}} шаг спуска — это умножение на матрицу:
+<span class="math-wrap">$$x_{k+1}=x_k-\eta Ax_k=(I-\eta A)x_k.$$</span>
+В базисе из собственных векторов $A$ всё распадается на независимые координаты. Если <span class="nw">$c_{k,i}=\langle q_i,x_k\rangle$,</span> то $\langle q_i,Ax_k\rangle=\langle Aq_i,x_k\rangle=\lambda_ic_{k,i}$, и
+<span class="math-wrap">$$c_{k+1,i}=(1-\eta\lambda_i)\,c_{k,i},\qquad c_{k,i}=(1-\eta\lambda_i)^k\,c_{0,i}.$$</span>
+Каждая координата живёт своей жизнью и за шаг умножается на своё число <span class="nw">$1-\eta\lambda_i$.</span> Из этого читается всё.</p>
+
+<div class="stmt"><span class="lbl">{{Предложение:quadgd}} (спуск на квадратичной функции)</span>
+Пусть $A$ положительно определена с собственными числами <span class="nw">$\lambda_{\min}=\lambda_1\le\dots\le\lambda_d=\lambda_{\max}$,</span> $f(x)=\frac12x^\top Ax$ и <span class="nw">$\rho(\eta)=\max_i|1-\eta\lambda_i|$.</span> Тогда:
+<ol class="ax" type="a">
+<li>$\|x_k\|\le\rho(\eta)^k\|x_0\|$ для любой начальной точки;</li>
+<li>$x_k\to0$ при любой начальной точке тогда и только тогда, когда <span class="nw">$0\lt\eta\lt2/\lambda_{\max}$;</span></li>
+<li>наименьшее значение $\rho(\eta)$ достигается при $\eta_*=\frac2{\lambda_{\min}+\lambda_{\max}}$ и равно <span class="nw">$\rho_*=\frac{\kappa-1}{\kappa+1}$.</span></li>
+</ol></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>В собственном базисе координаты умножаются на числа <span class="nw">$1-\eta\lambda_i$;</span> спуск сходится, когда все они по модулю меньше единицы, и быстрее всего — когда самое плохое из них наименьшее.</div>
+<div class="step"><span class="sh">Шаг 1. Оценка (а).</span> Длина вектора равна длине его координат в ортонормированном базисе (шаг 1 доказательства леммы {{#rayleigh}}), поэтому
+<span class="math-wrap">$$\begin{aligned}\|x_k\|^2&=\sum_i(1-\eta\lambda_i)^{2k}c_{0,i}^2\\&\le\rho(\eta)^{2k}\sum_ic_{0,i}^2=\rho(\eta)^{2k}\|x_0\|^2.\end{aligned}$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Критерий (б).</span> Если $0\lt\eta\lt2/\lambda_{\max}$, то для каждого $i$ число $\eta\lambda_i$ лежит в <span class="nw">$(0,2)$,</span> так что $|1-\eta\lambda_i|\lt1$, <span class="nw">$\rho(\eta)\lt1$,</span> и по (а) <span class="nw">$x_k\to0$.</span> Обратно, если $\eta\ge2/\lambda_{\max}$ (или <span class="nw">$\eta\le0$),</span> то для $i=d$ (соответственно $i=1$) <span class="nw">$|1-\eta\lambda_i|\ge1$;</span> при $x_0=q_i$ получаем <span class="nw">$\|x_k\|=|1-\eta\lambda_i|^k\ge1$,</span> и сходимости нет.</div>
+<div class="step"><span class="sh">Шаг 3. Худшие координаты.</span> Функция $\lambda\mapsto1-\eta\lambda$ линейна, поэтому её модуль на отрезке $[\lambda_{\min},\lambda_{\max}]$ наибольший в одном из концов: <span class="nw">$\rho(\eta)=\max\bigl(|1-\eta\lambda_{\min}|,\,|1-\eta\lambda_{\max}|\bigr)$.</span></div>
+<div class="step"><span class="sh">Шаг 4. Лучший шаг (в).</span> При $\eta=\eta_*$ имеем <span class="nw">$1-\eta_*\lambda_{\min}=\frac{\lambda_{\max}-\lambda_{\min}}{\lambda_{\max}+\lambda_{\min}}=\rho_*$</span> и <span class="nw">$1-\eta_*\lambda_{\max}=-\rho_*$,</span> так что <span class="nw">$\rho(\eta_*)=\rho_*$;</span> деление числителя и знаменателя на $\lambda_{\min}$ даёт <span class="nw">$\rho_*=\frac{\kappa-1}{\kappa+1}$.</span> При $\eta\lt\eta_*$ <span class="nw">$\rho(\eta)\ge1-\eta\lambda_{\min}\gt1-\eta_*\lambda_{\min}=\rho_*$,</span> а при $\eta\gt\eta_*$ <span class="nw">$\rho(\eta)\ge\eta\lambda_{\max}-1\gt\rho_*$.</span></div>
+</div>
+<p>Посмотрим, что происходит с двумя крайними координатами. Вдоль крутого направления (собственное число $\lambda_{\max}$) множитель $1-\eta\lambda_{\max}$ при длинном шаге отрицателен: координата каждый раз меняет знак, и спуск перескакивает с одной стенки оврага на другую. Если шаг больше <span class="nw">$2/\lambda_{\max}$,</span> перескоки ещё и растут, и спуск разлетается — это и есть граница $2/L$ из теоремы {{#decr}}. Вдоль пологого направления (собственное число $\lambda_{\min}$) множитель $1-\eta\lambda_{\min}$ близок к единице, и спуск еле ползёт по дну.</p>
+<p>Вылечить обе беды одной длиной шага нельзя. Шаг ограничен сверху крутым направлением: он меньше <span class="nw">$2/\lambda_{\max}$.</span> А продвижение вдоль пологого направления за шаг — доля $\eta\lambda_{\min}$ оставшегося пути, то есть меньше <span class="nw">$2\lambda_{\min}/\lambda_{\max}=2/\kappa$.</span> Даже при наилучшем шаге $\eta_*$ ошибка за шаг уменьшается лишь в $\frac{\kappa+1}{\kappa-1}\approx1+\frac2\kappa$ раз, и число шагов снова растёт пропорционально <span class="nw">$\kappa$.</span> Для функции потерь нейросети $\kappa$ бывает огромным, и градиентный спуск в чистом виде становится мучительно медленным.</p>
+
+<figure>
+  <div class="fig1"><canvas id="gd" width="760" height="460" aria-label="Градиентный спуск в квадратичном овраге и график ошибки по шагам в логарифмической шкале"></canvas></div>
+  <div class="controls">
+    <label for="gdK">$\log_{10}\kappa$ <input id="gdK" type="range" min="0" max="2" step="0.05" value="1"><output id="gdKOut">κ = 10</output></label>
+    <label for="gdE">$\eta\lambda_{\max}$ <input id="gdE" type="range" min="0.1" max="2.2" step="0.01" value="1"><output id="gdEOut">1,00</output></label>
+    <div class="btns"><button type="button" class="act" id="gdBest">$\eta=\eta_*$</button><button type="button" class="act" id="gdRun">пуск</button></div>
+  </div>
+  <div id="gdFx" class="fx" aria-live="polite"></div>
+  <figcaption>{{Рис:fgd}}. Градиентный спуск в квадратичном овраге $f(x)=\frac12x^\top Ax$ с $\lambda_{\max}=1$ и <span class="nw">$\lambda_{\min}=1/\kappa$.</span> Слева — линии уровня и траектория спуска, справа — значения $f(x_k)$ по шагам в логарифмической шкале и штриховая прямая <span class="nw">$\rho^{2k}f(x_0)$</span> — оценка из предложения {{#quadgd}}, возведённая в квадрат, потому что $f$ квадратична.
+<ul class="capl">
+<li><b>Ползунок $\kappa$</b> вытягивает овраг: чем больше $\kappa$, тем медленнее спуск ползёт вдоль дна;</li>
+<li><b>Ползунок $\eta\lambda_{\max}$</b> задаёт длину шага в единицах <span class="nw">$1/\lambda_{\max}$:</span> при значениях больше $1$ спуск начинает перескакивать через дно оврага, а при значениях больше $2$ разлетается;</li>
+<li><b>Кнопка «$\eta=\eta_*$»</b> ставит наилучший шаг из предложения {{#quadgd}}, кнопка «пуск» проигрывает спуск заново шаг за шагом.</li>
+</ul>
+Начальную точку можно перетаскивать. Под рисунком — множители, на которые за шаг умножаются координаты вдоль крутой и пологой осей.</figcaption>
+</figure>
+
+<p>Если бы можно было выбрать свою длину шага для каждого собственного направления — большую вдоль пологого, малую вдоль крутого, — овраг перестал бы быть проблемой. Например, шаг $1/\lambda_i$ вдоль $i$-го направления обнулил бы каждую координату за один шаг. Но «свой шаг для каждого направления» — это уже не шаг против градиента. Следующий параграф объясняет, в каком смысле это тоже самый крутой спуск, только при другом способе мерить длину шага.</p>
+</section>

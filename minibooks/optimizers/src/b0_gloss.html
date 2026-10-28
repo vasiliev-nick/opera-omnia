@@ -1,0 +1,42 @@
+<nav class="gloss navm" aria-label="Содержание"><button class="gbtn" type="button" aria-label="Содержание" aria-expanded="false" title="Содержание"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><g fill="currentColor"><circle cx="5.5" cy="7" r="1.5"/><circle cx="5.5" cy="12" r="1.5"/><circle cx="5.5" cy="17" r="1.5"/></g><path d="M9.5 7h9M9.5 12h9M9.5 17h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><div class="gpanel" role="dialog" aria-label="Содержание"><div class="ghead">Содержание<a class="ghome" href="https://claude.ai/artifact/GsAXGC62CPJkWxh1PEy9WQ" data-file="../../index.html" target="_blank" rel="noopener" title="Все учебники и поиск по ним">Все учебники ↗</a></div><ol class="glist nlist"></ol></div></nav><script>/* «Все учебники»: a local copy of the books opens the library page that lies next to it */if(location.protocol==='file:')document.querySelectorAll('a.ghome[data-file]').forEach(a=>{a.href=a.dataset.file;a.removeAttribute('target');});</script>
+<button class="tbtn" type="button" aria-label="Переключить тему: светлая или тёмная" title="Светлая или тёмная тема"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4.8a7.2 7.2 0 0 1 0 14.4z" fill="currentColor"/></svg></button>
+<nav class="gloss" aria-label="Обозначения"><button class="gbtn" type="button" aria-label="Обозначения" aria-expanded="false" title="Обозначения"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M17 4H7l6 8-6 8h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="gpanel" role="dialog" aria-label="Обозначения"><div class="ghead">Обозначения <span>в порядке введения</span></div><ol class="glist">
+<li><span class="gs">$\mathcal L(w)$</span><span class="gd">Функция потерь нейросети с весами $w\in\mathbb R^d$. <a class="gref" href="#" data-t="#s1">§1</a></span></li>
+<li><span class="gs">$\langle x,y\rangle,\ \|x\|$</span><span class="gd">Скалярное произведение и порождённая им длина; без индекса — стандартные. <a class="gref" href="#" data-t="{{@ip}}">{{~ip}}</a></span></li>
+<li><span class="gs">$\|x\|_1,\ \|x\|_2,\ \|x\|_\infty$</span><span class="gd">Сумма модулей координат, евклидова длина, наибольший модуль координаты. <a class="gref" href="#" data-t="{{@l1inf}}">{{~l1inf}}</a></span></li>
+<li><span class="gs">$o(\|h\|)$</span><span class="gd">Величина, малая по сравнению с длиной сдвига $h$. <a class="gref" href="#" data-t="{{@diff}}">{{~diff}}</a></span></li>
+<li><span class="gs">$\nabla f(x)$</span><span class="gd">Градиент: вектор частных производных. <a class="gref" href="#" data-t="{{@grad}}">{{~grad}}</a></span></li>
+<li><span class="gs">$e_i$</span><span class="gd">Вектор с единицей на $i$-м месте и нулями на остальных. <a class="gref" href="#" data-t="{{@partial}}">{{~partial}}</a></span></li>
+<li><span class="gs">$Q,\ \Lambda,\ \lambda_i,\ q_i$</span><span class="gd">Спектральное разложение $A=Q\Lambda Q^\top$ симметричной матрицы: собственные числа и ортонормированные собственные векторы. <a class="gref" href="#" data-t="{{@spectral}}">{{~spectral}}</a></span></li>
+<li><span class="gs">$\lambda_{\min},\ \lambda_{\max}$</span><span class="gd">Наименьшее и наибольшее собственные числа. <a class="gref" href="#" data-t="{{@posdef}}">{{~posdef}}</a></span></li>
+<li><span class="gs">$u$</span><span class="gd">Случайное направление: случайный вектор единичной длины. <a class="gref" href="#" data-t="{{@rdir}}">{{~rdir}}</a></span></li>
+<li><span class="gs">$P(x,y),\ \pi$</span><span class="gd">Переходная матрица цепи Маркова и её стационарное распределение. <a class="gref" href="#" data-t="{{@markov}}">{{~markov}}</a></span></li>
+<li><span class="gs">$T,\ \pi_T,\ Z_T$</span><span class="gd">Температура, распределение Больцмана и его нормировка. <a class="gref" href="#" data-t="{{@metro}}">{{~metro}}</a></span></li>
+<li><span class="gs">$\partial_uf(x)$</span><span class="gd">Производная по направлению $u$. <a class="gref" href="#" data-t="{{@dirder}}">{{~dirder}}</a></span></li>
+<li><span class="gs">$\eta$</span><span class="gd">Длина шага (скорость обучения). <a class="gref" href="#" data-t="{{@gdmodel}}">{{~gdmodel}}</a></span></li>
+<li><span class="gs">$x_k$</span><span class="gd">Точка после $k$ шагов метода. <a class="gref" href="#" data-t="{{@gd}}">{{~gd}}</a></span></li>
+<li><span class="gs">$L$</span><span class="gd">Константа гладкости: градиент меняется не быстрее, чем на $L$ на единицу пути. <a class="gref" href="#" data-t="{{@smooth}}">{{~smooth}}</a></span></li>
+<li><span class="gs">$\mu$</span><span class="gd">Константа сильной выпуклости: функция изгибается вверх не медленнее параболы $\frac\mu2\|h\|^2$. <a class="gref" href="#" data-t="{{@strong}}">{{~strong}}</a></span></li>
+<li><span class="gs">$x_*$</span><span class="gd">Точка минимума. <a class="gref" href="#" data-t="{{@pl}}">{{~pl}}</a></span></li>
+<li><span class="gs">$\kappa$</span><span class="gd">Число обусловленности $L/\mu$; для квадратичной функции $\lambda_{\max}/\lambda_{\min}$. <a class="gref" href="#" data-t="{{@kappa}}">{{~kappa}}</a></span></li>
+<li><span class="gs">$\rho(\eta)$</span><span class="gd">Множитель, на который за шаг спуска сокращается расстояние до минимума квадратичной функции. <a class="gref" href="#" data-t="{{@quadgd}}">{{~quadgd}}</a></span></li>
+<li><span class="gs">$\|g\|_*,\ u_*$</span><span class="gd">Двойственная норма и направление наискорейшего роста относительно выбранной нормы. <a class="gref" href="#" data-t="{{@dual}}">{{~dual}}</a></span></li>
+<li><span class="gs">$\operatorname{sign}g$</span><span class="gd">Вектор знаков координат $g$. <a class="gref" href="#" data-t="{{@three}}">{{~three}}</a></span></li>
+<li><span class="gs">$\langle x,y\rangle_A,\ \|x\|_A$</span><span class="gd">Скалярное произведение $x^\top Ay$ и его длина $\sqrt{x^\top Ax}$. <a class="gref" href="#" data-t="#s6three">§6</a></span></li>
+<li><span class="gs">$A^p$</span><span class="gd">Степень положительно определённой матрицы: $Q\Lambda^pQ^\top$. <a class="gref" href="#" data-t="{{@mpow}}">{{~mpow}}</a></span></li>
+</ol></div></nav>
+<article class="book">
+<header class="ch">
+  <div class="eyebrow">Мини-учебник</div>
+  <h1>Оптимизаторы: от случайного перебора до Muon и Shampoo</h1>
+  <p class="lead">Обучение нейросети — это спуск по рельефу функции потерь в густом тумане: видно только, куда склон уходит под ногами. Здесь мы честно разберём, куда и как далеко шагать, и увидим, что «самое крутое направление» зависит от того, как мерить длину шага. Из этой одной мысли вырастают градиентный спуск, знак градиента и Adam, метод Ньютона, натуральный градиент, а в конце — Shampoo и Muon, которые обращаются с градиентом-матрицей как с матрицей. Нужны анализ функций многих переменных, линейная алгебра и начала теории вероятностей.</p>
+  <p class="lead">Сейчас готовы §1–§6, до главной идеи книги; следующие параграфы появятся следующими частями.</p>
+  <ul class="toc">
+    <li><a href="#s1">§1. Откуда вопрос</a></li>
+    <li><a href="#s2">§2. Напоминание и обозначения</a></li>
+    <li><a href="#s3">§3. Без производных: случайный перебор и отжиг</a></li>
+    <li><a href="#s4">§4. Градиент — направление наискорейшего роста</a></li>
+    <li><a href="#s5">§5. Градиентный спуск</a></li>
+    <li><a href="#s6">§6. Самое крутое направление зависит от нормы</a></li>
+  </ul>
+</header>

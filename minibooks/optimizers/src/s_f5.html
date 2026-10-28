@@ -1,0 +1,95 @@
+<script>
+(function(){
+  /* Fig. upper: a function of one variable between the parabolas f(x) + f'(x)(t-x) +- L/2 (t-x)^2, and the step to the minimum of the upper one. */
+  const cv=document.getElementById('upper');if(!cv||!window.TB||!TB.fit)return;
+  const sL=document.getElementById('upL'),oL=document.getElementById('upLOut'),fx=document.getElementById('upFx');
+  const f=t=>0.25*t*t+0.5*Math.sin(1.7*t+0.4)+0.1*t,df=t=>0.5*t+0.85*Math.cos(1.7*t+0.4)+0.1;
+  let x=-2.2,geo=null;
+  function draw(){
+    const L=+sL.value;oL.textContent=TB.fmt(L,2);
+    const F=TB.fit(cv,W=>Math.max(300,Math.min(420,Math.round(W*0.55)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:13;
+    const A=TB.axes(c,{L:sm?34:44,T:14,R:W-10,B:H-28,x0:-4,x1:4,y0:-1.5,y1:5.5,xt:[-4,-2,0,2,4],yt:[0,2,4],s:s,xl:[['t','i']]},K);
+    geo=A;
+    const fx0=f(x),g=df(x),up=t=>fx0+g*(t-x)+L/2*(t-x)**2,lo=t=>fx0+g*(t-x)-L/2*(t-x)**2,tan=t=>fx0+g*(t-x);
+    c.save();c.beginPath();c.rect(A.X(-4),A.Y(5.5),A.X(4)-A.X(-4),A.Y(-1.5)-A.Y(5.5));c.clip();
+    const n=400,ts=[];for(let i=0;i<=n;i++)ts.push(-4+8*i/n);
+    // band between the parabolas
+    c.fillStyle=TB.rgba(K.eth,0.08);c.beginPath();ts.forEach((t,i)=>{i?c.lineTo(A.X(t),A.Y(up(t))):c.moveTo(A.X(t),A.Y(up(t)));});
+    for(let i=n;i>=0;i--)c.lineTo(A.X(ts[i]),A.Y(lo(ts[i])));c.closePath();c.fill();
+    // places where the graph leaves the band
+    c.fillStyle=TB.rgba(K.warm,0.4);
+    const runs=(bad,edge)=>{let run=[];const flush=()=>{if(run.length>1){c.beginPath();run.forEach((t,k)=>{k?c.lineTo(A.X(t),A.Y(edge(t))):c.moveTo(A.X(t),A.Y(edge(t)));});
+        for(let k=run.length-1;k>=0;k--)c.lineTo(A.X(run[k]),A.Y(f(run[k])));c.closePath();c.fill();}run=[];};
+      ts.forEach(t=>{if(bad(t))run.push(t);else flush();});flush();};
+    runs(t=>f(t)>up(t),up);runs(t=>f(t)<lo(t),lo);
+    const line=(fn,col,w,dash)=>{c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.beginPath();ts.forEach((t,i)=>{i?c.lineTo(A.X(t),A.Y(fn(t))):c.moveTo(A.X(t),A.Y(fn(t)));});c.stroke();c.setLineDash([]);};
+    line(tan,TB.rgba(K.muted,0.9),1.2,[5,4]);line(lo,K.eth,1.6,[6,4]);line(up,K.eth,2);line(f,K.ink,2.4);
+    c.restore();
+    const xp=x-g/L,bound=fx0-g*g/(2*L),real=f(xp);
+    const P=[A.X(x),A.Y(fx0)],Q=[A.X(xp),A.Y(up(xp))];
+    if(Math.abs(Q[0]-P[0])>3&&Q[0]>A.X(-4)-1&&Q[0]<A.X(4)+1){TB.arrow(c,P[0],P[1],Q[0],Q[1],K.warm,2);
+      c.strokeStyle=TB.rgba(K.warm,0.8);c.setLineDash([3,3]);c.lineWidth=1.2;c.beginPath();c.moveTo(Q[0],Q[1]);c.lineTo(Q[0],A.Y(real));c.stroke();c.setLineDash([]);
+      TB.ring(c,Q[0],Q[1],K.warm,K,4.5);TB.dot(c,Q[0],A.Y(Math.max(-1.5,Math.min(5.5,real))),K.warm,K,4.5);}
+    TB.dot(c,P[0],P[1],K.ink,K,6);
+    TB.tag(c,[['x','i']],P[0],A.Y(-1.5)-6,s+1,K.ink,K,'center');
+    const ok=real<=bound+1e-12,lrange=t=>Math.abs(0.5-1.445*Math.sin(1.7*t+0.4));
+    fx.innerHTML=TB.rows([['<i>f</i>(<i>x</i>) = '+TB.fmt(fx0,3)+',','шаг −<i>f</i>′(<i>x</i>)/<i>L</i> = '+TB.fmt(-g/L,3)],
+      ['гарантия: <i>f</i>(<i>x</i>) − <i>f</i>′(<i>x</i>)²/(2<i>L</i>) = '+TB.fmt(bound,3)+',','на деле: '+TB.fmt(real,3)+(ok?' — гарантия выполнена':' — гарантия нарушена')]]);
+  }
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(x),py-geo.Y(f(x)))<(t?26:14)||Math.abs(px-geo.X(x))<(t?20:10)?1:null;},
+    move:(h,px)=>{x=Math.max(-3.8,Math.min(3.8,-4+(px-geo.X(-4))/(geo.X(4)-geo.X(-4))*8));redraw();}});
+  sL.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. gd: gradient descent on f(x) = x^T A x / 2 with lambda_max = 1, lambda_min = 1/kappa, axes turned by 25 degrees; level lines and log f by steps. */
+  const cv=document.getElementById('gd');if(!cv||!window.TB||!TB.fit)return;
+  const sK=document.getElementById('gdK'),oK=document.getElementById('gdKOut'),sE=document.getElementById('gdE'),oE=document.getElementById('gdEOut'),fx=document.getElementById('gdFx');
+  const ANG=25*Math.PI/180,q1=[Math.cos(ANG),Math.sin(ANG)],q2=[-Math.sin(ANG),Math.cos(ANG)],NS=60;
+  let x0=[-2.6,0.2],shown=NS,geo=null;
+  const kap=()=>Math.pow(10,+sK.value);
+  const fq=(x,y,k)=>{const a=x*q1[0]+y*q1[1],b=x*q2[0]+y*q2[1];return 0.5*(a*a+b*b/k);};
+  function traj(k,eta){const out=[x0.slice()];let a=x0[0]*q1[0]+x0[1]*q1[1],b=x0[0]*q2[0]+x0[1]*q2[1];
+    for(let i=0;i<NS;i++){a*=1-eta;b*=1-eta/k;out.push([a*q1[0]+b*q2[0],a*q1[1]+b*q2[1]]);}return out;}
+  function draw(){
+    const k=kap(),eta=+sE.value;oK.textContent='κ = '+TB.fmt(k,k<10?1:0);oE.textContent=TB.fmt(eta,2);
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.25):Math.max(300,Math.round(W*0.5))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,R=3,pw=sm?W-8:W*0.52,ph=sm?Math.round((W-8)*0.62):H-8,sc=Math.min(pw/(2*R),ph/(2*R*0.62)),ox=4+pw/2,oy=4+ph/2;
+    const X=v=>ox+v*sc,Y=v=>oy-v*sc;geo={ux:p=>(p-ox)/sc,uy:p=>(oy-p)/sc,X:X,Y:Y};
+    c.save();c.beginPath();c.rect(4,4,pw,ph);c.clip();
+    c.fillStyle=TB.rgba(K.eth,0.04);c.fillRect(4,4,pw,ph);
+    for(const v of [0.005,0.02,0.08,0.2,0.45,0.9,1.6,2.6,4]){c.beginPath();c.ellipse(ox,oy,Math.sqrt(2*v)*sc,Math.sqrt(2*v*k)*sc,-ANG,0,7);c.strokeStyle=TB.rgba(K.ink,0.25);c.lineWidth=1;c.stroke();}
+    const tr=traj(k,eta);let m=Math.min(shown,NS);for(let i=1;i<=m;i++)if(Math.hypot(tr[i][0],tr[i][1])>15){m=i;break;}
+    c.strokeStyle=K.warm;c.lineWidth=1.7;c.beginPath();for(let i=0;i<=m;i++){const P=[X(tr[i][0]),Y(tr[i][1])];i?c.lineTo(P[0],P[1]):c.moveTo(P[0],P[1]);}c.stroke();
+    for(let i=1;i<=m;i++){c.fillStyle=K.warm;c.beginPath();c.arc(X(tr[i][0]),Y(tr[i][1]),2.4,0,7);c.fill();}
+    c.restore();
+    c.strokeStyle=K.ink;c.lineWidth=1.4;c.beginPath();c.moveTo(ox-4,oy-4);c.lineTo(ox+4,oy+4);c.moveTo(ox+4,oy-4);c.lineTo(ox-4,oy+4);c.stroke();
+    TB.dot(c,X(x0[0]),Y(x0[1]),K.ink,K,6);TB.tag(c,[['x','i'],['0','s']],X(x0[0])+9,Y(x0[1])-9,s+1,K.ink,K);
+    // log f by steps
+    const gL=sm?44:W*0.52+56,gR=W-12,gT=sm?ph+24:20,gB=H-30;
+    const A=TB.axes(c,{L:gL,T:gT,R:gR,B:gB,x0:0,x1:NS,y0:-12,y1:2,xt:[0,20,40,60],yt:[-12,-8,-4,0],s:s,xl:[['шаг ','r'],['k','i']],yl:[['lg ','r'],['f','i'],['(','m'],['x','i'],['k','s'],[')','m']]},K);
+    const lf=p=>Math.log10(Math.max(1e-300,fq(p[0],p[1],k))),f0=fq(x0[0],x0[1],k);
+    const rho=Math.max(Math.abs(1-eta),Math.abs(1-eta/k));
+    c.save();c.beginPath();c.rect(gL,gT,gR-gL,gB-gT);c.clip();
+    c.strokeStyle=TB.rgba(K.ink,0.55);c.setLineDash([5,4]);c.lineWidth=1.3;c.beginPath();c.moveTo(A.X(0),A.Y(Math.log10(f0)));c.lineTo(A.X(NS),A.Y(Math.log10(f0)+2*NS*Math.log10(Math.max(rho,1e-12))));c.stroke();c.setLineDash([]);
+    c.strokeStyle=K.warm;c.lineWidth=2;c.beginPath();for(let i=0;i<=Math.min(shown,NS);i++){const y=A.Y(Math.max(-13,Math.min(3,lf(tr[i]))));i?c.lineTo(A.X(i),y):c.moveTo(A.X(i),y);}c.stroke();
+    c.restore();
+    const steps=rho<1?Math.ceil(Math.log(1e-6)/(2*Math.log(rho))):Infinity;
+    fx.innerHTML=TB.rows([['вдоль крутой оси 1 − ηλ<sub>max</sub> = '+TB.fmt(1-eta,3)+',','вдоль пологой 1 − ηλ<sub>min</sub> = '+TB.fmt(1-eta/k,3)],
+      ['ρ = '+TB.fmt(rho,3)+',',rho<1?'шагов до <i>f</i> &lt; 10⁻⁶·<i>f</i>(<i>x</i><sub>0</sub>): '+steps.toLocaleString('ru-RU'):'спуск разлетается']]);
+  }
+  const pl=TB.player(()=>{shown++;draw();return shown<NS;},70);
+  const full=()=>{pl.stop();shown=NS;draw();};
+  document.getElementById('gdRun').addEventListener('click',()=>{shown=0;draw();pl.start();});
+  document.getElementById('gdBest').addEventListener('click',()=>{const k=kap();sE.value=(2*k/(k+1)).toFixed(2);full();});
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(x0[0]),py-geo.Y(x0[1]))<(t?26:14)?1:null;},
+    move:(h,px,py)=>{pl.stop();shown=NS;x0=[Math.max(-2.9,Math.min(2.9,geo.ux(px))),Math.max(-1.75,Math.min(1.75,geo.uy(py)))];redraw();}});
+  sK.addEventListener('input',full);sE.addEventListener('input',full);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>

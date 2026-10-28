@@ -1,0 +1,67 @@
+<script>
+(function(){
+  /* Fig. balls: the unit balls of l1, l2 and l-infinity, and the three norms of a draggable vector. */
+  const cv=document.getElementById('balls');if(!cv||!window.TB||!TB.fit)return;
+  const g1=new TB.Gauge('gBl1'),g2=new TB.Gauge('gBl2'),g3=new TB.Gauge('gBl3');
+  let x=[1.3,0.6],geo=null;
+  const shape=(c,k,r,X,Y)=>{c.beginPath();
+    if(k===1){c.moveTo(X(r),Y(0));c.lineTo(X(0),Y(r));c.lineTo(X(-r),Y(0));c.lineTo(X(0),Y(-r));c.closePath();}
+    else if(k===2){c.ellipse(X(0),Y(0),X(r)-X(0),X(r)-X(0),0,0,7);}
+    else{c.rect(X(-r),Y(r),X(r)-X(-r),Y(-r)-Y(r));}};
+  function draw(){
+    const F=TB.fit(cv,W=>Math.max(300,Math.min(440,Math.round(W*0.6)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,R=2.3,side=H-16,ox=W/2,oy=H/2,sc=side/(2*R);
+    const X=v=>ox+v*sc,Y=v=>oy-v*sc;geo={X:X,Y:Y,ux:p=>(p-ox)/sc,uy:p=>(oy-p)/sc};
+    const col={1:K.sage,2:K.eth,3:K.warm};
+    c.save();c.beginPath();c.rect(X(-R),Y(R),2*R*sc,2*R*sc);c.clip();
+    // grid and axes
+    c.strokeStyle=TB.rgba(K.rule,0.7);c.lineWidth=1;c.beginPath();for(let v=-2;v<=2;v++){c.moveTo(X(v),Y(-R));c.lineTo(X(v),Y(R));c.moveTo(X(-R),Y(v));c.lineTo(X(R),Y(v));}c.stroke();
+    c.strokeStyle=K.muted;c.beginPath();c.moveTo(X(-R),Y(0));c.lineTo(X(R),Y(0));c.moveTo(X(0),Y(-R));c.lineTo(X(0),Y(R));c.stroke();
+    const n1=Math.abs(x[0])+Math.abs(x[1]),n2=Math.hypot(x[0],x[1]),n3=Math.max(Math.abs(x[0]),Math.abs(x[1]));
+    [[3,n3],[2,n2],[1,n1]].forEach(([k,n])=>{shape(c,k,1,X,Y);c.fillStyle=TB.rgba(col[k],0.10);c.fill();c.strokeStyle=col[k];c.lineWidth=2;c.setLineDash([]);c.stroke();
+      shape(c,k,n,X,Y);c.setLineDash([5,4]);c.lineWidth=1.4;c.stroke();c.setLineDash([]);});
+    c.restore();
+    TB.tag(c,[['1','r']],X(1)+9,Y(0)+s+4,s-1,K.muted,K,'center');TB.tag(c,[['−1','r']],X(-1)-12,Y(0)+s+4,s-1,K.muted,K,'center');TB.tag(c,[['1','r']],X(0)-9,Y(1)-5,s-1,K.muted,K,'center');
+    TB.tag(c,[['ℓ','i'],['1','s']],X(-0.32),Y(-0.32)+s*0.4,s,K.sage,K,'center');
+    TB.tag(c,[['ℓ','i'],['2','s']],X(-0.84),Y(0.84)+s*0.4,s,K.eth,K,'center');
+    TB.tag(c,[['ℓ','i'],['∞','s']],X(0.86),Y(-0.86)+s*0.4,s,K.warm,K,'center');
+    TB.arrow(c,X(0),Y(0),X(x[0]),Y(x[1]),K.ink,2);TB.dot(c,X(x[0]),Y(x[1]),K.ink,K,5.5);
+    TB.tag(c,[['x','i']],X(x[0])+10,Y(x[1])-8,s+1,K.ink,K);
+    g1.set(n1,K.sage);g2.set(n2,K.eth);g3.set(n3,K.warm);
+  }
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(x[0]),py-geo.Y(x[1]))<(t?26:14)?1:null;},
+    move:(h,px,py)=>{x=[Math.max(-2.1,Math.min(2.1,geo.ux(px))),Math.max(-2.1,Math.min(2.1,geo.uy(py)))];if(Math.hypot(x[0],x[1])<0.05)x=[0.05,0];redraw();}});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. quad: level lines of x^T A x for A = Q diag(l1, l2) Q^T, with the eigenvectors drawn to the semi-axes of the level-1 ellipse. */
+  const cv=document.getElementById('quad');if(!cv||!window.TB||!TB.fit)return;
+  const s1=document.getElementById('qdL1'),s2=document.getElementById('qdL2'),sa=document.getElementById('qdA'),fx=document.getElementById('qdFx');
+  const o1=document.getElementById('qdL1Out'),o2=document.getElementById('qdL2Out'),oa=document.getElementById('qdAOut');
+  function draw(){
+    const l1=+s1.value,l2=+s2.value,a=+sa.value*Math.PI/180;o1.textContent=TB.fmt(l1,1);o2.textContent=TB.fmt(l2,1);oa.textContent=sa.value+'°';
+    const F=TB.fit(cv,W=>Math.max(300,Math.min(420,Math.round(W*0.56)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,R=2.6,sc=(H-16)/(2*R),ox=W/2,oy=H/2,X=v=>ox+v*sc,Y=v=>oy-v*sc;
+    c.save();c.beginPath();c.rect(0,0,W,H);c.clip();
+    c.strokeStyle=K.muted;c.lineWidth=1;c.beginPath();c.moveTo(0,oy);c.lineTo(W,oy);c.moveTo(ox,0);c.lineTo(ox,H);c.stroke();
+    [0.25,0.5,1,2,4,8].forEach(v=>{c.beginPath();c.ellipse(ox,oy,Math.sqrt(v/l1)*sc,Math.sqrt(v/l2)*sc,-a,0,7);
+      c.strokeStyle=v===1?K.ink:TB.rgba(K.ink,0.35);c.lineWidth=v===1?2:1.1;c.stroke();});
+    c.restore();
+    const q1=[Math.cos(a),Math.sin(a)],q2=[-Math.sin(a),Math.cos(a)],r1=1/Math.sqrt(l1),r2=1/Math.sqrt(l2);
+    TB.arrow(c,ox,oy,X(q1[0]*r1),Y(q1[1]*r1),K.eth,2.4);TB.arrow(c,ox,oy,X(q2[0]*r2),Y(q2[1]*r2),K.warm,2.4);
+    const lab=(q,r,txt,col)=>{const e=r+0.32;TB.tag(c,txt,X(q[0]*e),Y(q[1]*e)+s*0.4,s+1,col,K,'center');};
+    lab(q1,r1,[['q','i'],['1','s']],K.eth);lab(q2,r2,[['q','i'],['2','s']],K.warm);
+    TB.tag(c,[['уровень 1','r']],X(-q1[0]*(r1+0.08)),Y(-q1[1]*(r1+0.08))+s*0.4,s-1,K.ink,K,q1[0]>0?'right':'left');
+    const A11=l1*q1[0]**2+l2*q2[0]**2,A12=l1*q1[0]*q1[1]+l2*q2[0]*q2[1],A22=l1*q1[1]**2+l2*q2[1]**2;
+    const m='<span style="display:inline-grid;grid-template-columns:auto auto;gap:0 .9em;border-left:1.5px solid currentColor;border-right:1.5px solid currentColor;border-radius:6px;padding:0 .45em;vertical-align:middle;text-align:right">'+[A11,A12,A12,A22].map(v=>'<span>'+TB.fmt(v,2)+'</span>').join('')+'</span>';
+    const k=Math.max(l1,l2)/Math.min(l1,l2);
+    fx.innerHTML=TB.rows([['<i>A</i> = '+m],['λ<sub>max</sub>/λ<sub>min</sub> = '+TB.fmt(k,2)]]);
+  }
+  [s1,s2,sa].forEach(e=>e.addEventListener('input',draw));draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>

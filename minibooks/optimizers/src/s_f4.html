@@ -1,0 +1,55 @@
+<script>
+(function(){
+  /* Fig. steep: level lines, the circle of unit directions coloured by the directional derivative, and that derivative as a function of the angle. */
+  const cv=document.getElementById('steep');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('stFx');
+  const f=(x,y)=>0.35*x*x+0.9*y*y+0.4*x*y+0.6*Math.sin(1.3*x+0.8*y);
+  const grad=(x,y)=>{const c=0.6*Math.cos(1.3*x+0.8*y);return [0.7*x+0.4*y+1.3*c,1.8*y+0.4*x+0.8*c];};
+  let p=[-1.1,0.9],th=2.6,geo=null;const RU=0.75;
+  function draw(){
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.5):Math.max(300,Math.round(W*0.5))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,R=2.5;
+    const side=sm?W-8:Math.min(H-8,W*0.5-12),ox=4+side/2,oy=4+side/2,sc=side/(2*R);
+    const X=v=>ox+v*sc,Y=v=>oy-v*sc;
+    // right (or lower) panel
+    const gL=sm?40:W*0.5+40,gR=W-12,gT=sm?side+30:22,gB=H-30;
+    const g=grad(p[0],p[1]),gn=Math.hypot(g[0],g[1]),ga=Math.atan2(g[1],g[0]);
+    const A=TB.axes(c,{L:gL,T:gT,R:gR,B:gB,x0:0,x1:360,y0:-6,y1:6,xt:[0,90,180,270,360],yt:[-6,-3,0,3,6],s:s,xl:[['угол ','r'],['u','i'],[', °','r']],yl:[['∂','m'],['u','s'],['f','i'],['(','m'],['x','i'],[')','m']]},K);
+    c.strokeStyle=TB.rgba(K.rule,0.9);c.beginPath();c.moveTo(gL,A.Y(0));c.lineTo(gR,A.Y(0));c.stroke();
+    const deg=a=>((a*180/Math.PI)%360+360)%360;
+    c.strokeStyle=TB.rgba(K.ink,0.45);c.setLineDash([4,4]);c.beginPath();c.moveTo(A.X(deg(ga)),gT);c.lineTo(A.X(deg(ga)),gB);c.stroke();c.setLineDash([]);
+    TB.tag(c,[['∇','m'],['f','i']],A.X(deg(ga))+4,gT+s+2,s,K.ink,K);
+    [gn,-gn].forEach(v=>{c.strokeStyle=TB.rgba(K.muted,0.6);c.setLineDash([2,4]);c.beginPath();c.moveTo(gL,A.Y(v));c.lineTo(gR,A.Y(v));c.stroke();c.setLineDash([]);});
+    c.lineWidth=2.2;for(let i=0;i<360;i++){const a0=i,a1=i+1,v0=gn*Math.cos(a0*Math.PI/180-ga),v1=gn*Math.cos(a1*Math.PI/180-ga);
+      c.strokeStyle=(v0+v1)>0?K.warm:K.eth;c.beginPath();c.moveTo(A.X(a0),A.Y(v0));c.lineTo(A.X(a1),A.Y(v1));c.stroke();}
+    const du=gn*Math.cos(th-ga);TB.dot(c,A.X(deg(th)),A.Y(du),K.muted,K,6);
+    // left (or upper) panel: level lines
+    c.save();c.beginPath();c.rect(ox-side/2,oy-side/2,side,side);c.clip();
+    const lv=[];for(let k=-0.8;k<=8;k+=0.4)lv.push(k);
+    TB.contours(c,f,-R,R,-R,R,X,Y,lv,80,()=>{c.strokeStyle=TB.rgba(K.ink,0.25);c.lineWidth=1;});
+    const P=[X(p[0]),Y(p[1])],r=RU*sc;
+    for(let i=0;i<120;i++){const a0=i/120*2*Math.PI,a1=(i+1)/120*2*Math.PI,cs=Math.cos((a0+a1)/2-ga);
+      c.strokeStyle=TB.rgba(cs>0?K.warm:K.eth,0.25+0.75*Math.abs(cs));c.lineWidth=6;c.beginPath();c.arc(P[0],P[1],r,-a1,-a0);c.stroke();}
+    c.restore();
+    const gl=Math.min(1.3,0.35+gn*0.3)*sc;
+    TB.arrow(c,P[0],P[1],P[0]+Math.cos(ga)*gl,P[1]-Math.sin(ga)*gl,K.ink,2.4);
+    TB.tag(c,[['∇','m'],['f','i'],['(','m'],['x','i'],[')','m']],P[0]+Math.cos(ga)*(gl+16),P[1]-Math.sin(ga)*(gl+16)+s*0.4,s,K.ink,K,'center');
+    TB.arrow(c,P[0],P[1],P[0]+Math.cos(th)*r,P[1]-Math.sin(th)*r,K.muted,2.4);
+    TB.ring(c,P[0]+Math.cos(th)*r,P[1]-Math.sin(th)*r,K.muted,K,5);
+    TB.tag(c,[['u','i']],P[0]+Math.cos(th)*(r+14),P[1]-Math.sin(th)*(r+14)+s*0.4,s+1,K.muted,K,'center');
+    TB.dot(c,P[0],P[1],K.ink,K,5);
+    geo={X:X,Y:Y,sc:sc,ux:v=>(v-ox)/sc,uy:v=>(oy-v)/sc,side:side,ox:ox,oy:oy,A:A,gT:gT,gB:gB,gL:gL,gR:gR};
+    let phi=((th-ga)*180/Math.PI)%360;if(phi>180)phi-=360;if(phi<-180)phi+=360;
+    fx.innerHTML=TB.rows([['‖∇<i>f</i>(<i>x</i>)‖ = '+TB.fmt(gn,2)+',','угол между <i>u</i> и градиентом '+Math.round(Math.abs(phi))+'°'],['∂<sub><i>u</i></sub><i>f</i>(<i>x</i>) = ‖∇<i>f</i>(<i>x</i>)‖ cos φ = '+TB.fmt(du,2)]]);
+  }
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(x,y,t)=>{if(!geo)return null;const tol=t?24:12,P=[geo.X(p[0]),geo.Y(p[1])],r=RU*geo.sc,U=[P[0]+Math.cos(th)*r,P[1]-Math.sin(th)*r];
+      if(Math.hypot(x-U[0],y-U[1])<tol)return 'u';if(Math.hypot(x-P[0],y-P[1])<tol)return 'p';
+      if(x>=geo.gL&&x<=geo.gR&&y>=geo.gT&&y<=geo.gB)return 'g';return null;},
+    move:(h,x,y)=>{if(h==='p'){p=[Math.max(-2,Math.min(2,geo.ux(x))),Math.max(-2,Math.min(2,geo.uy(y)))];}
+      else if(h==='u'){const P=[geo.X(p[0]),geo.Y(p[1])];th=Math.atan2(P[1]-y,x-P[0]);}
+      else{const a=(x-geo.gL)/(geo.gR-geo.gL)*360;th=Math.max(0,Math.min(360,a))*Math.PI/180;}redraw();}});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
