@@ -4,7 +4,9 @@ import os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'optimizers.html')
-BODY = ['b0_gloss.html'] + sorted([f for f in os.listdir(SRC) if re.fullmatch(r'b\d+\.html', f) and f != 'b0_gloss.html'], key=lambda f: int(f[1:-5])) + ['b_end.html']
+# MAXSEC=N in the environment leaves out sections after N (to rebuild a published part while later ones are being written).
+MAXSEC = int(os.environ.get('MAXSEC', '999'))
+BODY = ['b0_gloss.html'] + sorted([f for f in os.listdir(SRC) if re.fullmatch(r'b\d+\.html', f) and f != 'b0_gloss.html' and int(f[1:-5]) <= MAXSEC], key=lambda f: int(f[1:-5])) + ['b_end.html']
 SCRIPTS = ['s_capfold.html', 's_xref.html', 's_helpers.html', 's_lib.html'] + sorted([f for f in os.listdir(SRC) if re.fullmatch(r's_f\d+\.html', f)], key=lambda f: int(f[3:-5])) + ['s_tail.html']
 rd = lambda f: open(os.path.join(SRC, f), encoding='utf-8').read()
 
