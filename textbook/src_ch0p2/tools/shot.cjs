@@ -1,4 +1,4 @@
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs');
 const MJ=fs.readFileSync(process.cwd()+'/mj/node_modules/mathjax/es5/tex-svg.js','utf8');
 /* name: [figure element id, list of actions]; an action is ['v', input id, value] or ['k', canvas id, data-k]. */

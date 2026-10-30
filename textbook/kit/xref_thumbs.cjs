@@ -1,6 +1,6 @@
 // node kit/xref_thumbs.cjs page.html … : renders every numbered figure of the built pages as a small picture in both themes,
 // kit/thumbs/<key>_<light|dark>.png; kit/xref_index.py turns them into WebP thumbnails for the cards of mentions in other parts.
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
 const MJ=fs.readFileSync(process.cwd()+'/mj/node_modules/mathjax/es5/tex-svg.js','utf8');
 const OUT=path.join(__dirname,'thumbs');fs.mkdirSync(OUT,{recursive:true});

@@ -1,0 +1,13 @@
+# working folder of textbook/kit/workspace.py and what the chapter builds write next to their sources
+textbook/_work/
+textbook/mj
+textbook/src_*/body.part
+textbook/src_*/scripts.part
+textbook/src_ch0p2/ch0p2.html
+textbook/src_ch0p3/ch0p3.html
+textbook/src_chAngle/ch_angle.html
+textbook/src_chNabla/ch_nabla.html
+textbook/src_chNp1/ch_n_part1.html
+__pycache__/
+node_modules/
+*.bak*

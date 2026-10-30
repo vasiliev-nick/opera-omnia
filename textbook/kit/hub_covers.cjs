@@ -1,5 +1,5 @@
 // node kit/hub_covers.cjs : sharp cover pictures for the library page (index.html), one figure per book part, both themes.
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');const MJ=fs.readFileSync(process.cwd()+'/mj/node_modules/mathjax/es5/tex-svg.js','utf8');
 const COVERS=[['p1','ch0_lebesgue.html','∅.1'],['p2','p2/ch0p2.html','∅.24'],['p3','p3/ch0p3.html','∅.60'],['nb','nb/ch_nabla.html','∇.11'],
   ['ang','ang/ch_angle.html','∠.1'],['n1','n1/ch_n_part1.html','𝒩.1'],['mb','/mnt/project-files/minibooks/cross_entropy/cross_entropy_file.html','14']];

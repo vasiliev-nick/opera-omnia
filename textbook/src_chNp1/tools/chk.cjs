@@ -1,5 +1,5 @@
 // Usage (from the scratchpad root): node n1/tools/chk.cjs — structural checks of the built page of chapter 𝒩, part 1.
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs');const path=require('path');
 const SP=path.resolve(__dirname,'..','..');
 const MJ=fs.readFileSync(SP+'/mj/node_modules/mathjax/es5/tex-svg.js','utf8');

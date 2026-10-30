@@ -1,5 +1,5 @@
 // interaction smoke test: for every figure canvas and every seg mode, drag on the canvas, tap it, move every slider, click the other buttons; report JS errors
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs');const MJ=fs.readFileSync(process.cwd()+'/mj/node_modules/mathjax/es5/tex-svg.js','utf8');
 (async()=>{const b=await chromium.launch();
 for(const w of [820,390]){const p=await b.newPage({viewport:{width:w,height:900}});const errs=[];

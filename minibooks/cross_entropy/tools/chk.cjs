@@ -1,5 +1,5 @@
 // Usage: node chk.cjs <page.html> <tex-svg.js>. Static checks of the assembled page in headless Chromium.
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs');const [page,mj]=process.argv.slice(2);const MJ=fs.readFileSync(mj,'utf8');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:820,height:1000}});const errs=[];
 p.on('pageerror',e=>errs.push(String(e)));p.on('console',m=>{if(m.type()==='error')errs.push(m.text());});

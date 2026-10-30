@@ -1,5 +1,5 @@
 // Usage (from the scratchpad root): node n1/tools/shot.cjs <light|dark> <width> [names] — screenshots of every figure of chapter 𝒩, part 1, in several states.
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs');const path=require('path');
 const SP=path.resolve(__dirname,'..','..');
 const MJ=fs.readFileSync(SP+'/mj/node_modules/mathjax/es5/tex-svg.js','utf8');

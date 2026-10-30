@@ -1,5 +1,5 @@
 // node figshot.cjs page.html outprefix id1,id2,... : screenshots of the figures holding these canvases at 820/390, light/dark.
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs');const MJ=fs.readFileSync(process.cwd()+'/mj/node_modules/mathjax/es5/tex-svg.js','utf8');
 const [page,out,ids]=process.argv.slice(2);
 (async()=>{const b=await chromium.launch();

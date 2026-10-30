@@ -1,5 +1,5 @@
 // Usage: node shot.cjs <page.html> <tex-svg.js> <outdir> <theme> <width> [names]. Screenshots of every figure in several states.
-const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+const {chromium}=require('playwright');
 const fs=require('fs');const [page,mj,out,theme,wid,only]=process.argv.slice(2);const MJ=fs.readFileSync(mj,'utf8');const width=+wid;
 /* name: [canvas id, actions]; ['v',input,value], ['k',canvas,data-k] or ['c',button id]. */
 const SHOTS={
