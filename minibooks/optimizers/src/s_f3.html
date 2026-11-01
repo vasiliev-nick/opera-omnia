@@ -46,12 +46,16 @@
   let bl=gmin,br=gmin;while(bl>0&&v[bl-1]>v[bl])bl--;while(br<N-1&&v[br+1]>v[br])br++;
   const START=64,rnd=TB.rng(11);
   let mode=TB.seg1(cv.closest('figure').querySelector('.seg'),k=>{mode=k;reset();});
-  let pos=START,T=1,visits=new Array(N).fill(0),steps=0,inW=0;
+  let start=START,pos=START,T=1,visits=new Array(N).fill(0),steps=0,inW=0,last=null,geo=null;
   const T0=()=>Math.pow(10,+sT.value);
   function boltz(T){const m=Math.min(...v),w=v.map(x=>Math.exp(-(x-m)/T)),z=w.reduce((a,b)=>a+b,0);return w.map(x=>x/z);}
-  function reset(){pl.stop();pos=START;T=T0();oT.textContent='T = '+TB.fmt(T,T<0.1?3:2);visits.fill(0);steps=0;inW=0;draw();}
-  function step(){const y=pos+(rnd()<0.5?-1:1)*(1+Math.floor(rnd()*10));if(y>=0&&y<N){const dl=v[y]-v[pos];if(dl<=0||rnd()<Math.exp(-dl/T))pos=y;}
-    visits[pos]++;steps++;if(pos>=bl&&pos<=br)inW++;}
+  function reset(){pl.stop();pos=start;last=null;T=T0();oT.textContent='T = '+TB.fmt(T,T<0.1?3:2);visits.fill(0);steps=0;inW=0;draw();}
+  /* one Metropolis step; the last proposal is kept so that a single step can be explained */
+  function step(keep){const sh=(rnd()<0.5?-1:1)*(1+Math.floor(rnd()*10)),y=pos+sh,L={from:pos,to:y,sh:sh,T:T};
+    if(y<0||y>=N){L.edge=true;L.acc=false;}
+    else{const dl=v[y]-v[pos];L.dl=dl;if(dl<=0)L.acc=true;else{L.p=Math.exp(-dl/T);L.u=rnd();L.acc=L.u<L.p;}if(L.acc)pos=y;}
+    visits[pos]++;steps++;if(pos>=bl&&pos<=br)inW++;last=keep?L:null;}
+  const coolT=()=>{const t0=T0();return t0*Math.pow(0.01/t0,Math.min(1,steps/60000));};
   function draw(){
     const F=TB.fit(cv,W=>Math.max(330,Math.min(430,Math.round(W*0.56)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
     c.fillStyle=K.paper;c.fillRect(0,0,W,H);
@@ -59,7 +63,13 @@
     const A=TB.axes(c,{L:L,T:12,R:R,B:mid-14,x0:0,x1:1,y0:-0.9,y1:1.1,yt:[-0.5,0,0.5,1],s:s,yl:[['f','i']]},K);
     c.strokeStyle=TB.rgba(K.eth,0.10);c.fillStyle=TB.rgba(K.eth,0.07);c.fillRect(A.X(bl/(N-1)),12,A.X(br/(N-1))-A.X(bl/(N-1)),mid-26);
     c.strokeStyle=K.ink;c.lineWidth=2;c.beginPath();v.forEach((y,i)=>{const X=A.X(i/(N-1)),Y=A.Y(y);i?c.lineTo(X,Y):c.moveTo(X,Y);});c.stroke();
+    if(last&&!last.edge){const x1=A.X(last.from/(N-1)),y1=A.Y(v[last.from]),x2=A.X(last.to/(N-1)),y2=A.Y(v[last.to]),col=last.acc?K.sage:K.muted;
+      c.setLineDash(last.acc?[]:[4,4]);c.strokeStyle=col;c.lineWidth=1.6;c.beginPath();c.moveTo(x1,y1);c.quadraticCurveTo((x1+x2)/2,Math.min(y1,y2)-26,x2,y2);c.stroke();c.setLineDash([]);
+      TB.ring(c,x2,y2,col,K,5);if(!last.acc)TB.dot(c,x1,y1,K.muted,K,3);}
     TB.dot(c,A.X(pos/(N-1)),A.Y(v[pos]),K.warm,K,6);
+    if(!steps){c.strokeStyle=TB.rgba(K.warm,0.6);c.lineWidth=1;c.beginPath();c.moveTo(A.X(pos/(N-1)),A.Y(v[pos])+9);c.lineTo(A.X(pos/(N-1)),mid-14);c.stroke();
+      TB.tag(c,[['старт','r']],A.X(pos/(N-1)),mid-18,s-1,K.warm,K,'center');}
+    geo={X:A.X,top:12,bot:mid-14,L:L,R:R};
     // lower panel: square-root scale of the share per bin
     const B2=H-28,T2=mid+14,Y2=p=>B2-Math.sqrt(Math.max(0,p))*(B2-T2);
     c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(L,T2);c.lineTo(L,B2);c.lineTo(R,B2);c.stroke();
@@ -76,13 +86,23 @@
     TB.legend(c,[{k:'fill',col:K.eth,a:0.35,t:[['ожидаемая доля ∝ exp(−','r'],['f','i'],['(','r'],['x','i'],[')/','r'],['T','i'],[')','r']]},{k:'fill',col:K.warm,a:0.75,t:[['доля времени блуждания','r']]}],L+10,R,T2-6,s-1);
     let pw=0;for(let i=bl;i<=br;i++)pw+=pi[i];
     oT.textContent='T = '+TB.fmt(T,T<0.1?3:2);
-    fx.innerHTML=TB.rows([['шагов: '+steps.toLocaleString('ru-RU')+',','<i>T</i> = '+TB.fmt(T,T<0.1?3:2)],
-      ['в самой глубокой яме: доля времени '+(steps?TB.fmt(inW/steps,2):'—')+',','по Больцману '+TB.fmt(pw,2)]]);
+    const rows=[['шагов: '+steps.toLocaleString('ru-RU')+',','<i>T</i> = '+TB.fmt(T,T<0.1?3:2)],
+      ['в самой глубокой яме: доля времени '+(steps?TB.fmt(inW/steps,2):'—')+',','по Больцману '+TB.fmt(pw,2)]];
+    if(last){const sh='предложен сдвиг на '+(last.sh>0?'+':'−')+Math.abs(last.sh)+' '+TB.plural(Math.abs(last.sh),'узел','узла','узлов')+':';
+      if(last.edge)rows.push([sh,'за край отрезка, предложение отклонено,','точка стоит на месте']);
+      else if(last.dl<=0)rows.push([sh,'<i>f</i> уменьшилась на '+TB.fmt(-last.dl,3)+',','спуск принимается всегда — переход']);
+      else rows.push([sh,'<i>f</i> выросла на Δ = '+TB.fmt(last.dl,3)+',','принять с вероятностью <i>e</i><sup>−Δ/<i>T</i></sup> = '+TB.fmt(last.p,3)+';',
+        'выпало <i>u</i> = '+TB.fmt(last.u,3)+(last.acc?' &lt; ':' ≥ ')+TB.fmt(last.p,3)+' — '+(last.acc?'переход':'точка остаётся на месте')]);}
+    fx.innerHTML=TB.rows(rows);
   }
   const PER={cool:600,const:1000};
   const pl=TB.player(()=>{if(mode==='cool'){const t0=T0(),K=60000;for(let i=0;i<PER.cool;i++){T=t0*Math.pow(0.01/t0,Math.min(1,steps/K));step();}draw();return steps<60000;}
     for(let i=0;i<PER.const;i++)step();draw();return steps<100000;},40);
   document.getElementById('anRun').addEventListener('click',()=>{reset();pl.start();});
+  document.getElementById('anStep').addEventListener('click',()=>{pl.stop();if(mode==='cool')T=coolT();step(true);draw();});
+  /* a click on the upper graph moves the starting point there */
+  cv.addEventListener('click',e=>{if(!geo)return;const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    if(y<geo.top||y>geo.bot||x<geo.L||x>geo.R)return;start=Math.max(0,Math.min(N-1,Math.round((x-geo.L)/(geo.R-geo.L)*(N-1))));reset();});
   document.getElementById('anReset').addEventListener('click',reset);
   sT.addEventListener('input',reset);reset();TB.onTheme(draw);TB.onResize(cv,draw);
 })();
@@ -161,5 +181,59 @@
   TB.drag(cv,{hit:(px,py,tc)=>{if(!geo||bS.disabled)return null;for(let x=0;x<3;x++)if(Math.hypot(px-geo.pos[x][0],py-geo.pos[x][1])<geo.nr+(tc?10:2))return x;return null;},
     move:(h)=>{if(W[0].s!==h||k>0||!W.every(w=>w.s===h))place(h);},cursor:'pointer'});
   place(0);TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. rsearch: random search with two probes x +- sigma*u on the winding ravine of fig. fog; one step at a time, with an explanation. */
+  const cv=document.getElementById('rsearch');if(!cv||!window.TB||!TB.fit)return;
+  const sS=document.getElementById('rsS'),oS=document.getElementById('rsSOut'),fx=document.getElementById('rsFx');
+  const sn=x=>0.7*Math.sin(1.5*x+0.3),ds=x=>1.05*Math.cos(1.5*x+0.3);
+  const f=(x,y)=>1.6*(y-sn(x))**2+0.035*(x-2.3)**2+0.06*Math.exp(-((x+0.6)**2+(y+0.9)**2));
+  const grad=(x,y)=>{const e=y-sn(x),b=0.06*Math.exp(-((x+0.6)**2+(y+0.9)**2));return [-3.2*e*ds(x)+0.07*(x-2.3)-2*(x+0.6)*b,3.2*e-2*(y+0.9)*b];};
+  const X0=[-1.4,1.1],rnd=TB.rng(13);
+  let path=[X0.slice()],last=null,geo=null,img=null,imgKey='';
+  let fmin=Infinity;for(let i=0;i<=600;i++){const x=-3+6*i/600;fmin=Math.min(fmin,f(x,sn(x)));}
+  const lev=v=>Math.log(v-fmin+0.004);
+  function heat(K,n,ym){const key=K.paper+K.eth+n+ym;if(img&&imgKey===key)return img;
+    const lo=lev(fmin),hi=lev(f(-3,-ym));
+    img=TB.heat(n,(i,j)=>{const x=-3+6*(i+0.5)/n,y=-ym+2*ym*(j+0.5)/n;const t=Math.max(0,Math.min(1,(lev(f(x,y))-lo)/(hi-lo)));return TB.mixa(K.eth,K.paper,0.06+0.94*Math.pow(t,1.5));});
+    imgKey=key;return img;}
+  function step(){const p=path[path.length-1],sg=+sS.value,a=rnd()*2*Math.PI,u=[Math.cos(a),Math.sin(a)];
+    const pp=[p[0]+sg*u[0],p[1]+sg*u[1]],pm=[p[0]-sg*u[0],p[1]-sg*u[1]],f0=f(p[0],p[1]),fp=f(pp[0],pp[1]),fm=f(pm[0],pm[1]);
+    const g=grad(p[0],p[1]),gn=Math.hypot(g[0],g[1]),cs=gn>0?-(u[0]*g[0]+u[1]*g[1])/gn:0,pg=gn>0?[p[0]-sg*g[0]/gn,p[1]-sg*g[1]/gn]:p.slice();
+    let to=null;if(Math.min(fp,fm)<f0)to=fp<=fm?'+':'-';
+    last={p:p,pp:pp,pm:pm,f0:f0,fp:fp,fm:fm,c:cs,pg:pg,fg:f(pg[0],pg[1]),to:to,sg:sg};
+    path.push(to==='+'?pp:to==='-'?pm:p.slice());}
+  function draw(){
+    oS.textContent=TB.fmt(+sS.value,2);
+    const F=TB.fit(cv,W=>Math.max(250,Math.round(W*0.56))),c=F.c,W=F.W,H=F.H,K=TB.cols(),sm=W<520,s=sm?12:13;
+    const ym=3*H/W,X=x=>(x+3)/6*W,Y=y=>H/2-y/ym*H/2;geo={ux:x=>x/W*6-3,uy:y=>(H/2-y)/(H/2)*ym,ym:ym};
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);c.imageSmoothingEnabled=true;c.drawImage(heat(K,180,ym),0,0,W,H);
+    const levels=[];for(let k=-5;k<=1.2;k+=0.55)levels.push(fmin+Math.exp(k));
+    TB.contours(c,f,-3,3,-ym,ym,X,Y,levels,90,()=>{c.strokeStyle=TB.rgba(K.ink,0.22);c.lineWidth=1;});
+    const m=[X(2.3),Y(sn(2.3))];c.strokeStyle=K.ink;c.lineWidth=1.6;c.beginPath();c.moveTo(m[0]-5,m[1]-5);c.lineTo(m[0]+5,m[1]+5);c.moveTo(m[0]+5,m[1]-5);c.lineTo(m[0]-5,m[1]+5);c.stroke();
+    c.strokeStyle=TB.rgba(K.warm,0.85);c.lineWidth=1.6;c.beginPath();path.forEach((q,i)=>{i?c.lineTo(X(q[0]),Y(q[1])):c.moveTo(X(q[0]),Y(q[1]));});c.stroke();
+    if(last){const L=last;
+      TB.arrow(c,X(L.p[0]),Y(L.p[1]),X(L.pg[0]),Y(L.pg[1]),K.ink,1.8);
+      c.strokeStyle=K.ink;c.lineWidth=1.3;c.setLineDash([4,4]);c.beginPath();c.moveTo(X(L.pm[0]),Y(L.pm[1]));c.lineTo(X(L.pp[0]),Y(L.pp[1]));c.stroke();c.setLineDash([]);
+      [['+',L.pp],['-',L.pm]].forEach(([k,q])=>{TB.ring(c,X(q[0]),Y(q[1]),L.to===k?K.sage:K.muted,K,5);});}
+    const p=path[path.length-1];TB.dot(c,X(p[0]),Y(p[1]),K.warm,K,6);
+    const k=path.length-1,rows=[['шагов: '+k+',','<i>f</i>(<i>x</i>) = '+TB.fmt(f(p[0],p[1]),3)]];
+    if(last){const L=last;
+      const cb=L.fp<=L.fm?L.c:-L.c;rows.push(['косинус угла между сдвигом к лучшей пробе','и антиградиентом: '+TB.fmt(cb,2)]);
+      rows.push(['<i>f</i>(<i>x</i>) = '+TB.fmt(L.f0,3)+',','<i>f</i>(<i>x</i> + σ<i>u</i>) = '+TB.fmt(L.fp,3)+',','<i>f</i>(<i>x</i> − σ<i>u</i>) = '+TB.fmt(L.fm,3)]);
+      rows.push([L.to?('переход в <i>x</i> '+(L.to==='+'?'+':'−')+' σ<i>u</i>: там меньше, выигрыш '+TB.fmt(L.f0-Math.min(L.fp,L.fm),3)):'обе пробы не ниже <i>x</i> — точка остаётся на месте',
+        'шаг σ против градиента дал бы '+TB.fmt(L.f0-L.fg,3)]);}
+    fx.innerHTML=TB.rows(rows);
+  }
+  let left=0;const pl=TB.player(()=>{if(left<=0)return false;step();left--;draw();return left>0;},110);
+  document.getElementById('rsStep').addEventListener('click',()=>{pl.stop();step();draw();});
+  document.getElementById('rsRun').addEventListener('click',()=>{left=20;pl.start();});
+  document.getElementById('rsReset').addEventListener('click',()=>{pl.stop();path=[path[0].slice()];last=null;draw();});
+  cv.addEventListener('click',e=>{if(!geo)return;const r=cv.getBoundingClientRect();let u=geo.ux(e.clientX-r.left),v=geo.uy(e.clientY-r.top);
+    u=Math.max(-2.95,Math.min(2.95,u));v=Math.max(-geo.ym+0.05,Math.min(geo.ym-0.05,v));pl.stop();path=[[u,v]];last=null;draw();});
+  sS.addEventListener('input',()=>{oS.textContent=TB.fmt(+sS.value,2);});
+  draw();TB.onTheme(()=>{img=null;draw();});TB.onResize(cv,()=>{img=null;draw();});
 })();
 </script>
