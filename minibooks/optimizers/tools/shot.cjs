@@ -5,7 +5,7 @@ const fs=require('fs');const [page,mj,out,theme,wid,only]=process.argv.slice(2);
 const SHOTS={
   fog:['fog',[]],fogStep:['fog',[['c','fogStep'],['c','fogStep'],['c','fogStep'],['c','fogStep']]],fogMap:['fog',[['k','fog','map'],['c','fogStep'],['c','fogStep'],['c','fogStep']]],
   balls:['balls',[]],lp:['lp',[]],lpHalf:['lp',[['v','lpP',-1]]],lpBig:['lp',[['v','lpP',4]]],sym:['symop',[]],symNeg:['symop',[['v','smL2',-1.5]]],symZero:['symop',[['v','smL2',0],['v','smA',120]]],quad:['quad',[]],quadRound:['quad',[['v','qdL1',1],['v','qdL2',1]]],
-  dirs:['dirs',[]],dirsRun:['dirs',[['c','drRun']]],dirs1e4:['dirs',[['v','drD',4],['c','drRun']]],
+  markov:['markov',[]],markovRun:['markov',[['c','mkRun'],['w',11000]]],markovMid:['markov',[['c','mkStep'],['w',220]]],dirs:['dirs',[]],dirsRun:['dirs',[['c','drRun']]],dirs1e4:['dirs',[['v','drD',4],['c','drRun']]],
   anneal:['anneal',[]],annealRun:['anneal',[['c','anRun']]],annealConst:['anneal',[['k','anneal','const'],['c','anRun']]],
   steep:['steep',[]],
   upper:['upper',[]],upperSmall:['upper',[['v','upL',0.8]]],
