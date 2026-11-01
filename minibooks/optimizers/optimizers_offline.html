@@ -743,9 +743,6 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 </ul></figcaption>
 </figure>
 
-<p>Сплошная кривая на правой половине рисунка — настоящая синусоида, и это легко проверить. Если $\theta$ — угол между $x$ и <span class="nw"><span class="nw">$q_1$,</span></span> то <span class="nw"><span class="nw">$c_1=\cos\theta$,</span></span> <span class="nw"><span class="nw">$c_2=\sin\theta$,</span></span> и формулы двойного угла дают
-<span class="math-wrap">$$x^\top Ax=\lambda_1\cos^2\theta+\lambda_2\sin^2\theta=\frac{\lambda_1+\lambda_2}2+\frac{\lambda_1-\lambda_2}2\cos2\theta.$$</span>
-Середина синусоиды — среднее собственных чисел, размах — их полуразность, а период равен <span class="nw">$180^\circ$,</span> потому что $x$ и $-x$ дают одно и то же значение. Штриховая кривая $\|Ax\|$ на неё только похожа: синусоидой здесь оказывается квадрат <span class="nw">$\|Ax\|^2={}$<wbr><span class="nw">$\lambda_1^2\cos^2\theta+\lambda_2^2\sin^2\theta$,</span></span> а сама длина — корень из синусоиды. Разницу видно в двух местах. Под углом $45^\circ$ к $q_1$ синусоида стоит ровно посередине между своими крайними значениями, а длина равна <span class="nw">$\sqrt{(\lambda_1^2+\lambda_2^2)/2}$</span> — среднему квадратичному чисел <span class="nw"><span class="nw">$|\lambda_1|,|\lambda_2|$,</span></span> которое выше их среднего арифметического. А при $\lambda_2=0$ длина равна <span class="nw"><span class="nw">$|\lambda_1|\,|\cos\theta|$,</span></span> и у её графика появляется излом, какого у синусоиды не бывает.</p>
 <p>Линии уровня квадратичной формы $x^\top Ax$ с положительно определённой матрицей — эллипсы (в старших размерностях — эллипсоиды) с осями вдоль собственных векторов. Вдоль оси $q_i$ форма растёт как <span class="nw"><span class="nw">$\lambda_it^2$,</span></span> поэтому полуось эллипса уровня $1$ равна <span class="nw"><span class="nw">$1/\sqrt{\lambda_i}$:</span></span> чем больше собственное число, тем круче склон и тем короче ось. Отношение $\lambda_{\max}/\lambda_{\min}$ показывает, насколько эллипсы вытянуты. Мы увидим, что именно оно управляет скоростью градиентного спуска.</p>
 
 <figure>
@@ -4333,4 +4330,31 @@ figcaption ul.capl b{font-weight:650;color:var(--ink)}
 <script>
 (function(){
   /* Proofs and solutions fold into two squares joined by a thread; solutions start folded. */
-  document.querySelectorAll('.proof').
+  document.querySelectorAll('.proof').forEach(function(p){
+    var lbl=p.querySelector(':scope>.lbl'); if(!lbl) return;
+    var sol=p.classList.contains('sol');
+    var body=document.createElement('div'); body.className='pbody';
+    var pin=document.createElement('div'); pin.className='pin'; body.appendChild(pin);
+    while(lbl.nextSibling) pin.appendChild(lbl.nextSibling);
+    p.appendChild(body);
+    ['thread','qo','qc'].forEach(function(c){var e=document.createElement('span');e.className=c;e.setAttribute('aria-hidden','true');p.appendChild(e);});
+    lbl.setAttribute('role','button'); lbl.tabIndex=0;
+    lbl.title=sol?'Показать или скрыть решение':'Свернуть или развернуть доказательство';
+    if(sol){p.classList.add('folded');body.inert=true;}
+    lbl.setAttribute('aria-expanded',sol?'false':'true');
+    function toggle(){
+      var f=p.classList.toggle('folded');
+      lbl.setAttribute('aria-expanded',f?'false':'true');
+      body.inert=f;
+      p.classList.remove('snap'); void p.offsetWidth;
+      setTimeout(function(){p.classList.add('snap');},f?430:0);
+    }
+    lbl.addEventListener('click',toggle);
+    lbl.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+    p.querySelector('.qo').addEventListener('click',toggle);
+    p.querySelector('.qc').addEventListener('click',toggle);
+  });
+})();
+</script>
+
+</html>

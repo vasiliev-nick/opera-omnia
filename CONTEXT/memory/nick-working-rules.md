@@ -16,3 +16,5 @@ Nick's wishes, stated 2026-10-05 in the project chat:
 **How to apply:** default to diagnostic questions + exercises before new material; see [[2d-prototype-setup]].
 
 Never attribute wishes or priorities to Nick that he did not state (2026-10-27: Claude ranked its own proposal, the info-gain minibook, first and claimed he wanted diffusion most; he asked for a quote and there was none). Keep Claude's proposals visibly separate from Nick's requests; when ranking by "importance for him", ask what interests him instead of guessing.
+
+Reactions are not approval (Nick, 2026-11-01): his 👍 on a chat explanation that ended with an offer («допишу в книгу?») meant he liked the explanation, not yes to the offer; Claude added the text anyway and he asked to remove it. Book edits need his explicit words; a reaction alone never authorizes adding text.
