@@ -50,7 +50,7 @@
 | `cross_entropy/cross_entropy.html` | Та же книга в виде фрагмента страницы для публикации. |
 | `cross_entropy/PLAN.md` | План книги. |
 | `cross_entropy/src/`, `cross_entropy/tools/` | Исходники и сборка. |
-| `optimizers/optimizers_file.html` | «Оптимизаторы: от случайного перебора до Muon и Shampoo» (пишется, готовы §1–§11). `optimizers_offline.html` открывается без интернета. |
+| `optimizers/optimizers_file.html` | «Оптимизаторы: от случайного перебора до Muon и Shampoo»: самый крутой шаг зависит от того, какой нормой мерить длину, отсюда Adam, Ньютон, натуральный градиент, Shampoo и Muon (§1–§16). `optimizers_offline.html` открывается без интернета. |
 | `optimizers/PLAN.md`, `optimizers/src/`, `optimizers/tools/` | План, исходники и сборка. |
 | `value_of_information/PLAN.md` | Черновик плана книги об информационном выигрыше и ценности информации. |
 | `FUTURE.md` | Список будущих книг. |

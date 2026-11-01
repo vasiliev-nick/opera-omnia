@@ -1,19 +1,21 @@
 """Library page (index.html): every book of the collection on one page, with a search over numbered items.
 
 python3 textbook/kit/hub.py OUT.html [MINIBOOK.html]
-Reads xref_index.json (main textbook items and page URLs), the cross-entropy minibook page and the covers in kit/covers/ (made by hub_covers.cjs)."""
+Reads xref_index.json (main textbook items and page URLs), the minibook pages and the covers in kit/covers/ (made by hub_covers.cjs)."""
 import base64, html, json, os, re, sys
 
 KIT = os.path.dirname(os.path.abspath(__file__))
 OUT = sys.argv[1]
-MB = sys.argv[2] if len(sys.argv) > 2 else os.path.join(KIT, '..', '..', 'minibooks', 'cross_entropy', 'cross_entropy.html')
+MBDIR = os.path.join(KIT, '..', '..', 'minibooks')
+MBS = {'mb': sys.argv[2] if len(sys.argv) > 2 else os.path.join(MBDIR, 'cross_entropy', 'cross_entropy.html'), 'opt': os.path.join(MBDIR, 'optimizers', 'optimizers.html')}
 rd = lambda p: open(p, encoding='utf-8').read()
 X = json.loads(rd(os.path.join(KIT, 'xref_index.json')))
 
 # Page addresses: claude.ai pages, and file paths relative to index.html in the repository root.
 PAGES = {k: {'url': v['url'], 'file': 'textbook/' + v['file']} for k, v in X['pages'].items()}
 PAGES['mb'] = {'url': 'https://claude.ai/artifact/7JUQRANXVdiuqgyDMfaSdh', 'file': 'minibooks/cross_entropy/cross_entropy_file.html'}
-SHORT = {'p1': '∅, часть 1', 'p2': '∅, часть 2', 'p3': '∅, часть 3', 'nb': 'глава ∇', 'ang': 'глава ∠', 'n1': '𝒩, часть 1', 'mb': 'кросс-энтропия'}
+PAGES['opt'] = {'url': 'https://claude.ai/artifact/XAdyoRDeyvygfLBjha37dB', 'file': 'minibooks/optimizers/optimizers_file.html'}
+SHORT = {'p1': '∅, часть 1', 'p2': '∅, часть 2', 'p3': '∅, часть 3', 'nb': 'глава ∇', 'ang': 'глава ∠', 'n1': '𝒩, часть 1', 'mb': 'кросс-энтропия', 'opt': 'оптимизаторы'}
 for k in PAGES:
     PAGES[k]['short'] = SHORT[k]
 
@@ -39,10 +41,14 @@ MINI = [
     {'sym': 'H', 'it': True, 'title': 'Кросс-энтропия', 'sub': 'удивление, информация и расстояние между распределениями',
      'desc': 'Почему классификаторы почти всегда учат на кросс-энтропии. Нужны только начала теории вероятностей на конечных множествах, анализа и линейной алгебры.',
      'parts': [('mb', 'Мини-учебник', 'Кросс-энтропия', 'Правдоподобие, информация и удивление, энтропия, неравенство Гиббса, расхождение Кульбака–Лейблера, функция потерь классификатора.')]},
+    {'sym': '∂', 'title': 'Оптимизаторы', 'sub': 'от случайного перебора до Muon и Shampoo',
+     'desc': 'Как нейросеть спускается по рельефу функции потерь и почему самое крутое направление зависит от того, как мерить длину шага. Нужны анализ функций многих переменных, линейная алгебра и начала теории вероятностей.',
+     'parts': [('opt', 'Мини-учебник', 'Оптимизаторы', 'Отжиг, градиентный спуск, нормы и предобусловливание, метод Ньютона, натуральный градиент, инерция, стохастический спуск, Adam, сингулярное разложение, Shampoo и Muon.')]},
 ]
-COVER = {'p1': 'p1', 'p2': 'p2', 'p3': 'p3', 'nb': 'nb', 'ang': 'ang', 'n1': 'n1', 'mb': 'mb'}
+COVER = {'p1': 'p1', 'p2': 'p2', 'p3': 'p3', 'nb': 'nb', 'ang': 'ang', 'n1': 'n1', 'mb': 'mb', 'opt': 'opt'}
 ALT = {'p1': 'Интеграл Лебега: множества, где функция выше уровня', 'p2': 'Тор и градиент функции на сфере', 'p3': 'Плотность пары величин и её частные плотности',
-       'nb': 'Овалы Кассини и функция расстояния', 'ang': 'Случайные величины как векторы в пространстве', 'n1': 'Гауссовское облако вокруг формы', 'mb': 'Расхождение Кульбака–Лейблера на треугольнике распределений'}
+       'nb': 'Овалы Кассини и функция расстояния', 'ang': 'Случайные величины как векторы в пространстве', 'n1': 'Гауссовское облако вокруг формы', 'mb': 'Расхождение Кульбака–Лейблера на треугольнике распределений',
+       'opt': 'Итерации Ньютона–Шульца сводят сингулярные числа к единице'}
 
 
 def plain(h):
@@ -80,23 +86,24 @@ for k, v in X['items'].items():
     if it['p']:
         items.append(it)
 
-# Items of the minibook, read from its page.
-mb = rd(MB)
-LBL = re.compile(r'<div class="(stmt|ex)"><span class="lbl">((Определение|Лемма|Теорема|Предложение|Следствие|Упражнение|Вопрос)\s+(\d+)[^<]*)</span>(.*?)(?=<div class="(?:stmt|ex|proof)"|<figure|<h[23]|</section>)', re.S)
-for m in LBL.finditer(mb):
-    word, num = m.group(3), m.group(4)
-    kind = 'ex' if word == 'Упражнение' else 'q' if word == 'Вопрос' else 'st'
-    txt = plain(m.group(5))
-    items.append({'key': kind + ':' + num, 'k': kind, 'p': 'mb', 'lab': plain(m.group(2)), 'text': txt[:600], 'snip': snip(txt)})
-for m in re.finditer(r'<h2[^>]*>§(\d+)\.\s*(.*?)</h2>(.*?)(?=<h2|$)', mb, re.S):
-    p1 = re.search(r'<p>(.*?)</p>', m.group(3), re.S)
-    items.append({'key': 'sec:' + m.group(1), 'k': 'sec', 'p': 'mb', 'lab': '§' + m.group(1) + '. ' + plain(m.group(2)), 'text': plain(p1.group(1))[:600] if p1 else ''})
-for m in re.finditer(r'<figcaption>Рис\.\s*(\d+)\.\s*(.*?)</figcaption>', mb, re.S):
-    cap = plain(m.group(2))
-    first = re.split(r'(?<=[.!?])\s', cap, maxsplit=1)[0].rstrip('.')
-    items.append({'key': 'fig:' + m.group(1), 'k': 'fig', 'p': 'mb', 'lab': 'Рисунок ' + m.group(1), 'title': first, 'text': cap[:600]})
+# Items of the minibooks, read from their pages.
+for MBK, MBP in MBS.items():
+  mb = rd(MBP)
+  LBL = re.compile(r'<div class="(stmt|ex)"><span class="lbl">((Определение|Лемма|Теорема|Предложение|Следствие|Упражнение|Вопрос)\s+(\d+)[^<]*)</span>(.*?)(?=<div class="(?:stmt|ex|proof)"|<figure|<h[23]|</section>)', re.S)
+  for m in LBL.finditer(mb):
+      word, num = m.group(3), m.group(4)
+      kind = 'ex' if word == 'Упражнение' else 'q' if word == 'Вопрос' else 'st'
+      txt = plain(m.group(5))
+      items.append({'key': kind + ':' + num, 'k': kind, 'p': MBK, 'lab': plain(m.group(2)), 'text': txt[:600], 'snip': snip(txt)})
+  for m in re.finditer(r'<h2[^>]*>§(\d+)\.\s*(.*?)</h2>(.*?)(?=<h2|$)', mb, re.S):
+      p1 = re.search(r'<p>(.*?)</p>', m.group(3), re.S)
+      items.append({'key': 'sec:' + m.group(1), 'k': 'sec', 'p': MBK, 'lab': '§' + m.group(1) + '. ' + plain(m.group(2)), 'text': plain(p1.group(1))[:600] if p1 else ''})
+  for m in re.finditer(r'<figcaption>Рис\.\s*(\d+)\.\s*(.*?)</figcaption>', mb, re.S):
+      cap = plain(m.group(2))
+      first = re.split(r'(?<=[.!?])\s', cap, maxsplit=1)[0].rstrip('.')
+      items.append({'key': 'fig:' + m.group(1), 'k': 'fig', 'p': MBK, 'lab': 'Рисунок ' + m.group(1), 'title': first, 'text': cap[:600]})
 
-ORDER = ['p1', 'p2', 'p3', 'nb', 'ang', 'n1', 'mb']
+ORDER = ['p1', 'p2', 'p3', 'nb', 'ang', 'n1', 'mb', 'opt']
 KO = {'sec': 0, 'st': 1, 'ex': 2, 'q': 3, 'fig': 4}
 num = lambda key: [int(x) for x in re.findall(r'\d+', key)] or [0]
 items.sort(key=lambda it: (ORDER.index(it['p']), KO[it['k']], num(it['key'])))
@@ -157,7 +164,7 @@ def block(ch):
 tot = lambda k: sum(1 for it in items if it['k'] == k)
 books = sum(len(c.get('parts', [])) for c in MAIN + MINI)
 tally = ['<span><b>%d</b> %s</span>' % (n, w) for n, w in [
-    (len([c for c in MAIN if c.get('parts')]), 'главы основного учебника'), (len(MINI), 'мини-учебник'),
+    (len([c for c in MAIN if c.get('parts')]), 'главы основного учебника'), (len(MINI), 'мини-учебника' if 2 <= len(MINI) % 10 <= 4 else 'мини-учебник'),
     (tot('st'), 'утверждений'), (tot('fig'), 'рисунков'), (tot('ex'), 'упражнений')]]
 chips = ''.join('<button type="button">%s</button>' % w for w in ['Фубини', 'плотность', 'кривизна', 'гауссовский вектор', 'энтропия'])
 
