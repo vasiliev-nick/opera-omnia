@@ -1096,6 +1096,9 @@ $\mathcal B(\mathbb R^n)\subset\mathcal L_n$. На $\mathcal B(\mathbb R^n)$ м�
 .xback button{font:inherit;color:var(--ether);background:none;border:none;cursor:pointer;padding:.32rem .7rem;border-radius:999px;white-space:nowrap}
 .xback button:hover{background:color-mix(in srgb,var(--ether) 10%,transparent)}
 .xback button.x{color:var(--muted);padding:.32rem .55rem}
+.xback button{display:inline-flex;align-items:center}
+.xback .ic{flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.xback button.b .ic{margin-right:.4rem}
 @media print{.xpop,.xback{display:none}.xref{text-decoration:none}}
 </style>
 <script>
@@ -1227,7 +1230,7 @@ $\mathcal B(\mathbb R^n)\subset\mathcal L_n$. На $\mathcal B(\mathbb R^n)$ м�
   function jump(el,ref){close();from=ref;
     el.scrollIntoView({behavior:'smooth',block:'center'});flash(el);
     if(!back){back=document.createElement('div');back.className='xback';
-      back.innerHTML='<button type="button" class="b">↩ Вернуться к тексту</button><button type="button" class="x" aria-label="Скрыть">✕</button>';
+      back.innerHTML='<button type="button" class="b"><svg class="ic" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M5.5 2.5 2 6l3.5 3.5"/><path d="M2 6h7.5a4 4 0 0 1 0 8H6.5"/></svg>Вернуться к тексту</button><button type="button" class="x" aria-label="Скрыть"><svg class="ic" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>';
       document.body.appendChild(back);
       back.querySelector('.b').onclick=()=>{back.hidden=true;if(from){from.scrollIntoView({behavior:'smooth',block:'center'});flash(from);from.focus({preventScroll:true});}};
       back.querySelector('.x').onclick=()=>{back.hidden=true;};}
