@@ -210,6 +210,7 @@ figure.exfig{margin:1rem 0 1.2rem}
 button.act{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:.18rem .7rem;cursor:pointer;line-height:1.4}
 button.act:hover{border-color:var(--ether);color:var(--ether)}
 button.act:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
+button.act:disabled{opacity:.45;cursor:default;border-color:var(--rule);color:var(--ink)}
 .seg button mjx-container{pointer-events:none}
 .gth{display:inline-block;width:.58em;height:.76em;vertical-align:-.02em;overflow:visible}.gth ellipse,.gth line{fill:none;stroke:currentColor}.gth ellipse{stroke-width:8}.gth line{stroke-width:6.5}
 .hat{position:relative;display:inline-block}

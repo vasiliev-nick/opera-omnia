@@ -213,6 +213,7 @@ figure.exfig{margin:1rem 0 1.2rem}
 button.act{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:.18rem .7rem;cursor:pointer;line-height:1.4}
 button.act:hover{border-color:var(--ether);color:var(--ether)}
 button.act:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
+button.act:disabled{opacity:.45;cursor:default;border-color:var(--rule);color:var(--ink)}
 .seg button mjx-container{pointer-events:none}
 .gth{display:inline-block;width:.58em;height:.76em;vertical-align:-.02em;overflow:visible}.gth ellipse,.gth line{fill:none;stroke:currentColor}.gth ellipse{stroke-width:8}.gth line{stroke-width:6.5}
 .hat{position:relative;display:inline-block}
@@ -2999,7 +3000,7 @@ figcaption ul.capl b{font-weight:650;color:var(--ink)}
     const w=lw.map(l=>Math.exp(l-mx)),tot=w.reduce((a,b)=>a+b,0),bin=new Array(NB).fill(0);
     for(let i=0;i<M;i++){const c=Math.cos((i+0.5)/M*Math.PI),b=Math.min(NB-1,Math.floor((c+1)/2*NB));bin[b]+=w[i]/tot;}
     return Math.max(...bin)*NB/2;}
-  function reset(){d=Math.round(Math.pow(10,+sd.value));od.textContent='d = '+d.toLocaleString('ru-RU');cnt.fill(0);n=0;s2=0;big=0;ymax=expectMax(d)*1.6;pl.stop();draw();}
+  function reset(){d=Math.round(Math.pow(10,+sd.value));od.textContent='d = '+d.toLocaleString('ru-RU');cnt.fill(0);n=0;s2=0;big=0;ymax=expectMax(d)*1.6;pl.stop();left=0;if(run)run.disabled=false;draw();}
   function add(){let q=0;const x1=TB.gauss(rnd);q=x1*x1;for(let i=1;i<d;i++){const g=TB.gauss(rnd);q+=g*g;}
     const c=x1/Math.sqrt(q);cnt[Math.min(NB-1,Math.floor((c+1)/2*NB))]++;n++;s2+=c*c;if(Math.abs(c)>=0.1)big++;}
   function draw(){
@@ -3016,8 +3017,10 @@ figcaption ul.capl b{font-weight:650;color:var(--ink)}
     TB.tag(c,[['±1/√','r'],['d','i']],Math.min(W-60,A.X(e)+6),A.Y(ymax)+s+4,s,K.warm,K);
     fx.innerHTML=TB.rows([['направлений: '+n],['средний квадрат косинуса '+(n?TB.fmt(s2/n,4):'—')+',','по теореме 1/<i>d</i> = '+TB.fmt(1/d,4)],['доля направлений с |<i>c</i>| ≥ 0,1: '+(n?TB.fmt(big/n,3):'—')]]);
   }
-  let left=0;const pl=TB.player(()=>{const k=Math.min(left,10);for(let i=0;i<k;i++)add();left-=k;draw();return left>0;},40);
-  document.getElementById('drRun').addEventListener('click',()=>{left+=500;pl.start();});
+  /* one batch at a time: the button is off until the current 500 directions are drawn */
+  const run=document.getElementById('drRun');
+  let left=0;const pl=TB.player(()=>{const k=Math.min(left,10);for(let i=0;i<k;i++)add();left-=k;draw();if(left<=0)run.disabled=false;return left>0;},40);
+  run.addEventListener('click',()=>{if(left>0)return;left=500;run.disabled=true;pl.start();});
   document.getElementById('drReset').addEventListener('click',reset);
   sd.addEventListener('input',reset);reset();TB.onTheme(draw);TB.onResize(cv,draw);
 })();
