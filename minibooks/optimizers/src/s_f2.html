@@ -103,3 +103,103 @@
   [s1,s2,sa].forEach(e=>e.addEventListener('input',draw));draw();TB.onTheme(draw);TB.onResize(cv,draw);
 })();
 </script>
+<script>
+(function(){
+  /* Fig. sym: a symmetric 2x2 matrix A = Q diag(l1, l2) Q^T maps the unit circle to an ellipse; x^T A x and |Ax| as functions of the direction of x. */
+  const cv=document.getElementById('symop');if(!cv||!window.TB||!TB.fit)return;
+  const s1=document.getElementById('smL1'),s2=document.getElementById('smL2'),sa=document.getElementById('smA'),fx=document.getElementById('smFx'),run=document.getElementById('smRun');
+  const o1=document.getElementById('smL1Out'),o2=document.getElementById('smL2Out'),oa=document.getElementById('smAOut');
+  let phi=60*Math.PI/180,geo=null;
+  const D=Math.PI/180;
+  function draw(){
+    const l1=+s1.value,l2=+s2.value,a=+sa.value*D;o1.textContent=TB.fmt(l1,1);o2.textContent=TB.fmt(l2,1);oa.textContent=sa.value+'°';
+    const F=TB.fit(cv,W=>W>=600?Math.min(380,Math.round((W-28)/2))+52:Math.min(W,360)+16+Math.round(W*0.66)+60),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const wide=W>=600,s=wide?14:12;
+    /* left panel: the plane */
+    const P=wide?Math.min(380,Math.round((W-28)/2)):Math.min(W,360),px0=wide?0:Math.round((W-P)/2),py0=0;
+    const Rp=3.3,sc=P/(2*Rp),ox=px0+P/2,oy=py0+P/2,X=v=>ox+v*sc,Y=v=>oy-v*sc;
+    const q1=[Math.cos(a),Math.sin(a)],q2=[-Math.sin(a),Math.cos(a)];
+    const x=[Math.cos(phi),Math.sin(phi)],c1=x[0]*q1[0]+x[1]*q1[1],c2=x[0]*q2[0]+x[1]*q2[1];
+    const Ax=[l1*c1*q1[0]+l2*c2*q2[0],l1*c1*q1[1]+l2*c2*q2[1]],r=x[0]*Ax[0]+x[1]*Ax[1],nA=Math.hypot(Ax[0],Ax[1]);
+    c.save();c.beginPath();c.rect(px0,py0,P,P);c.clip();
+    c.strokeStyle=TB.rgba(K.rule,0.8);c.lineWidth=1;c.beginPath();c.moveTo(X(-Rp),Y(0));c.lineTo(X(Rp),Y(0));c.moveTo(X(0),Y(-Rp));c.lineTo(X(0),Y(Rp));c.stroke();
+    const line=(q,col)=>{c.strokeStyle=TB.rgba(col,0.55);c.lineWidth=1.3;c.beginPath();c.moveTo(X(-5*q[0]),Y(-5*q[1]));c.lineTo(X(5*q[0]),Y(5*q[1]));c.stroke();};
+    line(q1,K.eth);line(q2,K.warm);
+    /* the unit circle and its image */
+    c.strokeStyle=K.muted;c.lineWidth=1.4;c.beginPath();c.arc(ox,oy,sc,0,7);c.stroke();
+    c.beginPath();for(let i=0;i<=240;i++){const t=i/240*2*Math.PI,u=l1*Math.cos(t),v=l2*Math.sin(t),p=[u*q1[0]+v*q2[0],u*q1[1]+v*q2[1]];i?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1]));}
+    c.closePath();c.fillStyle=TB.rgba(K.sage,0.10);c.fill();c.strokeStyle=K.sage;c.lineWidth=2;c.stroke();
+    /* the shadow of Ax on the line of x */
+    c.strokeStyle=TB.rgba(K.sage,0.38);c.lineWidth=9;c.lineCap='butt';c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(r*x[0]),Y(r*x[1]));c.stroke();
+    c.strokeStyle=TB.rgba(K.ink,0.25);c.lineWidth=1;c.beginPath();c.moveTo(X(-5*x[0]),Y(-5*x[1]));c.lineTo(X(5*x[0]),Y(5*x[1]));c.stroke();
+    c.setLineDash([2,3]);c.strokeStyle=K.sage;c.lineWidth=1.2;c.beginPath();c.moveTo(X(Ax[0]),Y(Ax[1]));c.lineTo(X(r*x[0]),Y(r*x[1]));c.stroke();
+    /* coordinates along the eigen-axes: c_i q_i and lambda_i c_i q_i */
+    const dash=(p,f,col)=>{c.strokeStyle=TB.rgba(col,0.8);c.lineWidth=1.1;c.setLineDash([4,4]);c.beginPath();c.moveTo(X(p[0]),Y(p[1]));c.lineTo(X(f[0]),Y(f[1]));c.stroke();c.setLineDash([]);};
+    const f1=[c1*q1[0],c1*q1[1]],f2=[c2*q2[0],c2*q2[1]],g1=[l1*f1[0],l1*f1[1]],g2=[l2*f2[0],l2*f2[1]];
+    dash(x,f1,K.warm);dash(x,f2,K.eth);dash(Ax,g1,K.warm);dash(Ax,g2,K.eth);
+    c.setLineDash([]);
+    if(Math.hypot(g1[0]-f1[0],g1[1]-f1[1])*sc>6)TB.arrow(c,X(f1[0]),Y(f1[1]),X(g1[0]),Y(g1[1]),K.eth,1.6);
+    if(Math.hypot(g2[0]-f2[0],g2[1]-f2[1])*sc>6)TB.arrow(c,X(f2[0]),Y(f2[1]),X(g2[0]),Y(g2[1]),K.warm,1.6);
+    TB.ring(c,X(f1[0]),Y(f1[1]),K.eth,K,3.2);TB.ring(c,X(f2[0]),Y(f2[1]),K.warm,K,3.2);
+    c.restore();
+    /* eigen-axis labels near the edge */
+    const edge=(q,txt,col)=>{let k=Rp*0.86/Math.max(Math.abs(q[0]),Math.abs(q[1]));k=Math.min(k,3.05);TB.tag(c,txt,X(q[0]*k),Y(q[1]*k)+s*0.4,s,col,K,'center');};
+    const qs=q=>q[1]<-1e-9||(Math.abs(q[1])<1e-9&&q[0]<0)?[-q[0],-q[1]]:q;
+    edge(qs(q1),[['q','i'],['1','s']],K.eth);edge(qs(q2),[['q','i'],['2','s']],K.warm);
+    TB.arrow(c,X(0),Y(0),X(Ax[0]),Y(Ax[1]),K.sage,2.4);
+    TB.arrow(c,X(0),Y(0),X(x[0]),Y(x[1]),K.ink,2);TB.dot(c,X(x[0]),Y(x[1]),K.ink,K,5.5);
+    const lab=(p,txt,col,ext)=>{const n=Math.hypot(p[0],p[1])||1,e=n+ext;TB.tag(c,txt,X(p[0]/n*e),Y(p[1]/n*e)+s*0.4,s+1,col,K,'center');};
+    {const cr=x[0]*Ax[1]-x[1]*Ax[0],sg=cr>0?-1:1,pp=[x[0]*1.05+sg*x[1]*0.34,x[1]*1.05-sg*x[0]*0.34];TB.tag(c,[['x','i']],X(pp[0]),Y(pp[1])+s*0.4,s+1,K.ink,K,'center');}if(nA>0.05)lab(Ax,[['A','i'],['x','i']],K.sage,0.42);
+    /* right panel: x^T A x and |Ax| against the angle of x */
+    let L,T,R,B;
+    if(wide){L=P+28+40;T=8;R=W-20;B=P-30;}else{L=40;T=P+16+6;R=W-18;B=P+16+Math.round(W*0.66)-28;}
+    const yM=3.3,ax=TB.axes(c,{L:L,T:T,R:R,B:B,x0:0,x1:180,y0:-yM,y1:yM,yt:[-3,-2,-1,0,1,2,3],s:s-1},K),GX=ax.X,GY=ax.Y;
+    c.fillStyle=K.muted;c.font=(s-1)+'px '+TB.ui;c.textAlign='center';c.strokeStyle=K.rule;c.lineWidth=1;
+    for(const v of [0,45,90,135,180]){c.beginPath();c.moveTo(GX(v),B);c.lineTo(GX(v),B+4);c.stroke();c.fillText(v+'°',GX(v),B+s+4);}
+    c.textAlign='start';TB.rich(c,[['угол вектора ','r'],['x','i']],R,B+2*s+12,s-1,K.muted,'right');
+    c.strokeStyle=TB.rgba(K.muted,0.6);c.beginPath();c.moveTo(L,GY(0));c.lineTo(R,GY(0));c.stroke();
+    const lo=Math.min(l1,l2),hi=Math.max(l1,l2);
+    c.fillStyle=TB.rgba(K.sage,0.10);c.fillRect(L,GY(hi),R-L,Math.max(1,GY(lo)-GY(hi)));
+    const hl=(v,col,txt,dy)=>{c.strokeStyle=col;c.lineWidth=1.2;c.setLineDash([5,4]);c.beginPath();c.moveTo(L,GY(v));c.lineTo(R,GY(v));c.stroke();c.setLineDash([]);
+      TB.tag(c,txt,R-4,GY(v)+dy,s,col,K,'right');};
+    const close=Math.abs(GY(l1)-GY(l2))<s+6;
+    hl(l1,K.eth,[['λ','i'],['1','s']],l1>=l2||close&&l1>=l2?-5:s+3);hl(l2,K.warm,[['λ','i'],['2','s']],l2>l1?-5:(close?s+3+(l1===l2?s+4:0):s+3));
+    const md=v=>((v%180)+180)%180;
+    const vl=(deg,col,txt)=>{const xx=GX(md(deg));c.strokeStyle=col;c.lineWidth=1.2;c.setLineDash([3,4]);c.beginPath();c.moveTo(xx,T+s+6);c.lineTo(xx,B);c.stroke();c.setLineDash([]);
+      TB.tag(c,txt,Math.min(R-10,Math.max(L+10,xx)),T+s,s,col,K,'center');};
+    vl(+sa.value,K.eth,[['q','i'],['1','s']]);vl(+sa.value+90,K.warm,[['q','i'],['2','s']]);
+    const fR=d=>{const t=d*D-a;return l1*Math.cos(t)**2+l2*Math.sin(t)**2;},fN=d=>{const t=d*D-a;return Math.sqrt((l1*Math.cos(t))**2+(l2*Math.sin(t))**2);};
+    c.save();c.beginPath();c.rect(L,T,R-L,B-T);c.clip();
+    c.strokeStyle=K.muted;c.lineWidth=1.6;c.setLineDash([6,4]);c.beginPath();for(let i=0;i<=360;i++){const d=i/2;i?c.lineTo(GX(d),GY(fN(d))):c.moveTo(GX(d),GY(fN(d)));}c.stroke();c.setLineDash([]);
+    c.strokeStyle=K.sage;c.lineWidth=2.6;c.beginPath();for(let i=0;i<=360;i++){const d=i/2;i?c.lineTo(GX(d),GY(fR(d))):c.moveTo(GX(d),GY(fR(d)));}c.stroke();
+    c.restore();
+    const dc=md(phi/D),xx=GX(dc);
+    c.strokeStyle=TB.rgba(K.ink,0.5);c.lineWidth=1;c.beginPath();c.moveTo(xx,T+s+6);c.lineTo(xx,B);c.stroke();
+    TB.dot(c,xx,GY(nA),K.muted,K,4);TB.dot(c,xx,GY(r),K.sage,K,5.5);
+    /* legend under the graph */
+    const lt=B+3*s+22;
+    TB.legend(c,[{k:'line',col:K.sage,t:[['x','i'],['ᵀ','r'],['A','i'],['x','i'],[' = ⟨','r'],['x','i'],[', ','r'],['A','i'],['x','i'],['⟩','r']]},{k:'dash',col:K.muted,t:[['‖','r'],['A','i'],['x','i'],['‖','r']]}],L,R,lt-s+2,s-1);
+    geo={X:X,Y:Y,ox:ox,oy:oy,sc:sc,x:x,L:L,R:R,T:T,B:B,GX:GX,dc:dc};
+    /* readout */
+    const f2s=v=>TB.fmt(v,2),mx=Math.max(Math.abs(l1),Math.abs(l2));
+    const msg=lo>0?['оба собственных числа положительны:','<i>x</i><sup>⊤</sup><i>Ax</i> &gt; 0 при всех <i>x</i> ≠ 0']:
+      hi<0?['оба собственных числа отрицательны:','форма отрицательна при всех <i>x</i> ≠ 0']:
+      (lo<0&&hi>0)?['собственные числа разных знаков:','форма меняет знак']:['одно собственное число равно нулю:','форма обращается в ноль на его оси'];
+    fx.innerHTML=TB.rows([['<i>c</i><sub>1</sub> = ⟨<i>q</i><sub>1</sub>, <i>x</i>⟩ = '+f2s(c1),'<i>c</i><sub>2</sub> = ⟨<i>q</i><sub>2</sub>, <i>x</i>⟩ = '+f2s(c2)],
+      ['<i>x</i><sup>⊤</sup><i>Ax</i> = λ<sub>1</sub><i>c</i><sub>1</sub><sup>2</sup> + λ<sub>2</sub><i>c</i><sub>2</sub><sup>2</sup> = '+f2s(r),'λ<sub>min</sub> = '+f2s(lo)+' ≤ '+f2s(r)+' ≤ '+f2s(hi)+' = λ<sub>max</sub>'],
+      ['‖<i>Ax</i>‖ = '+f2s(nA)+' ≤ max|λ<sub><i>i</i></sub>| = '+f2s(mx)],msg]);
+  }
+  const redraw=TB.raf(draw);
+  const pl=TB.player(()=>{phi+=1.5*D;draw();return (phi-start)<Math.PI-1e-9;},30);let start=0;
+  run.addEventListener('click',()=>{start=phi;pl.start();});
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;const g=geo;
+      if(Math.hypot(px-g.X(g.x[0]),py-g.Y(g.x[1]))<(t?26:14))return 1;
+      if(px>=g.L&&px<=g.R&&py>=g.T&&py<=g.B&&(!t||Math.abs(px-g.GX(g.dc))<26))return 2;return null;},
+    move:(h,px,py)=>{pl.stop();const g=geo;
+      if(h===1){let ang=Math.atan2(g.oy-py,px-g.ox);phi=ang;}
+      else{const d=Math.max(0,Math.min(180,(px-g.L)/(g.R-g.L)*180));const cur=((phi%(2*Math.PI))+2*Math.PI)%(2*Math.PI);phi=d*D+(cur>=Math.PI-1e-9?Math.PI:0);}
+      redraw();}});
+  [s1,s2,sa].forEach(e=>e.addEventListener('input',draw));draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>

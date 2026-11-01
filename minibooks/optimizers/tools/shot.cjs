@@ -4,7 +4,7 @@ const fs=require('fs');const [page,mj,out,theme,wid,only]=process.argv.slice(2);
 /* name: [canvas id, actions]; ['v',input,value], ['k',canvas,data-k] or ['c',button id]. */
 const SHOTS={
   fog:['fog',[]],fogStep:['fog',[['c','fogStep'],['c','fogStep'],['c','fogStep'],['c','fogStep']]],fogMap:['fog',[['k','fog','map'],['c','fogStep'],['c','fogStep'],['c','fogStep']]],
-  balls:['balls',[]],lp:['lp',[]],lpHalf:['lp',[['v','lpP',-1]]],lpBig:['lp',[['v','lpP',4]]],quad:['quad',[]],quadRound:['quad',[['v','qdL1',1],['v','qdL2',1]]],
+  balls:['balls',[]],lp:['lp',[]],lpHalf:['lp',[['v','lpP',-1]]],lpBig:['lp',[['v','lpP',4]]],sym:['symop',[]],symNeg:['symop',[['v','smL2',-1.5]]],symZero:['symop',[['v','smL2',0],['v','smA',120]]],quad:['quad',[]],quadRound:['quad',[['v','qdL1',1],['v','qdL2',1]]],
   dirs:['dirs',[]],dirsRun:['dirs',[['c','drRun']]],dirs1e4:['dirs',[['v','drD',4],['c','drRun']]],
   anneal:['anneal',[]],annealRun:['anneal',[['c','anRun']]],annealConst:['anneal',[['k','anneal','const'],['c','anRun']]],
   steep:['steep',[]],
