@@ -1,0 +1,110 @@
+<script>
+(function(){
+  /* Fig. svd: a 2×2 matrix as rotation, stretch along the axes and rotation; the columns of the matrix can be dragged. */
+  const cv=document.getElementById('svd');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('svdFx');
+  let A=[[0.95,1.0],[-0.18,0.73]],pv=[0.57,0.82],geo=null;const RMAX=1.6,R=2.1,R0=1.35;
+  const FLAG=[[-0.3,-0.55],[-0.3,0.5],[0.4,0.32],[-0.3,0.12]];
+  function svd(){
+    const a=A[0][0],b=A[0][1],c=A[1][0],d=A[1][1];
+    const p=a*a+c*c,q=a*b+c*d,r=b*b+d*d,tr=p+r,dt=Math.sqrt(Math.max(0,(p-r)*(p-r)/4+q*q));
+    const l1=tr/2+dt,l2=Math.max(0,tr/2-dt);
+    let v1=Math.abs(q)>1e-12?[q,l1-p]:(p>=r?[1,0]:[0,1]);const n=Math.hypot(v1[0],v1[1]);v1=[v1[0]/n,v1[1]/n];
+    if(v1[0]*pv[0]+v1[1]*pv[1]<0)v1=[-v1[0],-v1[1]];pv=v1;
+    const v2=[-v1[1],v1[0]],s1=Math.sqrt(l1),s2=Math.sqrt(l2);
+    const Av=v=>[a*v[0]+b*v[1],c*v[0]+d*v[1]];
+    const u1=s1>1e-9?Av(v1).map(x=>x/s1):[1,0];
+    let u2=s2>1e-6?Av(v2).map(x=>x/s2):[-u1[1],u1[0]];
+    return {s1:s1,s2:s2,v1:v1,v2:v2,u1:u1,u2:u2,det:a*d-b*c};
+  }
+  const mul=(M,x)=>[M[0][0]*x[0]+M[0][1]*x[1],M[1][0]*x[0]+M[1][1]*x[1]];
+  function draw(){
+    const F=TB.fit(cv,W=>W<560?Math.round((W-30)/2)+Math.min(W-20,270)+70:Math.round((W-40)/3)+52),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,S=svd();
+    /* panels: [x, y, size] */
+    let P;if(sm){const w=Math.round((W-30)/2),w3=Math.min(W-20,270);P=[[10,26,w],[20+w,26,w],[(W-w3)/2,w+60,w3]];}
+    else{const w=Math.round((W-40)/3);P=[[10,30,w],[20+w,30,w],[30+2*w,30,w]];}
+    const map=(k,rr)=>{const p=P[k],h=p[2]/2;return {X:x=>p[0]+h+x/rr*h,Y:y=>p[1]+h-y/rr*h,u:h/rr};};
+    const M=[map(0,R0),map(1,R),map(2,R)];geo=M[2];
+    const SV=[[S.s1*S.v1[0],S.s1*S.v1[1]],[S.s2*S.v2[0],S.s2*S.v2[1]]];
+    const T=[x=>x,x=>[SV[0][0]*x[0]+SV[0][1]*x[1],SV[1][0]*x[0]+SV[1][1]*x[1]],x=>mul(A,x)];
+    const titles=[[['x','i']],[['Σ','r'],['V','i'],['ᵀ','r'],['x','i']],[['A','i'],['x','i'],[' = ','r'],['U','i'],['Σ','r'],['V','i'],['ᵀ','r'],['x','i']]];
+    for(let k=0;k<3;k++){const p=P[k],m=M[k],t=T[k];
+      c.strokeStyle=TB.rgba(K.muted,0.35);c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();
+      c.moveTo(p[0],m.Y(0));c.lineTo(p[0]+p[2],m.Y(0));c.moveTo(m.X(0),p[1]);c.lineTo(m.X(0),p[1]+p[2]);c.stroke();c.setLineDash([]);
+      c.strokeStyle=K.rule;c.strokeRect(p[0]+0.5,p[1]+0.5,p[2]-1,p[2]-1);c.save();c.beginPath();c.rect(p[0],p[1],p[2],p[2]);c.clip();
+      /* the image of the unit circle */
+      c.beginPath();for(let i=0;i<=120;i++){const a=i/120*2*Math.PI,q=t([Math.cos(a),Math.sin(a)]);i?c.lineTo(m.X(q[0]),m.Y(q[1])):c.moveTo(m.X(q[0]),m.Y(q[1]));}
+      c.fillStyle=TB.rgba(K.eth,0.08);c.fill();c.strokeStyle=K.eth;c.lineWidth=2;c.stroke();
+      /* the flag */
+      c.beginPath();FLAG.forEach((f,i)=>{const q=t(f);i?c.lineTo(m.X(q[0]),m.Y(q[1])):c.moveTo(m.X(q[0]),m.Y(q[1]));});c.closePath();
+      c.fillStyle=TB.rgba(K.eth,0.28);c.fill();
+      const q0=t(FLAG[0]),q1=t(FLAG[1]);c.strokeStyle=K.ink;c.lineWidth=1.6;c.beginPath();c.moveTo(m.X(q0[0]),m.Y(q0[1]));c.lineTo(m.X(q1[0]),m.Y(q1[1]));c.stroke();
+      /* the axes */
+      const ax=k===0?[S.v1,S.v2]:k===1?[[S.s1,0],[0,S.s2]]:[[S.s1*S.u1[0],S.s1*S.u1[1]],[S.s2*S.u2[0],S.s2*S.u2[1]]];
+      const lab=k===0?[[['v','i'],['1','s']],[['v','i'],['2','s']]]:k===1?[[['σ','i'],['1','s']],[['σ','i'],['2','s']]]:[[['σ','i'],['1','s'],['u','i'],['1','s']],[['σ','i'],['2','s'],['u','i'],['2','s']]];
+      [K.warm,K.sage].forEach((col,j)=>{const e=ax[j];if(Math.hypot(e[0],e[1])<1e-3)return;TB.arrow(c,m.X(0),m.Y(0),m.X(e[0]),m.Y(e[1]),col,2.4);
+        const L=Math.hypot(e[0],e[1]),ox=e[0]/L*12,oy=-e[1]/L*12;TB.tag(c,lab[j],m.X(e[0])+ox,m.Y(e[1])+oy+s*0.4,s,col,K,'center');});
+      /* the basis vectors and their images */
+      const E=k===0?[[1,0],[0,1]]:[t([1,0]),t([0,1])];
+      E.forEach((e,j)=>{if(k===2){TB.dot(c,m.X(e[0]),m.Y(e[1]),K.ink,K,5.5);}else{c.fillStyle=TB.rgba(K.muted,0.8);c.beginPath();c.arc(m.X(e[0]),m.Y(e[1]),3,0,7);c.fill();}});
+      if(k!==1){const lb=k===0?[[['e','i'],['1','s']],[['e','i'],['2','s']]]:[[['A','i'],['e','i'],['1','s']],[['A','i'],['e','i'],['2','s']]];
+        E.forEach((e,j)=>{const L=Math.hypot(e[0],e[1])||1;if(k===0&&j===0){TB.tag(c,lb[0],m.X(1)-5,m.Y(0)+s+8,s-1,K.muted,K,'right');return;}TB.tag(c,lb[j],m.X(e[0])+e[0]/L*14+(e[0]>=0?4:-4),m.Y(e[1])-e[1]/L*14+s*0.4,s-1,k===2?K.ink:K.muted,K,e[0]>=0?'left':'right');});}
+      c.restore();TB.rich(c,titles[k],p[0]+p[2]/2,p[1]-9,s+1,K.ink,'center');
+    }
+    fx.innerHTML=TB.rows([['<i>σ</i><sub>1</sub> = '+TB.fmt(S.s1,2)+',','<i>σ</i><sub>2</sub> = '+TB.fmt(S.s2,2)+(S.det<0?' (определитель отрицателен: <i>U</i> отражает)':'')],
+      ['‖<i>A</i>‖<sub>F</sub> = '+TB.fmt(Math.hypot(S.s1,S.s2),2)+',','‖<i>A</i>‖<sub>op</sub> = '+TB.fmt(S.s1,2)+',','‖<i>A</i>‖<sub>nuc</sub> = '+TB.fmt(S.s1+S.s2,2)]]);
+  }
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;for(let j=0;j<2;j++){const e=[A[0][j],A[1][j]];if(Math.hypot(px-geo.X(e[0]),py-geo.Y(e[1]))<(t?24:13))return j;}return null;},
+    move:(j,px,py)=>{let x=(px-geo.X(0))/geo.u,y=(geo.Y(0)-py)/geo.u;const L=Math.hypot(x,y);if(L>RMAX){x*=RMAX/L;y*=RMAX/L;}A[0][j]=x;A[1][j]=y;redraw();}});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+
+(function(){
+  /* Fig. kron: the Kronecker product as a matrix of blocks; pointing at an entry shows which two entries it is the product of. */
+  const cv=document.getElementById('kron');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('krFx');
+  let A=[[1,-2,0],[3,1,-1]],B=[[2,1],[0,-1],[1,3]],sel=[3,2],geo=null,seed=7;
+  const KR=(r,c)=>[Math.floor(r/3),Math.floor(c/2),r%3,c%2];
+  function draw(){
+    const csOf=W=>W<560?Math.min(24,Math.floor((W-76)/11)):32;
+    const F=TB.fit(cv,W=>34+6*csOf(W)+14),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,cs=csOf(W),gap=sm?28:34,s=sm?11:13;
+    const tw=3*cs+gap+2*cs+gap+6*cs,x0=Math.round((W-tw)/2),yK=34,yA=yK+cs*1.5,yB=yK+cs*1.5;
+    const xA=x0,xB=xA+3*cs+gap,xK=xB+2*cs+gap;geo={xA,yA,xB,yB,xK,yK,cs};
+    const [si,sj,sk,sl]=KR(sel[0],sel[1]);
+    const cell=(x,y,v,hi,dim)=>{const a=Math.min(1,Math.abs(v)/9);c.fillStyle=v===0?TB.rgba(K.muted,0.06):TB.rgba(v>0?K.warm:K.eth,0.12+0.5*Math.sqrt(a)*(dim?0.4:1));
+      c.fillRect(x+1,y+1,cs-2,cs-2);if(hi){c.strokeStyle=K.ink;c.lineWidth=2.2;c.strokeRect(x+1.5,y+1.5,cs-3,cs-3);}
+      c.fillStyle=dim?TB.rgba(K.ink,0.45):K.ink;c.font=s+'px '+TB.ui;c.textAlign='center';c.fillText(String(v).replace('-','−'),x+cs/2,y+cs/2+s*0.36);c.textAlign='start';};
+    for(let i=0;i<2;i++)for(let j=0;j<3;j++)cell(xA+j*cs,yA+i*cs,A[i][j],i===si&&j===sj,false);
+    for(let k=0;k<3;k++)for(let l=0;l<2;l++)cell(xB+l*cs,yB+k*cs,B[k][l],k===sk&&l===sl,false);
+    for(let r=0;r<6;r++)for(let q=0;q<6;q++){const [i,j]=KR(r,q);const v=A[i][j]*B[r%3][q%2];cell(xK+q*cs,yK+r*cs,v,r===sel[0]&&q===sel[1],!(i===si&&j===sj));}
+    /* block grid of the product */
+    c.strokeStyle=K.ink;c.lineWidth=1.2;for(let j=0;j<=3;j++){c.beginPath();c.moveTo(xK+j*2*cs,yK);c.lineTo(xK+j*2*cs,yK+6*cs);c.stroke();}
+    for(let i=0;i<=2;i++){c.beginPath();c.moveTo(xK,yK+i*3*cs);c.lineTo(xK+6*cs,yK+i*3*cs);c.stroke();}
+    c.strokeStyle=K.warm;c.lineWidth=2.6;c.strokeRect(xK+sj*2*cs,yK+si*3*cs,2*cs,3*cs);
+    c.fillStyle=K.ink;c.font=(s+6)+'px '+TB.serif;c.textAlign='center';
+    c.fillText('⊗',xA+3*cs+gap/2,yA+cs+6);c.fillText('=',xB+2*cs+gap/2,yA+cs+6);c.textAlign='start';
+    TB.rich(c,[['A','i']],xA+1.5*cs,yA-10,s+2,K.ink,'center');TB.rich(c,[['B','i']],xB+cs,yB-10,s+2,K.ink,'center');
+    TB.rich(c,[['A','i'],[' ⊗ ','r'],['B','i']],xK+3*cs,yK-10,s+2,K.ink,'center');
+    const v=A[si][sj]*B[sk][sl],n=x=>String(x).replace('-','−');
+    fx.innerHTML=TB.rows([['блок ('+(si+1)+', '+(sj+1)+') равен <i>a</i><sub>'+(si+1)+(sj+1)+'</sub><i>B</i> = '+(A[si][sj]<0?'('+n(A[si][sj])+')':n(A[si][sj]))+'·<i>B</i>;'],
+      ['выделенный элемент: '+n(A[si][sj])+' · '+(B[sk][sl]<0?'('+n(B[sk][sl])+')':n(B[sk][sl]))+' = '+n(v)]]);
+  }
+  function pick(px,py){if(!geo)return;const g=geo,cs=g.cs;
+    const inA=px>=g.xA&&px<g.xA+3*cs&&py>=g.yA&&py<g.yA+2*cs,inB=px>=g.xB&&px<g.xB+2*cs&&py>=g.yB&&py<g.yB+3*cs,inK=px>=g.xK&&px<g.xK+6*cs&&py>=g.yK&&py<g.yK+6*cs;
+    const [si,sj,sk,sl]=KR(sel[0],sel[1]);let ns=null;
+    if(inK)ns=[Math.floor((py-g.yK)/cs),Math.floor((px-g.xK)/cs)];
+    else if(inA){const i=Math.floor((py-g.yA)/cs),j=Math.floor((px-g.xA)/cs);ns=[3*i+sk,2*j+sl];}
+    else if(inB){const k=Math.floor((py-g.yB)/cs),l=Math.floor((px-g.xB)/cs);ns=[3*si+k,2*sj+l];}
+    if(ns&&(ns[0]!==sel[0]||ns[1]!==sel[1])){sel=ns;draw();}}
+  cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();pick(e.clientX-r.left,e.clientY-r.top);});
+  cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();pick(e.clientX-r.left,e.clientY-r.top);});
+  document.getElementById('krNew').addEventListener('click',()=>{const r=TB.rng(seed++),z=()=>{let v=0;while(v===0)v=Math.floor(r()*7)-3;return v;};
+    A=A.map(row=>row.map(z));B=B.map(row=>row.map(z));A[0][2]=0;draw();});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>

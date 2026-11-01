@@ -1,0 +1,178 @@
+<section id="s16">
+<h2>§16. Упражнения и вопросы</h2>
+<p>Упражнения идут в порядке параграфов, к которым относятся, и проверяют не память, а руки: почти в каждом нужно что-то посчитать. Вопросы короче и проверяют понимание. Решения и ответы свёрнуты.</p>
+
+<h3>Упражнения</h3>
+
+<div class="ex"><span class="lbl">{{Упражнение:exanneal}}</span>
+<p><b>Контекст.</b> Отжиг из §3 на самом маленьком примере, где всё считается в уме. Множество состояний $S=\{a,b\}$, <span class="nw">$f(a)=0$,</span> <span class="nw">$f(b)=1$;</span> предложение — всегда перейти в другое состояние: <span class="nw">$Q(a,b)=Q(b,a)=1$.</span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Выпишите переходные вероятности цепи Метрополиса при температуре <span class="nw">$T$.</span></li>
+<li>Найдите её стационарное распределение прямо из уравнений стационарности и сравните с распределением Больцмана из определения {{#metro}}.</li>
+<li>Найдите вероятность оказаться в минимуме $a$ в стационарном режиме при $T=1$ и при <span class="nw">$T=0{,}1$.</span></li>
+<li>Сколько шагов в среднем цепь проводит в состоянии $a$, прежде чем уйти из него, при $T=1$ и при <span class="nw">$T=0{,}1$?</span> Что это говорит о слишком быстром остывании?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Из $a$ предлагается $b$, и переход принимается с вероятностью <span class="nw">$q=e^{-1/T}$;</span> из $b$ предлагается $a$, и переход вниз принимается всегда. Значит, <span class="nw">$P(a,b)=q$,</span> <span class="nw">$P(a,a)=1-q$,</span> <span class="nw">$P(b,a)=1$,</span> <span class="nw">$P(b,b)=0$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Стационарность для состояния $b$: <span class="nw">$\pi(b)=\pi(a)\,q+\pi(b)\cdot0$,</span> то есть <span class="nw">$\pi(b)/\pi(a)=e^{-1/T}=e^{-(f(b)-f(a))/T}$.</span> Вместе с $\pi(a)+\pi(b)=1$ это даёт <span class="nw">$\pi(a)=1/(1+e^{-1/T})$</span> — ровно распределение Больцмана.</div>
+<div class="step"><span class="sh">Пункт (в).</span> При $T=1$: <span class="nw">$\pi(a)=1/(1+e^{-1})\approx0{,}731$.</span> При $T=0{,}1$: <span class="nw">$\pi(a)=1/(1+e^{-10})\approx0{,}99995$.</span></div>
+<div class="step"><span class="sh">Пункт (г).</span> На каждом шаге цепь уходит из $a$ с вероятностью $q$ независимо от прошлого, поэтому время до ухода распределено геометрически со средним <span class="nw">$1/q=e^{1/T}$:</span> около $2{,}7$ шага при $T=1$ и около $22\,000$ шагов при <span class="nw">$T=0{,}1$.</span> При низкой температуре цепь почти не выбирается из ямы, в которой оказалась. Если яма не та и остывание было слишком быстрым, выбраться из неё уже практически невозможно.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exgd}}</span>
+<p><b>Контекст.</b> Градиентный спуск из §5 на квадратичной функции, руками. Пусть <span class="nw">$f(x)=\frac12(x_1^2+9x_2^2)$</span> и <span class="nw">$x_0=(1,1)$.</span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Найдите $L$, $\mu$ и число обусловленности <span class="nw">$\kappa$.</span></li>
+<li>Выпишите $x_k$ для спуска с длиной шага <span class="nw">$\eta=1/L$.</span> Какая координата сходится мгновенно, а какая медленно?</li>
+<li>Найдите наилучшую постоянную длину шага $\eta_*$ из предложения {{#quadgd}} и выпишите $x_k$ для неё.</li>
+<li>Что происходит при <span class="nw">$\eta=0{,}25$?</span></li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $f=\frac12x^\top Ax$ с $A=\operatorname{diag}(1,9)$, поэтому <span class="nw">$L=9$,</span> <span class="nw">$\mu=1$,</span> <span class="nw">$\kappa=9$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Шаг умножает $i$-ю координату на <span class="nw">$1-\eta\lambda_i$.</span> При $\eta=1/9$ множители равны $8/9$ и <span class="nw">$0$:</span> <span class="nw">$x_k=\bigl((8/9)^k,0\bigr)$</span> при <span class="nw">$k\ge1$.</span> Крутая координата обнуляется за один шаг, пологая уменьшается на одну девятую за шаг.</div>
+<div class="step"><span class="sh">Пункт (в).</span> $\eta_*=2/(1+9)=0{,}2$, множители <span class="nw">$1-0{,}2=0{,}8$</span> и <span class="nw">$1-1{,}8=-0{,}8$,</span> так что <span class="nw">$x_k=\bigl(0{,}8^k,(-0{,}8)^k\bigr)$:</span> обе координаты убывают одинаково быстро, вторая — меняя знак, и <span class="nw">$\rho_*=0{,}8=(\kappa-1)/(\kappa+1)$.</span></div>
+<div class="step"><span class="sh">Пункт (г).</span> $0{,}25\gt2/9$, и множитель второй координаты равен <span class="nw">$1-2{,}25=-1{,}25$:</span> она растёт по модулю в $1{,}25$ раза за шаг, меняя знак. Спуск расходится, хотя первая координата сходится.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exl1}}</span>
+<p><b>Контекст.</b> В §6 мы нашли самые крутые шаги для норм $\ell_2$, $\ell_\infty$ и <span class="nw">$\|\cdot\|_A$.</span> Осталась норма <span class="nw">$\ell_1$.</span></p>
+<p><b>Задача.</b> Пусть $g\ne0$ и $i$ — номер координаты с наибольшим <span class="nw">$|g_i|$.</span></p>
+<ol class="ax" type="a">
+<li>Докажите, что двойственная к $\ell_1$ норма — это <span class="nw">$\|g\|_\infty$,</span> а верхняя грань в определении {{#dual}} достигается при <span class="nw">$u_*=\operatorname{sign}(g_i)\,e_i$.</span></li>
+<li>Найдите шаг из леммы {{#stepn}}. Что делает такой метод?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> При $\|u\|_1\le1$
+<span class="math-wrap">$$\langle g,u\rangle\le\sum_j|g_j|\,|u_j|\le\|g\|_\infty\sum_j|u_j|\le\|g\|_\infty,$$</span>
+а при $u=\operatorname{sign}(g_i)e_i$ получаем <span class="nw">$\langle g,u\rangle=|g_i|=\|g\|_\infty$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Шаг равен $-\eta\|g\|_\infty\operatorname{sign}(g_i)e_i=-\eta g_ie_i$: меняется только одна координата — та, по которой функция убывает быстрее всего, и на ней делается обычный градиентный шаг. Это жадный покоординатный спуск. Шар $\ell_1$ — ромб, и самая выгодная его точка — всегда вершина на одной из осей.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exhb}}</span>
+<p><b>Контекст.</b> Инерция из §9 помогает в оврагах. Посмотрим, что она делает там, где помогать не нужно. Пусть <span class="nw">$f(x)=\frac\lambda2x^2$,</span> <span class="nw">$\lambda\gt0$,</span> длина шага <span class="nw">$\eta=1/\lambda$,</span> <span class="nw">$\beta\in(0,1)$.</span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Где окажется градиентный спуск после одного шага?</li>
+<li>Найдите $x_1,\dots,x_4$ для метода тяжёлого шара из точки <span class="nw">$x_0$.</span></li>
+<li>Выпишите характеристическое уравнение рекуррентности и найдите модуль его корней. Как быстро сходится метод?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $x_1=x_0-\frac1\lambda\lambda x_0=0$ — сразу в минимум.</div>
+<div class="step"><span class="sh">Пункт (б).</span> Первый шаг такой же, <span class="nw">$x_1=0$,</span> но скорость $v_1=-x_0$ уже набрана. Дальше $x_{k+1}=x_k-x_k+\beta(x_k-x_{k-1})=\beta(x_k-x_{k-1})$, и
+<span class="math-wrap">$$x_2=-\beta x_0,\qquad x_3=-\beta^2x_0,\qquad x_4=\beta^2(1-\beta)\,x_0.$$</span>
+Шар проскакивает минимум и раскачивается около него.</div>
+<div class="step"><span class="sh">Пункт (в).</span> Уравнение <span class="nw">$r^2-\beta r+\beta=0$;</span> здесь $\eta\lambda=1$ лежит между $(1-\sqrt\beta)^2$ и <span class="nw">$(1+\sqrt\beta)^2$,</span> и по лемме {{#hbroots}} оба корня по модулю равны <span class="nw">$\sqrt\beta$.</span> Метод сходится как <span class="nw">$\beta^{k/2}$</span> — геометрически, но не за один шаг. Инерция окупается, когда функция плохо обусловлена; на идеально круглой функции она только мешает.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exadam}}</span>
+<p><b>Контекст.</b> Свойства шага Adam из §11, которые видны без всякой теории сходимости.</p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Пусть $\varepsilon=0$. Докажите, что если все градиенты умножить на одно число <span class="nw">$c\gt0$,</span> то все шаги Adam останутся прежними.</li>
+<li>Найдите первый шаг Adam (при $k=0$) по каждой координате. На что он похож?</li>
+<li>Пусть по некоторой координате градиент на всех шагах равен одному и тому же числу <span class="nw">$\delta\gt0$,</span> много меньшему <span class="nw">$\varepsilon$.</span> Найдите шаг по этой координате.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Средние линейны: $m$ умножается на $c$, а $v$, составленное из квадратов, на <span class="nw">$c^2$.</span> Поправки на смещение от градиентов не зависят. Поэтому $\hat m/\sqrt{\hat v}$ не меняется.</div>
+<div class="step"><span class="sh">Пункт (б).</span> $m_1=(1-\beta_1)g_0$, <span class="nw">$\hat m=g_0$;</span> $v_1=(1-\beta_2)g_0^2$, <span class="nw">$\hat v=g_0^2$.</span> Шаг по координате равен <span class="nw">$-\eta\,g_{0,i}/(|g_{0,i}|+\varepsilon)$</span> — почти $-\eta\operatorname{sign}g_{0,i}$: первый шаг Adam — это спуск по знаку.</div>
+<div class="step"><span class="sh">Пункт (в).</span> Тогда $\hat m=\delta$ и $\hat v=\delta^2$ на каждом шаге, и шаг равен <span class="nw">$-\eta\delta/(\delta+\varepsilon)\approx-(\eta/\varepsilon)\,\delta$:</span> по такой координате Adam превращается в обычный градиентный спуск с длиной шага <span class="nw">$\eta/\varepsilon$.</span> Поэтому $\varepsilon$ — не просто защита от деления на ноль: оно задаёт масштаб градиентов, ниже которого Adam перестаёт выравнивать координаты.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exadamfail}}</span>
+<p><b>Контекст.</b> В §11 говорилось, что Adam может не сходиться даже на выпуклой задаче. Вот упрощённая версия известного примера С. Редди, С. Кале и С. Кумара (2018). Ищем минимум на отрезке $[-1,1]$; после каждого шага точку, вышедшую за отрезок, возвращаем на ближайший конец. Функции потерь приходят по очереди: на шагах с номерами <span class="nw">$k=0,3,6,\dots$</span> это <span class="nw">$f_k(x)=Cx$</span> с некоторым <span class="nw">$C\gt2$,</span> на остальных шагах <span class="nw">$f_k(x)=-x$.</span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Где минимум средней функции <span class="nw">$\frac13\bigl(Cx-x-x\bigr)$</span> на отрезке?</li>
+<li>Куда придёт обычный стохастический спуск с маленьким постоянным шагом $\eta$ из точки <span class="nw">$x_0=0$?</span></li>
+<li>Adam с $\beta_1=\beta_2=0$ и $\varepsilon=0$ — это спуск по знаку градиента (упражнение {{#exadam}}). Куда он придёт из той же точки с шагом <span class="nw">$\eta=0{,}1$?</span> Объясните, что пошло не так.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Средняя функция $\frac{C-2}3x$ возрастает, так как <span class="nw">$C\gt2$,</span> и минимум — в точке <span class="nw">$x=-1$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> За три шага точка сдвигается на <span class="nw">$-\eta C+\eta+\eta=-\eta(C-2)\lt0$,</span> и спуск доходит до <span class="nw">$-1$,</span> где и остаётся (с колебаниями порядка <span class="nw">$\eta C$).</span></div>
+<div class="step"><span class="sh">Пункт (в).</span> Знаки градиентов за три шага: <span class="nw">$+,-,-$,</span> и точка сдвигается на <span class="nw">$-0{,}1+0{,}1+0{,}1=+0{,}1$.</span> Через десять таких троек она доходит до $+1$ и дальше колеблется между $0{,}9$ и <span class="nw">$1$</span> — в окрестности <i>наихудшей</i> точки. Знак забывает величину: редкий большой градиент, который должен перевешивать два маленьких, весит столько же, сколько каждый из них. Редди, Кале и Кумар построили похожие примеры и для настоящего Adam со стандартными <span class="nw">$\beta_1\lt\sqrt{\beta_2}$</span> и предложили исправление AMSGrad, в котором $\hat v$ не убывает.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exkron}}</span>
+<p><b>Контекст.</b> Произведение Кронекера из §12 руками.</p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Пусть $P=\begin{pmatrix}0&1\\1&0\end{pmatrix}$ и <span class="nw">$X$</span> — матрица $2\times2$. Что делают с $X$ умножения $(P\otimes I)\operatorname{vec}X$ и <span class="nw">$(I\otimes P)\operatorname{vec}X$?</span></li>
+<li>Докажите, что для обратимых $A$ и $B$ матрица $A\otimes B$ обратима и <span class="nw">$(A\otimes B)^{-1}=A^{-1}\otimes B^{-1}$.</span></li>
+<li>Найдите собственные числа $A\otimes B$ для <span class="nw">$A=\operatorname{diag}(1,2)$,</span> <span class="nw">$B=\operatorname{diag}(3,5)$</span> и проверьте, что $\operatorname{tr}(A\otimes B)=\operatorname{tr}A\cdot\operatorname{tr}B$.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> По лемме {{#kronp}}(а) $(P\otimes I)\operatorname{vec}X=\operatorname{vec}(XP^\top)$ — переставляет столбцы $X$; $(I\otimes P)\operatorname{vec}X=\operatorname{vec}(PX)$ — переставляет строки.</div>
+<div class="step"><span class="sh">Пункт (б).</span> По лемме {{#kronp}}(б) $(A\otimes B)(A^{-1}\otimes B^{-1})=(AA^{-1})\otimes(BB^{-1})=I\otimes I=I$.</div>
+<div class="step"><span class="sh">Пункт (в).</span> $A\otimes B=\operatorname{diag}(3,5,6,10)$, собственные числа — все произведения $\alpha_i\beta_j$; след равен <span class="nw">$24=3\cdot8$.</span></div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exsh1}}</span>
+<p><b>Контекст.</b> Во что превращается Shampoo из §13, если матрица весов — одна строка, то есть вектор <span class="nw">$w\in\mathbb R^n$,</span> записанный как матрица <span class="nw">$1\times n$?</span> Градиенты — строки <span class="nw">$G_j=g_j^\top$.</span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Выпишите $L_k$ и $R_k$ и шаг Shampoo для вектора <span class="nw">$w$.</span> Какой матрицей из §11 оказывается <span class="nw">$R_k$?</span></li>
+<li>Пусть $\varepsilon\to0$ и все прошлые градиенты лежат на двух координатных осях, так что <span class="nw">$R_k=\operatorname{diag}(a,b,0,\dots)$</span> на этих осях. Во сколько раз полноматричный AdaGrad и Shampoo усиливают шаг вдоль оси с меньшей суммой по сравнению с осью с большей?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $L_k=\varepsilon+\sum_j\|g_j\|^2$ — число, а <span class="nw">$R_k=\varepsilon I+\sum_jg_jg_j^\top$</span> — в точности матрица $S_k$ полноматричного AdaGrad. Шаг: <span class="nw">$w_{k+1}=w_k-\eta\,L_k^{-1/4}\,S_k^{-1/4}g_k$</span> — тот же AdaGrad, только со степенью $-1/4$ вместо $-1/2$ и с общим множителем <span class="nw">$L_k^{-1/4}$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Пусть $a\gt b$. AdaGrad делит компоненты на $\sqrt a$ и <span class="nw">$\sqrt b$,</span> то есть усиливает редкую ось в $\sqrt{a/b}$ раз. Shampoo делит на $a^{1/4}$ и <span class="nw">$b^{1/4}$</span> — усиление <span class="nw">$(a/b)^{1/4}$,</span> корень из усиления AdaGrad. Это и есть «выравнивание наполовину» из теоремы {{#kronworld}}.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exns}}</span>
+<p><b>Контекст.</b> Итерация Ньютона–Шульца из §14 для матрицы $1\times1$, то есть для числа <span class="nw">$x\ne0$.</span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Что такое $UV^\top$ для матрицы $1\times1$?</li>
+<li>Найдите $p(2)$ и $p(\sqrt3)$ для кубического многочлена <span class="nw">$p(\sigma)=\frac12(3\sigma-\sigma^3)$.</span> Куда сойдутся итерации из точки $x_0=2$? Зачем Muon перед итерациями делит матрицу на её норму?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $x=|x|\cdot(\operatorname{sign}x)\cdot1$ — сингулярное разложение с $\sigma=|x|$, <span class="nw">$u=\operatorname{sign}x$,</span> <span class="nw">$v=1$,</span> так что <span class="nw">$UV^\top=\operatorname{sign}x$.</span> Ортогонализация числа — его знак.</div>
+<div class="step"><span class="sh">Пункт (б).</span> $p(2)=\frac12(6-8)=-1$ и <span class="nw">$p(\sqrt3)=\frac12(3\sqrt3-3\sqrt3)=0$.</span> Из $x_0=2$ итерации сразу попадают в $-1$ и там остаются, потому что <span class="nw">$p(-1)=-1$:</span> знак получился неправильный. Теорема {{#nsconv}} гарантирует сходимость только для чисел из <span class="nw">$(0,1]$;</span> нормировка на $\|G\|_F$ загоняет туда все сингулярные числа.</div>
+</div>
+
+<div class="ex"><span class="lbl">{{Упражнение:exmuonvec}}</span>
+<p><b>Контекст.</b> В §14 говорилось, что смещения и масштабы, то есть векторы, Muon не обучают. Проверим, во что он для них превращается.</p>
+<p><b>Задача.</b> Пусть градиент — ненулевая матрица $g^\top$ размера <span class="nw">$1\times n$.</span></p>
+<ol class="ax" type="a">
+<li>Найдите её сингулярное разложение, спектральную норму и <span class="nw">$UV^\top$.</span></li>
+<li>Проверьте, что итерация Ньютона–Шульца с кубическим многочленом не меняет <span class="nw">$X_0=g^\top/\|g\|$.</span> Что за метод получается?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $g^\top=\|g\|\cdot1\cdot(g/\|g\|)^\top$: одно сингулярное число <span class="nw">$\|g\|$,</span> так что спектральная норма совпадает с евклидовой длиной, и <span class="nw">$UV^\top=g^\top/\|g\|$.</span></div>
+<div class="step"><span class="sh">Пункт (б).</span> $X_0X_0^\top=1$, поэтому <span class="nw">$p(X_0)=\frac12(3X_0-X_0X_0^\top X_0)=X_0$.</span> Шаг Muon для вектора — <span class="nw">$-\eta\,g/\|g\|$:</span> градиентный спуск с постоянной длиной шага. Выравнивать у вектора нечего — у него одно сингулярное направление, — и Muon теряет весь смысл.</div>
+</div>
+
+<h3>Вопросы</h3>
+
+<div class="ex"><span class="lbl">{{Вопрос:qrank}}</span>
+<p>Каков наибольший возможный ранг градиента по весам линейного слоя $m\times n$ на порции из $b$ примеров?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>$\min(b,m,n)$. По лемме {{#layergrad}} градиент — сумма $b$ матриц ранга один, а ранг суммы не больше суммы рангов; к тому же ранг матрицы не больше её размеров. Поэтому при маленькой порции градиент большого слоя заведомо вырожден, и у $UV^\top$ в Muon столько же ненулевых сингулярных чисел.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qscale}}</span>
+<p>Если функцию потерь умножить на $10$, шаг градиентного спуска вырастет в $10$ раз. У каких методов книги шаг при этом не изменится?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>У спуска по знаку, у Adam и AdaGrad (при $\varepsilon\to0$, упражнение {{#exadam}}), у Shampoo (по подсчёту степеней в §13), у Muon (нормировка на $\|G\|_F$) и у метода Ньютона: гессиан тоже умножается на $10$, и $H^{-1}g$ не меняется. А вот натуральный градиент изменится в $10$ раз: информация Фишера описывает модель, а не функцию потерь, и от множителя у потерь не зависит.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qnat}}</span>
+<p>Почему точный натуральный градиент невозможно использовать для сети с $10^9$ параметров, а Adam — можно?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Информация Фишера — матрица $10^9\times10^9$: $10^{18}$ чисел, и её обращение требует порядка $10^{27}$ операций. Adam хранит два числа на параметр и делает несколько операций на параметр за шаг. Поэтому на практике натуральный градиент всегда приближают — диагональю или произведениями Кронекера, как в K-FAC.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qkfac}}</span>
+<p>Что нужно знать K-FAC о слое, чего не нужно знать Shampoo?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>K-FAC собирает отдельно статистику входов слоя $\mathbb E\,xx^\top$ и статистику градиентов по выходам <span class="nw">$\mathbb E\,\delta\delta^\top$,</span> поэтому он должен заглядывать внутрь вычислений сети и знать, что параметр — линейный слой с такими входами. Shampoo видит только матрицу градиента по весам и строит свои $L$ и $R$ из неё; его можно применить к любому параметру-матрице.</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qsgd}}</span>
+<p>Почему стохастический спуск с постоянным шагом перестаёт приближаться к минимуму, и что меняет убывающий шаг?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Шум оценки градиента не убывает у минимума, и каждый шаг длины $\eta$ сбивает точку на величину порядка <span class="nw">$\eta$;</span> по теореме {{#sgdconst}} ошибка спускается только до уровня, пропорционального $\eta$ и дисперсии. Убывающий шаг уменьшает и сбивание, и, если шаги убывают не слишком быстро, всё ещё позволяет дойти до минимума (теорема {{#sgddecay}}).</p></div>
+
+<div class="ex"><span class="lbl">{{Вопрос:qembed}}</span>
+<p>Слой эмбеддингов — тоже матрица. Почему его обычно обучают AdamW, а не Muon?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Вход этого слоя — вектор из нулей и одной единицы, номер токена. Градиент на порции затрагивает только строки встретившихся токенов, и смысл у строк разный: это отдельные векторы для отдельных слов. Довод в пользу спектральной нормы — ограничить изменение выхода для <i>любого</i> входа — здесь не работает, а ортогонализация перемешала бы шаги разных слов. Покоординатный AdamW подстраивает шаг под частоту каждого слова, что здесь и нужно.</p></div>
+</section>

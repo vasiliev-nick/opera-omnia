@@ -504,17 +504,27 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 <li><span class="gs">$b,\ g_k$</span><span class="gd">Размер порции и стохастический градиент по порции. <a class="gref" href="#" data-t="Определение 64">Опр. 64</a></span></li>
 <li><span class="gs">$\delta_k$</span><span class="gd">Ошибка по значению <span class="nw">$f(x_k)-f(x_*)$.</span> <a class="gref" href="#" data-t="Теорема 67">Теор. 67</a></span></li>
 <li><span class="gs">$g^2,\ \sqrt v,\ g/v$</span><span class="gd">Покоординатные операции с векторами. <a class="gref" href="#" data-t="#s11">§11</a></span></li>
-<li><span class="gs">$G_k$</span><span class="gd">Сумма квадратов градиентов в AdaGrad. <a class="gref" href="#" data-t="Определение 69">Опр. 69</a></span></li>
+<li><span class="gs">$G_k$ (в §11)</span><span class="gd">Сумма квадратов градиентов в AdaGrad; начиная с §12 та же буква обозначает градиент-матрицу. <a class="gref" href="#" data-t="Определение 69">Опр. 69</a></span></li>
 <li><span class="gs">$e_k,\ \hat e_k$</span><span class="gd">Экспоненциальное скользящее среднее и оно же с поправкой на смещение. <a class="gref" href="#" data-t="Определение 70">Опр. 70</a></span></li>
 <li><span class="gs">$m_k,\ v_k,\ \beta_1,\ \beta_2$</span><span class="gd">Скользящие средние градиентов и их квадратов в Adam и их параметры. <a class="gref" href="#" data-t="Определение 73">Опр. 73</a></span></li>
 <li><span class="gs">$S_k$</span><span class="gd">Сумма матриц $g_jg_j^\top$ в полноматричном AdaGrad. <a class="gref" href="#" data-t="Определение 76">Опр. 76</a></span></li>
+<li><span class="gs">$\langle A,B\rangle,\ \|A\|_F$</span><span class="gd">Скалярное произведение матриц (сумма произведений элементов) и норма Фробениуса. <a class="gref" href="#" data-t="Определение 78">Опр. 78</a></span></li>
+<li><span class="gs">$W,\ G$</span><span class="gd">Матрица весов линейного слоя и градиент по ней. <a class="gref" href="#" data-t="Лемма 79">Лемма 79</a></span></li>
+<li><span class="gs">$x,\ \delta$</span><span class="gd">Вход слоя и градиент потерь по его выходу; на одном примере <span class="nw">$G=\delta x^\top$.</span> <a class="gref" href="#" data-t="Лемма 79">Лемма 79</a></span></li>
+<li><span class="gs">$\sigma_i,\ u_i,\ v_i$</span><span class="gd">Сингулярные числа и левые и правые сингулярные векторы. <a class="gref" href="#" data-t="Теорема 80">Теор. 80</a></span></li>
+<li><span class="gs">$U,\ \Sigma,\ V$</span><span class="gd">Матрицы сингулярного разложения <span class="nw">$A=U\Sigma V^\top$.</span> <a class="gref" href="#" data-t="Теорема 80">Теор. 80</a></span></li>
+<li><span class="gs">$\|A\|_{\mathrm{op}},\ \|A\|_{\mathrm{nuc}}$</span><span class="gd">Спектральная норма (наибольшее растяжение, <span class="nw">$\sigma_1$)</span> и ядерная норма (сумма сингулярных чисел). <a class="gref" href="#" data-t="Определение 81">Опр. 81</a></span></li>
+<li><span class="gs">$UV^\top$</span><span class="gd">Ортогонализация: матрица с теми же сингулярными векторами и единичными сингулярными числами. <a class="gref" href="#" data-t="Теорема 83">Теор. 83</a></span></li>
+<li><span class="gs">$A\otimes B,\ \operatorname{vec}X$</span><span class="gd">Произведение Кронекера и вытягивание матрицы в вектор по столбцам. <a class="gref" href="#" data-t="Определение 85">Опр. 85</a></span></li>
+<li><span class="gs">$L_k,\ R_k$</span><span class="gd">Левая и правая статистики Shampoo: суммы $G_jG_j^\top$ и <span class="nw">$G_j^\top G_j$.</span> <a class="gref" href="#" data-t="Определение 87">Опр. 87</a></span></li>
+<li><span class="gs">$p(X)$</span><span class="gd">Нечётный многочлен от прямоугольной матрицы; действует на каждое сингулярное число. <a class="gref" href="#" data-t="Лемма 92">Лемма 92</a></span></li>
+<li><span class="gs">$M_k$</span><span class="gd">Инерция в Muon. <a class="gref" href="#" data-t="Определение 95">Опр. 95</a></span></li>
 </ol></div></nav>
 <article class="book">
 <header class="ch">
   <div class="eyebrow">Мини-учебник</div>
   <h1>Оптимизаторы: от случайного перебора до Muon и Shampoo</h1>
   <p class="lead">Обучение нейросети — это спуск по рельефу функции потерь в густом тумане: видно только, куда склон уходит под ногами. Здесь мы честно разберём, куда и как далеко шагать, и увидим, что «самое крутое направление» зависит от того, как мерить длину шага. Из этой одной мысли вырастают градиентный спуск, знак градиента и Adam, метод Ньютона, натуральный градиент, а в конце — Shampoo и Muon, которые обращаются с градиентом как с матрицей. Нужны анализ функций многих переменных, линейная алгебра и начала теории вероятностей.</p>
-  <p class="lead">Сейчас готовы §1–§11: главная идея книги и все методы для векторов, от метода Ньютона до Adam. Матричные методы, Shampoo и Muon, появятся в следующей части.</p>
   <ul class="toc">
     <li><a href="#s1">§1. Откуда вопрос</a></li>
     <li><a href="#s2">§2. Напоминание и обозначения</a></li>
@@ -527,6 +537,11 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
     <li><a href="#s9">§9. Инерция: тяжёлый шар и метод Нестерова</a></li>
     <li><a href="#s10">§10. Стохастический градиент</a></li>
     <li><a href="#s11">§11. Адаптивные шаги: AdaGrad, RMSProp, Adam, AdamW</a></li>
+    <li><a href="#s12">§12. Матрицы как веса: сингулярное разложение и матричные нормы</a></li>
+    <li><a href="#s13">§13. Shampoo: полноматричный AdaGrad по частям</a></li>
+    <li><a href="#s14">§14. Muon: самый крутой шаг для матриц</a></li>
+    <li><a href="#s15">§15. Итог: одна задача и все методы</a></li>
+    <li><a href="#s16">§16. Упражнения и вопросы</a></li>
   </ul>
 </header>
 <section id="s1">
@@ -1844,6 +1859,634 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 </div>
 <p>Вот он, идеальный адаптивный метод: видит наклонные овраги и сам подбирает их форму. Но мы опять упираемся в ту же стену, что и в §7: матрица $S_k$ имеет размер <span class="nw"><span class="nw">$d\times d$,</span></span> а вычисление её корня требует порядка $d^3$ операций. Для сети с миллиардом весов это немыслимо.</p>
 <p>Выход подсказывает устройство нейросети. Её веса — не просто длинный вектор: веса каждого слоя образуют матрицу, и градиент по ним — тоже матрица. Если воспользоваться этой структурой, гигантскую матрицу $S_k$ можно заменить двумя маленькими — для строк и для столбцов. Так получится Shampoo. А если пойти ещё дальше и спросить, какой шаг самый крутой, когда длину матричного шага мерят естественной для матриц нормой, получится Muon. Для обоих понадобится язык матриц: сингулярное разложение и матричные нормы. Ему посвящён следующий параграф.</p>
+</section>
+<section id="s12">
+<h2>§12. Матрицы как веса: сингулярное разложение и матричные нормы</h2>
+<p>До сих пор веса нейросети были для нас одним длинным вектором. Но устроены они не так. Основная часть весов — это матрицы линейных слоёв: слой получает на вход вектор $x$ и выдаёт вектор <span class="nw"><span class="nw">$y=Wx$.</span></span> Градиент функции потерь по такой матрице — тоже матрица того же размера, и у неё есть структура, которую вектор не видит: строки, столбцы, ранг, сингулярные числа. Последние методы книги, Shampoo и Muon, построены именно на этой структуре.</p>
+<p>В этом параграфе мы соберём нужный для них язык. Главное в нём — сингулярное разложение: любая матрица действует как поворот, растяжение вдоль осей и ещё один поворот. Через растяжения, то есть сингулярные числа, выражаются все нужные нам матричные нормы, и окажется, что они устроены в точности как нормы <span class="nw">$\ell_2$,</span> $\ell_\infty$ и $\ell_1$ из §2, только применённые к сингулярным числам. В конце параграфа появится произведение Кронекера — способ собрать большую матрицу из двух маленьких.</p>
+
+<h3>Градиент по матрице</h3>
+<p>Матрицу $m\times n$ можно считать вектором из $mn$ чисел, и тогда всё, что мы знаем о градиентах, переносится на неё без изменений. Скалярное произведение векторов из $mn$ координат в матричной записи выглядит так.</p>
+
+<div class="stmt"><span class="lbl">Определение 78 (скалярное произведение и норма Фробениуса)</span>
+Для матриц $A,B$ размера $m\times n$
+<span class="math-wrap">$$\langle A,B\rangle=\sum_{i=1}^m\sum_{j=1}^nA_{ij}B_{ij},\qquad\|A\|_F=\sqrt{\langle A,A\rangle}.$$</span>
+Норма $\|A\|_F$ называется <b>нормой Фробениуса</b>.</div>
+<p>Это обычное евклидово скалярное произведение и обычная евклидова длина, только числа записаны в прямоугольную таблицу. Поэтому для функции $f(W)$ от матрицы определение 7 дословно даёт градиент <span class="nw">$\nabla f(W)$</span> — матрицу того же размера, что и <span class="nw">$W$,</span> с элементами <span class="nw">$\partial f/\partial W_{ij}$,</span> и
+<span class="math-wrap">$$f(W+\Delta)=f(W)+\langle\nabla f(W),\Delta\rangle+o(\|\Delta\|_F).$$</span>
+Градиентный спуск по матрице — это градиентный спуск по вектору её элементов, то есть самый крутой спуск в норме Фробениуса. Вопрос этого и следующих параграфов в том, нет ли для матриц более естественного способа мерить шаг.</p>
+<p>Одна формула будет встречаться постоянно. Если $a\in\mathbb R^m$ и $b\in\mathbb R^n$ — столбцы, то $ab^\top$ — матрица $m\times n$ с элементами <span class="nw"><span class="nw">$a_ib_j$,</span></span> и для любой матрицы $\Delta$ того же размера
+<span class="math-wrap">$$\langle ab^\top,\Delta\rangle=\sum_{i,j}a_ib_j\Delta_{ij}=a^\top\Delta\,b.\tag{$\ast$}$$</span>
+Матрицы вида $ab^\top$ называют матрицами ранга один: все их строки пропорциональны вектору <span class="nw"><span class="nw">$b^\top$,</span></span> а все столбцы — вектору <span class="nw"><span class="nw">$a$.</span></span> Следующая лемма объясняет, почему они так важны для нейросетей.</p>
+
+<div class="stmt"><span class="lbl">Лемма 79 (градиент по весам линейного слоя)</span>
+Пусть $x\in\mathbb R^n$ — вход слоя, $W$ — матрица <span class="nw">$m\times n$,</span> а потери на этом примере равны <span class="nw"><span class="nw">$\ell(Wx)$,</span></span> где $\ell$ дифференцируема в точке <span class="nw"><span class="nw">$y=Wx$.</span></span> Обозначим <span class="nw">$\delta={}$<wbr><span class="nw">$\nabla\ell(y)\in\mathbb R^m$.</span></span> Тогда
+<span class="math-wrap">$$\nabla_W\,\ell(Wx)=\delta\,x^\top.$$</span>
+Для порции из $b$ примеров с потерями <span class="nw">$\frac1b\sum_k\ell_k(Wx_k)$</span> градиент равен <span class="nw"><span class="nw">$\frac1b\sum_k\delta_kx_k^\top$.</span></span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Сдвиг весов на $\Delta$ сдвигает выход слоя на <span class="nw"><span class="nw">$\Delta x$;</span></span> подставить это в определение градиента $\ell$ и переписать скалярное произведение по формуле <span class="nw"><span class="nw">$(\ast)$.</span></span></div>
+<div class="step"><span class="sh">Шаг 1. Главная часть.</span> По определению 7 для $\ell$ в точке $y$ и по формуле $(\ast)$
+<span class="math-wrap">$$\begin{aligned}\ell\bigl((W+\Delta)x\bigr)&=\ell(y+\Delta x)=\ell(y)+\delta^\top\Delta x+r(\Delta x)\\&=\ell(y)+\langle\delta x^\top,\Delta\rangle+r(\Delta x).\end{aligned}$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Остаток мал.</span> $i$-я координата $\Delta x$ — скалярное произведение $i$-й строки $\Delta$ с <span class="nw"><span class="nw">$x$;</span></span> по неравенству Коши–Буняковского она по модулю не больше длины строки, умноженной на <span class="nw"><span class="nw">$\|x\|$.</span></span> Складывая квадраты, получаем <span class="nw">$\|\Delta x\|\le{}$<wbr><span class="nw">$\|\Delta\|_F\|x\|$,</span></span> и, как в шаге 2 доказательства леммы 45, <span class="nw">$r(\Delta x)={}$<wbr><span class="nw">$o(\|\Delta\|_F)$.</span></span></div>
+<div class="step"><span class="sh">Шаг 3. Порция.</span> Градиент среднего — среднее градиентов.</div>
+</div>
+<p>Итак, градиент по весам слоя на одном примере — матрица ранга один: «внешнее произведение» того, что пришло на вход слоя, и того, как потери чувствуют его выход. Градиент по порции — сумма $b$ таких матриц. Это не мелкая техническая подробность: у градиента-матрицы есть богатая внутренняя геометрия, и ниже мы научимся её видеть.</p>
+
+<h3>Сингулярное разложение</h3>
+<p>Симметричную матрицу спектральная теорема (теорема 10) превращает в растяжения вдоль перпендикулярных осей. У прямоугольной матрицы нет собственных векторов в обычном смысле: она переводит векторы из $\mathbb R^n$ в <span class="nw">$\mathbb R^m$,</span> в другое пространство. Но и у неё есть перпендикулярные оси — свои во входном пространстве и свои в выходном.</p>
+
+<div class="stmt"><span class="lbl">Теорема 80 (сингулярное разложение)</span>
+Пусть $A$ — ненулевая матрица <span class="nw">$m\times n$.</span> Тогда найдутся число <span class="nw"><span class="nw">$r\ge1$,</span></span> числа <span class="nw">$\sigma_1\ge{}$<wbr>$\sigma_2\ge{}$<wbr>$\dots\ge{}$<wbr>$\sigma_r\gt{}$<wbr><span class="nw">$0$,</span></span> ортонормированные векторы $u_1,\dots,u_r\in\mathbb R^m$ и ортонормированные векторы <span class="nw">$v_1,\dots,v_r\in\mathbb R^n$</span> такие, что
+<span class="math-wrap">$$A=\sum_{i=1}^r\sigma_i\,u_iv_i^\top=U\Sigma V^\top,$$</span>
+где $U$ — матрица $m\times r$ со столбцами <span class="nw">$u_i$,</span> $V$ — матрица $n\times r$ со столбцами <span class="nw">$v_i$,</span> $\Sigma={}$<wbr><span class="nw">$\operatorname{diag}(\sigma_1,\dots,\sigma_r)$.</span> При этом <span class="nw">$Av_i=\sigma_iu_i$,</span> а числа $\sigma_i^2$ — это в точности ненулевые собственные числа матрицы <span class="nw"><span class="nw">$A^\top A$.</span></span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Оси во входном пространстве — собственные векторы симметричной матрицы <span class="nw"><span class="nw">$A^\top A$;</span></span> матрица $A$ переводит их в перпендикулярные векторы, которые после нормировки и дают оси в выходном пространстве.</div>
+<div class="step"><span class="sh">Шаг 1. Матрица <span class="nw">$A^\top A$.</span></span> Она симметрична, и по теореме 10 у неё есть ортонормированный базис из собственных векторов <span class="nw">$q_1,\dots,q_n$</span> с числами <span class="nw"><span class="nw">$\lambda_j$.</span></span> Все они неотрицательны: <span class="nw">$\lambda_j={}$<wbr>$q_j^\top A^\top Aq_j={}$<wbr>$\|Aq_j\|^2\ge{}$<wbr><span class="nw">$0$.</span></span> Упорядочим их по убыванию; пусть положительны первые $r$ из них. Хотя бы одно положительно: иначе $Aq_j=0$ для всех векторов базиса, и <span class="nw"><span class="nw">$A=0$.</span></span></div>
+<div class="step"><span class="sh">Шаг 2. Оси.</span> Положим <span class="nw"><span class="nw">$v_i=q_i$,</span></span> <span class="nw">$\sigma_i={}$<wbr>$\sqrt{\lambda_i}$</span> и <span class="nw">$u_i=Av_i/\sigma_i$</span> при <span class="nw"><span class="nw">$i\le r$.</span></span> Векторы $u_i$ ортонормированы:
+<span class="math-wrap">$$\langle u_i,u_j\rangle=\frac{v_i^\top A^\top Av_j}{\sigma_i\sigma_j}=\frac{\lambda_j\langle v_i,v_j\rangle}{\sigma_i\sigma_j},$$</span>
+а это $1$ при $i=j$ и $0$ при <span class="nw"><span class="nw">$i\ne j$.</span></span></div>
+<div class="step"><span class="sh">Шаг 3. Разложение.</span> Сравним $A$ и $B={}$<wbr>$\sum_i\sigma_iu_iv_i^\top$ на базисе <span class="nw"><span class="nw">$q_1,\dots,q_n$.</span></span> При $j\le r$ имеем <span class="nw"><span class="nw">$Bq_j=\sigma_ju_j=Aq_j$.</span></span> При $j\gt r$ число <span class="nw">$\lambda_j=0$,</span> поэтому <span class="nw"><span class="nw">$\|Aq_j\|^2=\lambda_j=0$,</span></span> а <span class="nw">$Bq_j=0$,</span> потому что $q_j$ перпендикулярен всем <span class="nw"><span class="nw">$v_i$.</span></span> Линейные отображения, совпадающие на базисе, равны.</div>
+<div class="step"><span class="sh">Шаг 4. Собственные числа.</span> По построению <span class="nw"><span class="nw">$Av_i=\sigma_iu_i$,</span></span> а ненулевые собственные числа $A^\top A$ — это <span class="nw"><span class="nw">$\lambda_i=\sigma_i^2$.</span></span></div>
+</div>
+<p>Числа $\sigma_i$ называются <b>сингулярными числами</b> матрицы, векторы $v_i$ и $u_i$ — правыми и левыми <b>сингулярными векторами</b>. Сами векторы определены не однозначно (например, можно одновременно сменить знак у $u_i$ и <span class="nw"><span class="nw">$v_i$),</span></span> но сингулярные числа однозначны: это корни из ненулевых собственных чисел <span class="nw"><span class="nw">$A^\top A$.</span></span></p>
+<p>Геометрический смысл разложения такой. Возьмём вектор $x$ и разложим его по осям <span class="nw"><span class="nw">$v_i$:</span></span> координаты — это <span class="nw"><span class="nw">$c_i=\langle v_i,x\rangle$,</span></span> и умножение на $V^\top$ просто вычисляет эти координаты. Умножение на $\Sigma$ растягивает $i$-ю координату в $\sigma_i$ раз, а умножение на $U$ откладывает получившиеся числа вдоль осей $u_i$ выходного пространства. В итоге единичная окружность (единичная сфера) переходит в эллипс (эллипсоид) с полуосями <span class="nw">$\sigma_iu_i$:</span> <b>матрица — это поворот, растяжение вдоль осей и ещё один поворот</b>. Направления, перпендикулярные всем <span class="nw">$v_i$,</span> матрица просто обнуляет.</p>
+
+<figure>
+  <div class="fig1"><canvas id="svd" width="760" height="320" aria-label="Сингулярное разложение матрицы 2 на 2: единичная окружность, растяжение вдоль осей и эллипс-образ"></canvas></div>
+  <div id="svdFx" class="fx" aria-live="polite"></div>
+  <figcaption>Рис. 20. Матрица $2\times2$ как поворот, растяжение и поворот. Флажок внутри окружности показывает, как поворачивается и растягивается плоскость; серые точки — базисные векторы $e_1,e_2$ и их образы.
+<ul class="capl">
+<li><b>Слева</b> — единичная окружность и правые сингулярные векторы $v_1$ (тёплый) и $v_2$ (зелёный);</li>
+<li><b>в середине</b> — та же картинка после умножения на $V^\top$ и <span class="nw"><span class="nw">$\Sigma$:</span></span> оси $v_i$ легли на оси координат и растянулись в $\sigma_i$ раз;</li>
+<li><b>справа</b> — образ окружности под действием <span class="nw"><span class="nw">$A=U\Sigma V^\top$:</span></span> эллипс с полуосями <span class="nw">$\sigma_1u_1$</span> и <span class="nw"><span class="nw">$\sigma_2u_2$.</span></span></li>
+</ul>
+Справа тёмными точками отмечены столбцы матрицы, то есть образы $Ae_1$ и <span class="nw"><span class="nw">$Ae_2$;</span></span> их можно перетаскивать, меняя матрицу. Если определитель $A$ отрицателен, второй «поворот» $U$ включает зеркальное отражение, и флажок справа отражён. Под рисунком — сингулярные числа и три нормы матрицы из этого параграфа.</figcaption>
+</figure>
+
+<h3>Три матричные нормы</h3>
+<p>Норма Фробениуса считает все элементы матрицы равноправными, как будто это просто набор чисел. Но матрица — это отображение, и естественно мерить её тем, насколько сильно она может растянуть вектор.</p>
+
+<div class="stmt"><span class="lbl">Определение 81 (спектральная и ядерная нормы)</span>
+Для матрицы $A$ размера $m\times n$ <b>спектральная норма</b> (операторная норма) — это
+<span class="math-wrap">$$\|A\|_{\mathrm{op}}=\sup_{\|x\|\le1}\|Ax\|,$$</span>
+а <b>ядерная норма</b> — сумма сингулярных чисел: <span class="nw">$\|A\|_{\mathrm{nuc}}={}$<wbr>$\sigma_1+\dots+\sigma_r$</span> (для нулевой матрицы обе нормы равны нулю).</div>
+<p>Из определения сразу видно главное свойство спектральной нормы: <span class="nw">$\|Ax\|\le{}$<wbr>$\|A\|_{\mathrm{op}}\|x\|$</span> для любого <span class="nw"><span class="nw">$x$.</span></span> Это действительно норма: например, $\|(A+B)x\|\le{}$<wbr>$\|Ax\|+\|Bx\|\le{}$<wbr>$\|A\|_{\mathrm{op}}+\|B\|_{\mathrm{op}}$ при <span class="nw"><span class="nw">$\|x\|\le1$.</span></span> Что ядерная норма — тоже норма, мы увидим чуть позже, из теоремы 83. Все три нормы выражаются через сингулярные числа.</p>
+
+<div class="stmt"><span class="lbl">Предложение 82 (нормы через сингулярные числа)</span>
+Пусть $A={}$<wbr>$\sum_i\sigma_iu_iv_i^\top$ — сингулярное разложение. Тогда
+<span class="math-wrap">$$\begin{gathered}\|A\|_F=\sqrt{\sigma_1^2+\dots+\sigma_r^2},\\\|A\|_{\mathrm{op}}=\sigma_1,\qquad\|A\|_{\mathrm{nuc}}=\sigma_1+\dots+\sigma_r,\end{gathered}$$</span>
+и верхняя грань в определении спектральной нормы достигается при <span class="nw"><span class="nw">$x=v_1$.</span></span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Матрицы $u_iv_i^\top$ взаимно перпендикулярны и единичны в смысле скалярного произведения Фробениуса; а вектор $x$ под действием $A$ раскладывается на перпендикулярные слагаемые, каждое из которых растягивается в $\sigma_i$ раз.</div>
+<div class="step"><span class="sh">Шаг 1. Фробениус.</span> По формуле $(\ast)$ $\langle u_iv_i^\top,u_jv_j^\top\rangle={}$<wbr><span class="nw">$u_i^\top u_j\,v_j^\top v_i$,</span> что равно $1$ при $i=j$ и $0$ иначе. Поэтому $\langle A,A\rangle={}$<wbr>$\sum_{i,j}\sigma_i\sigma_j\langle u_iv_i^\top,u_jv_j^\top\rangle={}$<wbr><span class="nw">$\sum_i\sigma_i^2$.</span></div>
+<div class="step"><span class="sh">Шаг 2. Спектральная норма сверху.</span> Пусть <span class="nw"><span class="nw">$c_i=\langle v_i,x\rangle$.</span></span> Тогда <span class="nw"><span class="nw">$Ax=\sum_i\sigma_ic_iu_i$,</span></span> и, так как $u_i$ ортонормированы, $\|Ax\|^2={}$<wbr>$\sum_i\sigma_i^2c_i^2\le{}$<wbr><span class="nw">$\sigma_1^2\sum_ic_i^2$.</span> Вектор $x-\sum_ic_iv_i$ перпендикулярен всем <span class="nw"><span class="nw">$v_i$,</span></span> поэтому по теореме Пифагора <span class="nw"><span class="nw">$\sum_ic_i^2\le\|x\|^2$.</span></span> Значит, <span class="nw"><span class="nw">$\|Ax\|\le\sigma_1\|x\|$.</span></span></div>
+<div class="step"><span class="sh">Шаг 3. Достижение.</span> $\|Av_1\|={}$<wbr>$\|\sigma_1u_1\|={}$<wbr>$\sigma_1$ и <span class="nw"><span class="nw">$\|v_1\|=1$.</span></span> Ядерная норма определена как сумма сингулярных чисел, доказывать здесь нечего.</div>
+</div>
+<p>Посмотрите, что получилось. Если собрать сингулярные числа в вектор <span class="nw">$\sigma={}$<wbr><span class="nw">$(\sigma_1,\dots,\sigma_r)$,</span></span> то норма Фробениуса — его длина <span class="nw"><span class="nw">$\ell_2$,</span></span> спектральная норма — его наибольшая координата, то есть <span class="nw"><span class="nw">$\ell_\infty$,</span></span> а ядерная — сумма координат, то есть <span class="nw"><span class="nw">$\ell_1$.</span></span> Три матричные нормы — это три нормы из §2, применённые к сингулярным числам. В §6 нормы $\ell_\infty$ и $\ell_1$ оказались двойственными друг другу. Следующая теорема — то же самое для матриц, и она станет сердцем метода Muon.</p>
+
+<div class="stmt"><span class="lbl">Теорема 83 (двойственность спектральной и ядерной норм)</span>
+Пусть $G={}$<wbr>$\sum_i\sigma_iu_iv_i^\top={}$<wbr>$U\Sigma V^\top$ — ненулевая матрица со своим сингулярным разложением. Тогда
+<span class="math-wrap">$$\sup_{\|\Delta\|_{\mathrm{op}}\le1}\langle G,\Delta\rangle=\|G\|_{\mathrm{nuc}},$$</span>
+и верхняя грань достигается при <span class="nw">$\Delta={}$<wbr>$UV^\top={}$<wbr><span class="nw">$\sum_iu_iv_i^\top$,</span></span> причём <span class="nw">$\|UV^\top\|_{\mathrm{op}}={}$<wbr><span class="nw">$1$.</span></span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Скалярное произведение с $G$ раскладывается на слагаемые <span class="nw"><span class="nw">$\sigma_iu_i^\top\Delta v_i$;</span></span> каждое не больше <span class="nw"><span class="nw">$\sigma_i$,</span></span> потому что $\Delta$ не растягивает векторы больше чем в $1$ раз. Матрица $UV^\top$ переводит каждое $v_i$ ровно в <span class="nw"><span class="nw">$u_i$,</span></span> и все оценки становятся равенствами.</div>
+<div class="step"><span class="sh">Шаг 1. Оценка сверху.</span> Пусть <span class="nw">$\|\Delta\|_{\mathrm{op}}\le{}$<wbr><span class="nw">$1$.</span></span> По формуле $(\ast)$ и неравенству Коши–Буняковского
+<span class="math-wrap">$$\langle G,\Delta\rangle=\sum_i\sigma_i\,u_i^\top\Delta v_i\le\sum_i\sigma_i\,\|u_i\|\,\|\Delta v_i\|\le\sum_i\sigma_i.$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Достижение.</span> Матрица $UV^\top={}$<wbr>$\sum_ju_jv_j^\top$ — это сингулярное разложение, в котором все сингулярные числа равны единице, поэтому по предложению 82 её спектральная норма равна <span class="nw"><span class="nw">$1$.</span></span> Так как $v_j^\top v_i$ равно $1$ при $j=i$ и $0$ иначе, <span class="nw"><span class="nw">$UV^\top v_i=u_i$,</span></span> и $\langle G,UV^\top\rangle={}$<wbr>$\sum_i\sigma_iu_i^\top u_i={}$<wbr><span class="nw">$\sum_i\sigma_i$.</span></div>
+</div>
+<p>Из теоремы следует, что ядерная норма — действительно норма: верхняя грань линейных по $G$ выражений удовлетворяет неравенству треугольника, как в §6. А матрица $UV^\top$ заслуживает отдельного взгляда. Она получается из $G$ заменой всех сингулярных чисел единицами: те же оси, тот же поворот, но никаких растяжений. Эллипс-образ окружности превращается обратно в окружность. Если $G$ квадратная и все <span class="nw">$\sigma_i\gt0$,</span> то $UV^\top$ — ортогональная матрица; поэтому переход от $G$ к $UV^\top$ называют <b>ортогонализацией</b>. Для диагональной матрицы с ненулевой диагональю $UV^\top$ — это диагональная матрица из знаков её элементов: ортогонализация — матричный аналог знака числа.</p>
+
+<h3>Степени и сингулярное разложение</h3>
+<p>Методу Shampoo понадобятся отрицательные степени матриц <span class="nw">$GG^\top$</span> и <span class="nw"><span class="nw">$G^\top G$.</span></span> Обе симметричны, но могут иметь нулевые собственные числа, и тогда отрицательная степень не определена. Поэтому к ним добавляют маленькое <span class="nw"><span class="nw">$\varepsilon I$,</span></span> делая их положительно определёнными. Следующая лемма показывает, что получается, когда такая степень умножается на сам <span class="nw"><span class="nw">$G$:</span></span> всё снова сводится к сингулярным числам.</p>
+
+<div class="stmt"><span class="lbl">Лемма 84 (степени $GG^\top$ и <span class="nw">$G^\top G$)</span></span>
+Пусть $G={}$<wbr>$\sum_{i=1}^r\sigma_iu_iv_i^\top$ — сингулярное разложение, $\varepsilon\gt0$ и $p$ — действительное число. Тогда
+<span class="math-wrap">$$(GG^\top+\varepsilon I)^p\,G=G\,(G^\top G+\varepsilon I)^p=\sum_{i=1}^r(\sigma_i^2+\varepsilon)^p\,\sigma_i\,u_iv_i^\top.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Векторы $u_i$ — собственные векторы $GG^\top$ с числами <span class="nw"><span class="nw">$\sigma_i^2$,</span></span> а на всех перпендикулярных к ним направлениях $GG^\top$ равна нулю. Степень матрицы действует на собственные векторы как степень собственного числа, а $G$ выдаёт векторы только из линейной оболочки <span class="nw"><span class="nw">$u_i$.</span></span></div>
+<div class="step"><span class="sh">Шаг 1. Собственный базис.</span> Дополним ортонормированные векторы <span class="nw">$u_1,\dots,u_r$</span> до ортонормированного базиса <span class="nw">$u_1,\dots,u_m$</span> пространства $\mathbb R^m$ (это всегда можно сделать, например процессом Грама–Шмидта). Так как <span class="nw">$G^\top u_k={}$<wbr><span class="nw">$\sum_i\sigma_iv_i\,u_i^\top u_k$,</span></span> имеем <span class="nw">$GG^\top u_k={}$<wbr>$\sigma_k^2u_k$</span> при $k\le r$ и <span class="nw">$G^\top u_k=0$</span> при <span class="nw"><span class="nw">$k\gt r$.</span></span> Значит, $u_1,\dots,u_m$ — ортонормированный базис из собственных векторов матрицы $GG^\top+\varepsilon I$ с положительными числами $\sigma_k^2+\varepsilon$ при $k\le r$ и $\varepsilon$ при <span class="nw"><span class="nw">$k\gt r$.</span></span></div>
+<div class="step"><span class="sh">Шаг 2. Степень.</span> По определению 43 и лемме 44 степень можно вычислять по этому базису: $(GG^\top+\varepsilon I)^p={}$<wbr><span class="nw">$\sum_k\mu_k^pu_ku_k^\top$,</span> где $\mu_k$ — собственные числа из шага 1. Умножая на <span class="nw">$G={}$<wbr>$\sum_i\sigma_iu_iv_i^\top$</span> и пользуясь <span class="nw">$u_k^\top u_i=0$</span> при <span class="nw"><span class="nw">$k\ne i$,</span></span> получаем <span class="nw"><span class="nw">$\sum_i(\sigma_i^2+\varepsilon)^p\sigma_iu_iv_i^\top$.</span></span></div>
+<div class="step"><span class="sh">Шаг 3. Правая сторона.</span> Те же рассуждения для $G^\top G$ с базисом, дополняющим <span class="nw"><span class="nw">$v_1,\dots,v_r$,</span></span> дают то же выражение.</div>
+</div>
+
+<h3>Произведение Кронекера</h3>
+<p>Последний инструмент понадобится, чтобы сравнить методы для матриц с методами для векторов. Матрицу весов $W$ размера $m\times n$ можно вытянуть в вектор длины <span class="nw"><span class="nw">$mn$,</span></span> и тогда предобусловливатель для неё — матрица <span class="nw">$mn\times mn$.</span> Для слоя $4096\times4096$ это матрица из почти $3\cdot10^{14}$ чисел: хранить её нельзя. Но некоторые огромные матрицы собираются из двух маленьких, и как раз их можно хранить и обращать.</p>
+
+<div class="stmt"><span class="lbl">Определение 85 (произведение Кронекера и вытягивание матрицы)</span>
+<b>Произведение Кронекера</b> матрицы $A$ размера $p\times q$ и матрицы $B$ размера $s\times t$ — блочная матрица размера $ps\times qt$
+<span class="math-wrap">$$A\otimes B=\begin{pmatrix}a_{11}B&\cdots&a_{1q}B\\\vdots&&\vdots\\a_{p1}B&\cdots&a_{pq}B\end{pmatrix}.$$</span>
+<b>Вытягивание</b> матрицы $X$ размера $m\times n$ — вектор <span class="nw">$\operatorname{vec}X\in\mathbb R^{mn}$,</span> составленный из столбцов <span class="nw">$X$,</span> поставленных друг под другом.</div>
+<p>Каждый элемент $A$ порождает целый блок: копию матрицы <span class="nw">$B$,</span> умноженную на этот элемент. Поэтому элемент произведения Кронекера — это всегда произведение одного элемента $A$ на один элемент <span class="nw"><span class="nw">$B$:</span></span> номер блока говорит, какой элемент $A$ взять, а место внутри блока — какой элемент <span class="nw"><span class="nw">$B$.</span></span></p>
+
+<figure>
+  <div class="fig1"><canvas id="kron" width="760" height="260" aria-label="Произведение Кронекера матрицы 2 на 3 и матрицы 3 на 2 как блочная матрица 6 на 6"></canvas></div>
+  <div class="controls"><div class="btns"><button type="button" class="act" id="krNew">другие матрицы</button></div></div>
+  <div id="krFx" class="fx" aria-live="polite"></div>
+  <figcaption>Рис. 21. Произведение Кронекера матрицы $A$ размера $2\times3$ и матрицы $B$ размера <span class="nw">$3\times2$</span> — матрица $6\times6$ из шести блоков <span class="nw"><span class="nw">$a_{ij}B$.</span></span> Наведите указатель (или нажмите) на элемент любой из трёх матриц: в $A\otimes B$ выделится блок, порождённый элементом <span class="nw"><span class="nw">$a_{ij}$,</span></span> а в $A$ и $B$ — два числа, произведение которых стоит в выделенной клетке. Тёплые клетки положительны, фиолетовые отрицательны, бледные — нули; нулевой элемент $A$ даёт целый нулевой блок.</figcaption>
+</figure>
+
+<div class="stmt"><span class="lbl">Лемма 86 (свойства произведения Кронекера)</span>
+Для матриц подходящих размеров и столбцов <span class="nw">$a\in\mathbb R^m$,</span> <span class="nw"><span class="nw">$b\in\mathbb R^n$:</span></span>
+<ol class="ax" type="a">
+<li>$(A\otimes B)\operatorname{vec}X={}$<wbr><span class="nw">$\operatorname{vec}(BXA^\top)$;</span></li>
+<li>$(A\otimes B)(C\otimes D)={}$<wbr>$(AC)\otimes(BD)$ и <span class="nw">$(A\otimes B)^\top={}$<wbr><span class="nw">$A^\top\otimes B^\top$;</span></span></li>
+<li>$\operatorname{vec}(ab^\top)={}$<wbr>$b\otimes a$ и, следовательно, $\operatorname{vec}(ab^\top)\operatorname{vec}(ab^\top)^\top={}$<wbr><span class="nw">$(bb^\top)\otimes(aa^\top)$;</span></li>
+<li>если $A$ и $B$ положительно определены, то и $A\otimes B$ положительно определена, и <span class="nw">$(A\otimes B)^p={}$<wbr>$A^p\otimes B^p$</span> для любого действительного <span class="nw"><span class="nw">$p$.</span></span></li>
+</ol></div>
+<div class="proof tech"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Все пункты — блочное умножение матриц; в пункте (г) произведение Кронекера собственных разложений $A$ и $B$ оказывается собственным разложением <span class="nw"><span class="nw">$A\otimes B$.</span></span></div>
+<div class="step"><span class="sh">Шаг 1. Пункт (а).</span> Пусть $x_l$ — $l$-й столбец <span class="nw"><span class="nw">$X$.</span></span> $j$-й блок вектора $(A\otimes B)\operatorname{vec}X$ равен <span class="nw">$\sum_la_{jl}Bx_l={}$<wbr><span class="nw">$B\sum_lx_la_{jl}$.</span></span> Но $\sum_lx_la_{jl}$ — это $j$-й столбец матрицы <span class="nw"><span class="nw">$XA^\top$,</span></span> так что $j$-й блок — $j$-й столбец <span class="nw"><span class="nw">$BXA^\top$.</span></span></div>
+<div class="step"><span class="sh">Шаг 2. Пункт (б).</span> Блок $(i,j)$ произведения равен <span class="nw">$\sum_la_{il}B\,c_{lj}D={}$<wbr><span class="nw">$(AC)_{ij}\,BD$.</span></span> Блок $(i,j)$ транспонированной матрицы — транспонированный блок <span class="nw">$(j,i)$,</span> то есть <span class="nw"><span class="nw">$a_{ji}B^\top$.</span></span></div>
+<div class="step"><span class="sh">Шаг 3. Пункт (в).</span> $j$-й столбец $ab^\top$ равен <span class="nw"><span class="nw">$b_ja$,</span></span> и вектор из блоков $b_1a,\dots,b_na$ — это <span class="nw"><span class="nw">$b\otimes a$.</span></span> Столбцы $a$ и $b$ — это матрицы размеров $m\times1$ и <span class="nw"><span class="nw">$n\times1$,</span></span> поэтому по пункту (б) $(b\otimes a)(b\otimes a)^\top={}$<wbr>$(b\otimes a)(b^\top\otimes a^\top)={}$<wbr><span class="nw">$(bb^\top)\otimes(aa^\top)$.</span></div>
+<div class="step"><span class="sh">Шаг 4. Пункт (г).</span> Пусть $A=Q_A\Lambda_AQ_A^\top$ и $B=Q_B\Lambda_BQ_B^\top$ — разложения из теоремы 10. По пункту (б)<span class="math-wrap">$$\begin{gathered}A\otimes B=(Q_A\otimes Q_B)(\Lambda_A\otimes\Lambda_B)(Q_A\otimes Q_B)^\top,\\(Q_A\otimes Q_B)^\top(Q_A\otimes Q_B)=I\otimes I=I.\end{gathered}$$</span> Матрица $\Lambda_A\otimes\Lambda_B$ диагональна, на её диагонали стоят положительные произведения <span class="nw"><span class="nw">$\lambda_i\mu_j$.</span></span> Это разложение вида из определения 43, поэтому $A\otimes B$ положительно определена (лемма 12), и по лемме 44(а) её степень можно считать по нему: на диагонали встанут числа <span class="nw">$(\lambda_i\mu_j)^p={}$<wbr><span class="nw">$\lambda_i^p\mu_j^p$,</span></span> то есть<span class="math-wrap">$$(A\otimes B)^p=(Q_A\otimes Q_B)(\Lambda_A^p\otimes\Lambda_B^p)(Q_A\otimes Q_B)^\top=A^p\otimes B^p.$$</span></div>
+</div>
+<p>Пункт (а) — главный. Он говорит, что умножение вытянутой матрицы на огромную матрицу $A\otimes B$ размера $mn\times mn$ — это просто умножение самой матрицы $X$ на маленькую $B$ слева и на $A^\top$ справа. Хранить нужно $m^2+n^2$ чисел вместо <span class="nw">$m^2n^2$,</span> а умножать — две небольшие матрицы. А пункт (в) вместе с леммой 79 показывает, что произведения Кронекера в нейросетях возникают сами собой: для градиента на одном примере $\operatorname{vec}(\delta x^\top)\operatorname{vec}(\delta x^\top)^\top={}$<wbr><span class="nw">$(xx^\top)\otimes(\delta\delta^\top)$.</span> Матрица, которую накапливает полноматричный AdaGrad из §11, на одном примере — в точности произведение Кронекера «статистики входов» и «статистики градиентов по выходам». Это наблюдение — отправная точка Shampoo.</p>
+</section>
+<section id="s13">
+<h2>§13. Shampoo: полноматричный AdaGrad по частям</h2>
+<p>В §11 мы видели идеальный адаптивный метод — полноматричный AdaGrad. Он накапливает матрицу $S_k$ из всех градиентов, видит наклонные овраги и не замечает поворотов координат. Беда в размере: для слоя с матрицей весов $m\times n$ вектор параметров имеет длину <span class="nw"><span class="nw">$mn$,</span></span> и матрица $S_k$ состоит из $(mn)^2$ чисел. Для слоя $4096\times4096$ это около $3\cdot10^{14}$ чисел — больше петабайта памяти.</p>
+<p>Метод Shampoo предложили В. Гупта, Т. Корен и Й. Сингер в 2018 году. Он хранит вместо огромной матрицы две маленькие: одну размера $m\times m$ «со стороны выходов» слоя и одну размера $n\times n$ «со стороны входов». В этом параграфе мы выведем Shampoo из произведения Кронекера, поймём, откуда в нём странная степень <span class="nw"><span class="nw">$-1/4$,</span></span> и увидим, в каком случае он в точности воспроизводит полноматричный AdaGrad.</p>
+
+<h3>Две маленькие статистики вместо одной большой</h3>
+<p>Начнём с наблюдения из конца §12. Градиент по весам слоя на одном примере — матрица ранга один <span class="nw"><span class="nw">$G=\delta x^\top$,</span></span> и вклад этого градиента в матрицу полноматричного AdaGrad — произведение Кронекера:
+<span class="math-wrap">$$\operatorname{vec}G\,(\operatorname{vec}G)^\top=(xx^\top)\otimes(\delta\delta^\top).$$</span>
+Сумма многих произведений Кронекера уже не обязана быть произведением Кронекера, но можно надеяться, что она близка к нему. Тогда огромную матрицу можно заменить двумя маленькими множителями. Остаётся понять, где их взять, причём только из самих градиентов: оптимизатор видит матрицу <span class="nw">$G$,</span> а не отдельно $x$ и <span class="nw"><span class="nw">$\delta$.</span></span></p>
+<p>Подсказку дают два произведения градиента на себя. Для <span class="nw">$G=\delta x^\top$</span>
+<span class="math-wrap">$$GG^\top=\delta\,x^\top x\,\delta^\top=\|x\|^2\,\delta\delta^\top,\qquad G^\top G=\|\delta\|^2\,xx^\top.$$</span>
+Матрица $GG^\top$ размера $m\times m$ с точностью до множителя — это <span class="nw">$\delta\delta^\top$,</span> «статистика со стороны выходов», а $G^\top G$ размера $n\times n$ — это <span class="nw"><span class="nw">$xx^\top$,</span></span> «статистика со стороны входов». Обе вычисляются по одному только <span class="nw"><span class="nw">$G$.</span></span> Их и накапливает Shampoo.</p>
+
+<div class="stmt"><span class="lbl">Определение 87 (Shampoo)</span>
+Пусть веса — матрица $W$ размера <span class="nw"><span class="nw">$m\times n$,</span></span> $G_k=\nabla f(W_k)$ — градиент на шаге $k$ (или его оценка по порции), $\eta\gt0$ и <span class="nw"><span class="nw">$\varepsilon\gt0$.</span></span> <b>Shampoo</b> строит последовательность
+<span class="math-wrap">$$\begin{gathered}L_k=\varepsilon I_m+\sum_{j=0}^kG_jG_j^\top,\qquad R_k=\varepsilon I_n+\sum_{j=0}^kG_j^\top G_j,\\W_{k+1}=W_k-\eta\,L_k^{-1/4}\,G_k\,R_k^{-1/4}.\end{gathered}$$</span></div>
+<p>Здесь $I_m$ и $I_n$ — единичные матрицы размеров $m\times m$ и <span class="nw"><span class="nw">$n\times n$.</span></span> Буквы $L$ и $R$ значат «левая» и «правая»: матрица $L_k$ умножает градиент слева, $R_k$ — справа. Не путайте $L_k$ с константой гладкости $L$ из §5, а градиент-матрицу $G_k$ — с суммой квадратов $G_k$ из AdaGrad в §11: это разные объекты, просто им досталась одна буква. Как и $S_k$ в AdaGrad, обе матрицы симметричны и положительно определены: например, $v^\top L_kv={}$<wbr>$\varepsilon\|v\|^2+\sum_j\|G_j^\top v\|^2\gt{}$<wbr>$0$ при <span class="nw"><span class="nw">$v\ne0$,</span></span> так что их степени определены.</p>
+<p>Хранить нужно $m^2+n^2$ чисел вместо <span class="nw"><span class="nw">$m^2n^2$:</span></span> для слоя $4096\times4096$ это около $3{,}4\cdot10^7$ — столько же, сколько две копии самих весов. Связь с полноматричным AdaGrad видна сразу, если вытянуть шаг в вектор.</p>
+
+<div class="stmt"><span class="lbl">Предложение 88 (Shampoo как предобусловливание)</span>
+Шаг Shampoo, вытянутый в вектор, равен
+<span class="math-wrap">$$\operatorname{vec}\bigl(L_k^{-1/4}G_kR_k^{-1/4}\bigr)=(R_k\otimes L_k)^{-1/4}\operatorname{vec}G_k.$$</span>
+Иными словами, Shampoo — это полноматричный AdaGrad для вектора <span class="nw"><span class="nw">$\operatorname{vec}W$,</span></span> в котором матрица $S_k^{1/2}$ заменена на <span class="nw"><span class="nw">$(R_k\otimes L_k)^{1/4}$.</span></span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Умножение матрицы слева и справа — это умножение её вытягивания на произведение Кронекера, а степень произведения Кронекера — произведение степеней.</div>
+<div class="step"><span class="sh">Шаг 1. Вытягивание.</span> Матрица $R_k^{-1/4}$ симметрична, поэтому по лемме 86(а) с $A=R_k^{-1/4}$ и <span class="nw">$B=L_k^{-1/4}$</span>
+<span class="math-wrap">$$\operatorname{vec}\bigl(L_k^{-1/4}G_kR_k^{-1/4}\bigr)=\bigl(R_k^{-1/4}\otimes L_k^{-1/4}\bigr)\operatorname{vec}G_k.$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Степень.</span> Матрицы $R_k$ и $L_k$ положительно определены, и по лемме 86(г) с <span class="nw">$p=-1/4$</span> имеем $R_k^{-1/4}\otimes L_k^{-1/4}={}$<wbr><span class="nw">$(R_k\otimes L_k)^{-1/4}$.</span></div>
+</div>
+<p>Огромная матрица $R_k\otimes L_k$ размера $mn\times mn$ нигде не строится: она лишь помогает понять, что делает метод. Вычисляются только две степени маленьких матриц, а потом два матричных умножения.</p>
+
+<h3>Откуда степень $-1/4$</h3>
+<p>В AdaGrad стоит степень <span class="nw"><span class="nw">$-1/2$,</span></span> а здесь <span class="nw"><span class="nw">$-1/4$.</span></span> Первое объяснение — подсчёт степеней. Матрица $S_k$ составлена из произведений двух градиентов, то есть квадратична по ним, и корень $S_k^{1/2}$ имеет «размерность градиента»: шаг AdaGrad не меняется, если все градиенты умножить на одно и то же число. Произведение $R_k\otimes L_k$ составлено уже из произведений <i>четырёх</i> градиентов, и чтобы вернуться к размерности градиента, из него нужно извлечь корень четвёртой степени. Следующее предложение показывает, что эта арифметика точна: на самом первом шаге с градиентом ранга один Shampoo и полноматричный AdaGrad совпадают.</p>
+
+<div class="stmt"><span class="lbl">Предложение 89 (первый шаг с градиентом ранга один)</span>
+Пусть $G_0=\delta x^\top$ — ненулевая матрица ранга один. Тогда первый шаг Shampoo совпадает с первым шагом полноматричного AdaGrad для вектора <span class="nw">$\operatorname{vec}W$</span> с тем же $\eta$ и <span class="nw"><span class="nw">$\varepsilon$:</span></span>
+<span class="math-wrap">$$L_0^{-1/4}G_0R_0^{-1/4}=\frac{G_0}{\sqrt{\varepsilon+\|G_0\|_F^2}}.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Векторы $\delta$ и $x$ — собственные векторы матриц $L_0$ и <span class="nw">$R_0$,</span> причём с одним и тем же собственным числом <span class="nw"><span class="nw">$\varepsilon+\|G_0\|_F^2$;</span></span> две степени $-1/4$ складываются в <span class="nw"><span class="nw">$-1/2$.</span></span></div>
+<div class="step"><span class="sh">Шаг 1. Собственные векторы.</span> По формуле перед определением 87 и тождеству <span class="nw">$\|G_0\|_F={}$<wbr>$\|\delta\|\,\|x\|$</span> (оно следует из формулы $(\ast)$ §12)
+<span class="math-wrap">$$\begin{gathered}L_0\delta=\varepsilon\delta+\|x\|^2\delta\,\delta^\top\delta=(\varepsilon+\|G_0\|_F^2)\,\delta,\\R_0x=(\varepsilon+\|G_0\|_F^2)\,x.\end{gathered}$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Степени.</span> Степень симметричной матрицы действует на собственный вектор как степень собственного числа (определение 43). Поэтому, обозначив <span class="nw">$c={}$<wbr><span class="nw">$\varepsilon+\|G_0\|_F^2$,</span></span>
+<span class="math-wrap">$$\begin{aligned}L_0^{-1/4}G_0R_0^{-1/4}&=\bigl(L_0^{-1/4}\delta\bigr)\bigl(R_0^{-1/4}x\bigr)^\top\\&=c^{-1/4}\delta\cdot c^{-1/4}x^\top=\frac{G_0}{\sqrt c}.\end{aligned}$$</span></div>
+<div class="step"><span class="sh">Шаг 3. AdaGrad.</span> Для вектора $g=\operatorname{vec}G_0$ матрица $S_0={}$<wbr>$\varepsilon I+gg^\top$ имеет собственный вектор $g$ с числом <span class="nw"><span class="nw">$\varepsilon+\|g\|^2=c$,</span></span> поэтому <span class="nw"><span class="nw">$S_0^{-1/2}g=g/\sqrt c$.</span></span></div>
+</div>
+<p>С любой другой степенью совпадения не было бы: если заменить $-1/4$ на <span class="nw"><span class="nw">$-q$,</span></span> то в шаге 2 получится множитель <span class="nw"><span class="nw">$c^{-2q}$,</span></span> и он равен $c^{-1/2}$ при всех $c$ только при <span class="nw"><span class="nw">$q=1/4$.</span></span> Та же арифметика работает и для тензоров: в исходной статье Shampoo для весов с $s$ индексами берут по матрице на каждый индекс и степень <span class="nw"><span class="nw">$-1/(2s)$.</span></span></p>
+<p>Но один шаг — это ещё не вся история. Посмотрим, что происходит, когда градиентов много и они устроены так, что матрица $S_k$ в точности раскладывается в произведение Кронекера.</p>
+
+<div class="stmt"><span class="lbl">Теорема 90 (Shampoo в «кронекеровском мире»)</span>
+Пусть $x_1,\dots,x_p\in\mathbb R^n$ и <span class="nw">$\delta_1,\dots,\delta_q\in\mathbb R^m$,</span> причём матрицы
+<span class="math-wrap">$$C_x=\sum_{b=1}^px_bx_b^\top,\qquad C_\delta=\sum_{a=1}^q\delta_a\delta_a^\top$$</span>
+положительно определены. Пусть градиенты — все $pq$ матриц <span class="nw">$G_{ab}=\delta_ax_b^\top$,</span> и $S={}$<wbr><span class="nw">$\sum_{a,b}\operatorname{vec}G_{ab}(\operatorname{vec}G_{ab})^\top$,</span> <span class="nw">$L={}$<wbr><span class="nw">$\sum_{a,b}G_{ab}G_{ab}^\top$,</span></span> <span class="nw">$R={}$<wbr>$\sum_{a,b}G_{ab}^\top G_{ab}$</span> (без добавки <span class="nw"><span class="nw">$\varepsilon$).</span></span> Тогда
+<span class="math-wrap">$$S=C_x\otimes C_\delta,\qquad L=\operatorname{tr}C_x\cdot C_\delta,\qquad R=\operatorname{tr}C_\delta\cdot C_x,$$</span>
+и поэтому при <span class="nw">$c={}$<wbr>$\operatorname{tr}C_x\operatorname{tr}C_\delta$</span>
+<span class="math-wrap">$$\begin{gathered}R\otimes L=c\,S,\\(R\otimes L)^{1/4}=c^{1/4}S^{1/4},\qquad(R\otimes L)^{1/2}=c^{1/2}S^{1/2}.\end{gathered}$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Сумма по всем парам «вход — градиент по выходу» распадается на произведение двух сумм; след матрицы $xx^\top$ — это <span class="nw"><span class="nw">$\|x\|^2$.</span></span></div>
+<div class="step"><span class="sh">Шаг 1. Матрица <span class="nw">$S$.</span></span> По лемме 86(в) $\operatorname{vec}G_{ab}(\operatorname{vec}G_{ab})^\top={}$<wbr><span class="nw">$(x_bx_b^\top)\otimes(\delta_a\delta_a^\top)$.</span> Произведение Кронекера линейно по каждому множителю (это видно из определения 85), поэтому сумма по всем парам $(a,b)$ равна $\bigl(\sum_bx_bx_b^\top\bigr)\otimes\bigl(\sum_a\delta_a\delta_a^\top\bigr)={}$<wbr><span class="nw">$C_x\otimes C_\delta$.</span></div>
+<div class="step"><span class="sh">Шаг 2. Матрицы $L$ и <span class="nw">$R$.</span></span> Как мы видели, <span class="nw">$G_{ab}G_{ab}^\top={}$<wbr><span class="nw">$\|x_b\|^2\delta_a\delta_a^\top$.</span></span> Сумма по $a$ и $b$ равна <span class="nw"><span class="nw">$\bigl(\sum_b\|x_b\|^2\bigr)C_\delta$,</span></span> а $\sum_b\|x_b\|^2={}$<wbr>$\sum_b\operatorname{tr}(x_bx_b^\top)={}$<wbr><span class="nw">$\operatorname{tr}C_x$.</span> Для $R$ — то же самое с переменой ролей.</div>
+<div class="step"><span class="sh">Шаг 3. Степени.</span> По линейности произведения Кронекера<span class="math-wrap">$$R\otimes L=(\operatorname{tr}C_\delta\,C_x)\otimes(\operatorname{tr}C_x\,C_\delta)=c\,(C_x\otimes C_\delta)=cS.$$</span> Матрица $S$ положительно определена по лемме 86(г), и умножение на положительное число $c$ умножает её собственные числа на <span class="nw">$c$,</span> не меняя собственных векторов; поэтому по определению 43 <span class="nw"><span class="nw">$(cS)^p=c^pS^p$.</span></span></div>
+</div>
+<p>Теорема говорит две вещи. Хорошая: если статистика входов и статистика градиентов по выходам «не зависят друг от друга», то произведение Кронекера двух маленьких матриц Shampoo — это в точности большая матрица AdaGrad, умноженная на число. Ничего не потеряно, хотя хранится в тысячи раз меньше. В реальной сети градиенты не перебирают все пары, но если входы и градиенты по выходам примерно независимы, то при большом числе примеров картина получается близкой (рисунок 22).</p>
+<p>Вторая вещь тоньше. Предобусловливатель Shampoo — это <span class="nw">$(R\otimes L)^{1/4}$,</span> то есть с точностью до числа <span class="nw"><span class="nw">$S^{1/4}$,</span></span> а у AdaGrad — <span class="nw"><span class="nw">$S^{1/2}$.</span></span> Оси у них одни и те же, но растяжения разные: Shampoo выравнивает овраг лишь «наполовину», его растяжения — корни из растяжений AdaGrad. Вариант со степенями $-1/2$ с каждой стороны, <span class="nw"><span class="nw">$L^{-1/2}GR^{-1/2}$,</span></span> повторил бы форму AdaGrad точно, но, по подсчёту степеней выше, потерял бы правильный масштаб: его шаг уменьшается, когда градиенты растут. Работы последних лет показали, что такой вариант приближает полноматричный AdaGrad точнее, а масштаб шага у него задают отдельно, например «прививкой» от Adam, о которой ниже. Поэтому во многих реализациях степень оставлена настраиваемой.</p>
+
+<figure>
+  <div class="fig1"><canvas id="shampoo" width="760" height="300" aria-label="Тепловые карты статистик Shampoo и матрицы полноматричного AdaGrad для слоя 3 на 4"></canvas></div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Данные"><button type="button" data-k="ind" aria-pressed="true">независимы</button><button type="button" data-k="dep" aria-pressed="false">связаны</button></div>
+    <div class="btns"><button type="button" class="act" id="shRun">пуск</button></div>
+  </div>
+  <div id="shFx" class="fx" aria-live="polite"></div>
+  <figcaption>Рис. 22. Слой с матрицей весов <span class="nw">$3\times4$:</span> вход <span class="nw">$x\in\mathbb R^4$,</span> градиент по выходу <span class="nw"><span class="nw">$\delta\in\mathbb R^3$.</span></span> Примеры приходят один за другим, и по их градиентам $G=\delta x^\top$ накапливаются матрицы Shampoo $R$ (<span class="nw">$4\times4$)</span> и $L$ (<span class="nw">$3\times3$)</span> и матрица полноматричного AdaGrad $S$ (<span class="nw">$12\times12$).</span> Тёплые клетки положительны, фиолетовые отрицательны, яркость — величина элемента по отношению к наибольшему в своей матрице. Справа сравниваются $R\otimes L$ и <span class="nw"><span class="nw">$S$.</span></span>
+<ul class="capl">
+<li><b>Независимы</b> — вход и градиент по выходу выбираются независимо, каждый со своей корреляцией координат. Уже после нескольких десятков примеров $S$ почти не отличается от <span class="nw">$R\otimes L$:</span> каждый блок $S$ — копия $L$ со своим множителем, как в теореме 90;</li>
+<li><b>связаны</b> — градиент по выходу линейно зависит от входа. Тогда блоки $S$ перестают быть копиями одной матрицы, и расхождение с $R\otimes L$ не исчезает, сколько примеров ни бери.</li>
+</ul>
+Под рисунком — относительное расхождение <span class="nw"><span class="nw">$\bigl\|S/\|S\|_F-R\otimes L/\|R\otimes L\|_F\bigr\|_F$.</span></span></figcaption>
+</figure>
+
+<h3>Shampoo и K-FAC</h3>
+<p>В §8 упоминалось кронекеровское приближение информации Фишера, K-FAC. Теперь можно сказать, как оно устроено и чем отличается от Shampoo. Блок информации Фишера, отвечающий весам линейного слоя, — это среднее матриц $\operatorname{vec}G\,(\operatorname{vec}G)^\top={}$<wbr><span class="nw">$(xx^\top)\otimes(\delta\delta^\top)$,</span> где $\delta$ — градиент по выходу слоя, вычисленный для ответа, выбранного самой моделью. K-FAC заменяет среднее произведений произведением средних:
+<span class="math-wrap">$$F\approx A\otimes B,\qquad A=\mathbb E\,xx^\top,\quad B=\mathbb E\,\delta\delta^\top.$$</span>
+По лемме 86 натуральный шаг с такой матрицей снова сводится к двум маленьким матрицам: $(A\otimes B)^{-1}\operatorname{vec}G={}$<wbr><span class="nw">$\operatorname{vec}(B^{-1}GA^{-1})$.</span></p>
+<p>Сравнение получается наглядным. Оба метода держат по матрице на каждую сторону слоя и обращаются с огромной матрицей через произведение Кронекера. Но K-FAC собирает статистику входов и градиентов по выходам по отдельности, для чего ему нужен доступ внутрь слоя, и берёт степень $-1$ — он наследник натурального градиента и метода Ньютона. Shampoo видит только градиенты по весам и берёт корни — он наследник AdaGrad. В «кронекеровском мире» теоремы 90 матрицы $L$ и $R$ пропорциональны $B$ и <span class="nw">$A$,</span> так что различаются только степени.</p>
+
+<h3>Shampoo на практике</h3>
+<p>Сравним цену трёх методов для слоя $4096\times4096$ (около $1{,}7\cdot10^7$ весов). Под «памятью» понимается, сколько чисел хранит предобусловливатель, под «вычислением» — порядок числа операций, чтобы обновить корни.</p>
+<table class="tbl">
+<tr><th>метод</th><th>память</th><th>вычисление корней</th></tr>
+<tr><td>Adam (диагональ)</td><td>$mn\approx1{,}7\cdot10^7$</td><td><span class="nw">$mn$,</span> каждый шаг</td></tr>
+<tr><td>Shampoo</td><td>$m^2+n^2\approx{}$<wbr>$3{,}4\cdot10^7$</td><td>$m^3+n^3\approx{}$<wbr>$1{,}4\cdot10^{11}$</td></tr>
+<tr><td>полноматричный AdaGrad</td><td>$m^2n^2\approx{}$<wbr>$2{,}8\cdot10^{14}$</td><td>$m^3n^3\approx{}$<wbr>$4{,}7\cdot10^{21}$</td></tr>
+</table>
+<p>Память Shampoo вполне посильна, а вот вычисление корней всё ещё дорого: на каждом шаге его делать нельзя. Поэтому практические версии Shampoo обрастают рядом приёмов.</p>
+<ul>
+<li><b>Корни раз в несколько шагов.</b> Матрицы $L_k$ и $R_k$ обновляются на каждом шаге (это лишь умножения матриц), а их степени $-1/4$ пересчитываются раз в $10$–$100$ шагов; в промежутках используются старые. Предобусловливатель меняется медленно, и это почти ничего не стоит в качестве.</li>
+<li><b>Забывание.</b> Как RMSProp и Adam заменили суммы AdaGrad скользящими средними (§11), так и в Shampoo вместо сумм обычно берут скользящие средние <span class="nw">$L_k={}$<wbr><span class="nw">$\beta L_{k-1}+(1-\beta)G_kG_k^\top$.</span></span> Сверху добавляют инерцию.</li>
+<li><b>Аккуратная арифметика.</b> Малые собственные числа после возведения в степень $-1/4$ становятся огромными, поэтому корни вычисляют в повышенной точности, а $\varepsilon$ подбирают в масштабе собственных чисел.</li>
+<li><b>Прививка длины шага.</b> Направление шага берут от Shampoo, а его длину (норму Фробениуса) — от шага Adam для того же слоя. Тогда Shampoo можно поставить на место Adam, не подбирая заново расписание длины шага. Этот приём называют grafting — прививкой, как в садоводстве.</li>
+<li><b>Блоки.</b> Очень большие матрицы режут на блоки, скажем, <span class="nw">$1024\times1024$,</span> и у каждого блока свои $L$ и <span class="nw"><span class="nw">$R$.</span></span> Для слоя эмбеддингов, у которого одна сторона — размер словаря, с этой стороны оставляют диагональ.</li>
+</ul>
+<p>С этими приёмами Shampoo работает на больших моделях; в открытом соревновании алгоритмов обучения AlgoPerf в 2024 году победил именно вариант Shampoo.</p>
+<p>И последнее наблюдение, из которого вырос метод SOAP (2024). В «кронекеровском мире» собственные векторы матрицы $S=C_x\otimes C_\delta$ — это произведения Кронекера собственных векторов $C_x$ и <span class="nw"><span class="nw">$C_\delta$,</span></span> то есть $R$ и $L$ (лемма 86(г)). В этом базисе матрица $S$ диагональна, а для диагональной матрицы диагональный метод ничего не теряет. Отсюда рецепт: найти ортогональные матрицы $Q_L$ и $Q_R$ из собственных векторов $L$ и <span class="nw"><span class="nw">$R$,</span></span> повернуть градиент, <span class="nw"><span class="nw">$G'=Q_L^\top GQ_R$,</span></span> сделать для $G'$ обычный шаг Adam и повернуть результат обратно. В §11 мы видели, что Adam проигрывает, когда овраг повёрнут относительно осей координат; SOAP сначала разворачивает координаты вдоль оврага, а уже потом применяет Adam. Собственные векторы, как и корни в Shampoo, пересчитывают редко, а моменты Adam обновляют на каждом шаге.</p>
+</section>
+<section id="s14">
+<h2>§14. Muon: самый крутой шаг для матриц</h2>
+<p>Мы подошли к последнему методу книги. Muon предложил К. Джордан с соавторами в конце 2024 года. Сначала он побил рекорды скорости в соревнованиях по быстрому обучению небольших языковых моделей, а в 2025 году его применили для обучения больших моделей, и по сообщениям авторов он оказался примерно вдвое экономнее AdamW по вычислениям.</p>
+<p>Устроен Muon поразительно просто, и всё нужное для него у нас уже есть. В §6 мы выяснили, что самый крутой шаг зависит от того, чем мерить его длину: евклидова длина даёт градиентный спуск, наибольшая координата — знак градиента. Muon задаёт тот же вопрос для матрицы весов и отвечает на него спектральной нормой. Ответом оказывается матрица $UV^\top$ из §12: градиент, у которого все сингулярные числа заменены единицами. Остальная часть параграфа — о том, почему эта норма естественна, как быстро вычислить $UV^\top$ без сингулярного разложения и почему Muon — это Shampoo, забывший прошлое.</p>
+
+<h3>Самый крутой шаг в спектральной норме</h3>
+<p>Матрицы $m\times n$ со скалярным произведением из определения 78 — это то же пространство <span class="nw">$\mathbb R^{mn}$,</span> только записанное таблицей. Спектральная норма — норма на нём, так что определение 40 и лемма 41 применяются без изменений. Двойственную норму и самое крутое направление уже вычислила теорема 83.</p>
+
+<div class="stmt"><span class="lbl">Теорема 91 (самый крутой шаг в спектральной норме)</span>
+Пусть $G=U\Sigma V^\top$ — ненулевая матрица со своим сингулярным разложением. Относительно спектральной нормы двойственная норма $G$ — это <span class="nw"><span class="nw">$\|G\|_{\mathrm{nuc}}$,</span></span> направление наискорейшего роста — <span class="nw"><span class="nw">$UV^\top$,</span></span> а функция
+<span class="math-wrap">$$m(\Delta)=\langle G,\Delta\rangle+\frac1{2\eta}\|\Delta\|_{\mathrm{op}}^2$$</span>
+принимает наименьшее значение в точке <span class="nw">$\Delta_*={}$<wbr><span class="nw">$-\eta\,\|G\|_{\mathrm{nuc}}\,UV^\top$.</span></span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Всё уже доказано: двойственность спектральной и ядерной норм вместе с общей леммой о шаге.</div>
+<div class="step"><span class="sh">Шаг 1. Направление.</span> По теореме 83 верхняя грань $\langle G,\Delta\rangle$ по <span class="nw">$\|\Delta\|_{\mathrm{op}}\le{}$<wbr>$1$</span> равна <span class="nw">$\|G\|_{\mathrm{nuc}}$</span> и достигается при <span class="nw"><span class="nw">$\Delta=UV^\top$.</span></span> Это и есть двойственная норма и направление наискорейшего роста из определения 40.</div>
+<div class="step"><span class="sh">Шаг 2. Шаг.</span> Лемма 41 с $u_*=UV^\top$ даёт точку минимума <span class="nw"><span class="nw">$-\eta\|G\|_{\mathrm{nuc}}UV^\top$.</span></span></div>
+</div>
+<p>Сравните с нормой $\ell_\infty$ из §6: там самый крутой шаг был <span class="nw"><span class="nw">$-\eta\|g\|_1\operatorname{sign}g$,</span></span> и спуск по знаку отбрасывал множитель <span class="nw">$\|g\|_1$,</span> оставляя только направление. Muon поступает так же: его шаг — <span class="nw"><span class="nw">$-\eta\,UV^\top$,</span></span> и спектральная норма каждого шага равна ровно <span class="nw"><span class="nw">$\eta$.</span></span> Сходство не случайное. Для диагональной матрицы с ненулевой диагональю $UV^\top$ — это матрица знаков её элементов (§12), и шаг Muon совпадает со спуском по знаку. Ортогонализация — это «знак для матриц»: знак отбрасывает величины координат и оставляет их направления, а ортогонализация отбрасывает сингулярные числа и оставляет сингулярные направления.</p>
+
+<figure>
+  <div class="fig1"><canvas id="ortho" width="760" height="360" aria-label="Градиент-матрица порции и её ортогонализация: тепловые карты и сингулярные числа"></canvas></div>
+  <div class="controls">
+    <label for="orB">порция $b$ <input id="orB" type="range" min="1" max="24" step="1" value="6"><output id="orBOut">6</output></label>
+    <div class="btns"><button type="button" class="act" id="orNew">новая порция</button></div>
+  </div>
+  <div id="orFx" class="fx" aria-live="polite"></div>
+  <figcaption>Рис. 23. Градиент по весам слоя $16\times12$ на порции из $b$ примеров — сумма $b$ матриц ранга один из леммы 79 — и его ортогонализация <span class="nw"><span class="nw">$UV^\top$.</span></span> Тепловые карты нормированы на наибольший по модулю элемент; тёплые клетки положительны, фиолетовые отрицательны. Под каждой картой — её сингулярные числа (столбики, в логарифмическом масштабе).
+<ul class="capl">
+<li><b>Градиент</b> почти всегда вытянут вдоль немногих направлений: первые сингулярные числа во много раз больше остальных, и шаг градиентного спуска почти целиком идёт вдоль них;</li>
+<li><b>ортогонализация</b> делает все ненулевые сингулярные числа равными единице: каждое направление, которое есть в градиенте, получает одинаковый шаг. Ранг при этом не меняется — пустые направления остаются пустыми.</li>
+</ul>
+При $b=1$ градиент имеет ранг один, и ортогонализация лишь меняет его масштаб.</figcaption>
+</figure>
+
+<h3>Почему именно спектральная норма</h3>
+<p>Выбор нормы — это выбор того, какие изменения весов мы считаем «маленькими». Для матрицы линейного слоя самый честный ответ — смотреть, насколько изменится то, что слой делает. Если веса изменились на <span class="nw">$\Delta$,</span> то выход на входе $x$ изменится на <span class="nw">$\Delta x$,</span> и по определению спектральной нормы
+<span class="math-wrap">$$\|\Delta x\|\le\|\Delta\|_{\mathrm{op}}\,\|x\|.$$</span>
+Спектральная норма шага — это наибольшее относительное изменение выхода слоя, какой бы вход ни пришёл. Ограничить её — значит гарантировать, что ни один вход не будет обработан слоем резко иначе, чем до шага. Норма Фробениуса тоже даёт такую оценку, ведь <span class="nw">$\sigma_1\le\|\Delta\|_F$,</span> но грубую: она складывает изменения по всем направлениям сразу. Шаг, ограниченный по Фробениусу, должен делить свой бюджет между направлениями, а шаг, ограниченный по спектральной норме, может менять каждое направление на полную величину, и выход слоя от этого всё равно не изменится больше, чем разрешено.</p>
+<p>Отсюда и практический смысл ортогонализации. Градиент слоя — сумма немногих матриц ранга один, и обычно в нём доминируют несколько направлений (рисунок 23). Градиентный спуск и Adam, глядящие на матрицу как на набор чисел, шагают в основном вдоль этих направлений, а редкие, но, возможно, важные направления почти не обучаются. Muon даёт каждому направлению, присутствующему в градиенте, шаг одной и той же величины. Это то же выравнивание, что делает Adam для координат, только по сингулярным направлениям, которые не зависят от выбора координат.</p>
+<p>Остаётся вопрос масштаба. Если координаты входа и выхода слоя имеют порядок единицы, то естественно мерить векторы не евклидовой длиной, а средним квадратичным <span class="nw"><span class="nw">$\|x\|/\sqrt n$.</span></span> В таких единицах растяжение матрицы $m\times n$ равно <span class="nw"><span class="nw">$\sqrt{n/m}\,\|\Delta\|_{\mathrm{op}}$,</span></span> и чтобы шаг одинаково менял слои разной формы, ортогонализованный шаг умножают на множитель, зависящий от отношения <span class="nw"><span class="nw">$m/n$,</span></span> обычно на <span class="nw"><span class="nw">$\sqrt{\max(1,m/n)}$.</span></span></p>
+
+<h3>Как вычислить $UV^\top$ без сингулярного разложения</h3>
+<p>Сингулярное разложение большой матрицы на каждом шаге — слишком дорого, и плохо ложится на видеокарты. Но $UV^\top$ можно получить одними матричными умножениями, которые видеокарты делают лучше всего. Ключ — следующая лемма: нечётный многочлен от матрицы действует на каждое сингулярное число отдельно и не трогает сингулярные векторы.</p>
+
+<div class="stmt"><span class="lbl">Лемма 92 (нечётный многочлен от матрицы)</span>
+Пусть $p(t)={}$<wbr>$a_1t+a_3t^3+\dots+a_{2s+1}t^{2s+1}$ — нечётный многочлен. Для матрицы $X$ размера $m\times n$ положим
+<span class="math-wrap">$$p(X)=a_1X+a_3X(X^\top X)+\dots+a_{2s+1}X(X^\top X)^s.$$</span>
+Если $X={}$<wbr>$\sum_i\sigma_iu_iv_i^\top$ — сингулярное разложение, то
+<span class="math-wrap">$$p(X)=\sum_ip(\sigma_i)\,u_iv_i^\top.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>В произведении $X^\top X$ внутренние $U^\top U$ сокращаются до единичной матрицы, и каждое следующее умножение на $X^\top X$ лишь добавляет к сингулярным числам множитель <span class="nw"><span class="nw">$\sigma_i^2$.</span></span></div>
+<div class="step"><span class="sh">Шаг 1. Матрица <span class="nw">$X^\top X$.</span></span> Запишем $X=U\Sigma V^\top$ с $U^\top U=I$ и <span class="nw">$V^\top V=I$</span> (столбцы ортонормированы). Тогда $X^\top X={}$<wbr>$V\Sigma U^\top U\Sigma V^\top={}$<wbr><span class="nw">$V\Sigma^2V^\top$.</span></div>
+<div class="step"><span class="sh">Шаг 2. Степени.</span> По индукции <span class="nw">$(X^\top X)^j={}$<wbr><span class="nw">$V\Sigma^{2j}V^\top$:</span></span> при переходе от $j$ к $j+1$ в середине появляется <span class="nw"><span class="nw">$V^\top V=I$.</span></span> Поэтому $X(X^\top X)^j={}$<wbr>$U\Sigma V^\top V\Sigma^{2j}V^\top={}$<wbr><span class="nw">$U\Sigma^{2j+1}V^\top$.</span></div>
+<div class="step"><span class="sh">Шаг 3. Сумма.</span> Складывая с коэффициентами, получаем <span class="nw">$p(X)={}$<wbr><span class="nw">$U\,p(\Sigma)\,V^\top$,</span></span> где $p(\Sigma)$ — диагональная матрица с числами <span class="nw"><span class="nw">$p(\sigma_i)$.</span></span></div>
+</div>
+<p>Значит, если повторять <span class="nw">$X\leftarrow p(X)$,</span> то сингулярные векторы остаются на месте, а каждое сингулярное число независимо проходит одномерную итерацию <span class="nw"><span class="nw">$\sigma\leftarrow p(\sigma)$.</span></span> Нужен многочлен, итерации которого гонят все числа отрезка $(0,1]$ к единице. Сначала матрицу делят на её норму Фробениуса: так как <span class="nw">$\sigma_1\le\|G\|_F$</span> (предложение 82), все сингулярные числа попадают в <span class="nw"><span class="nw">$(0,1]$.</span></span> Классический выбор — <b>итерация Ньютона–Шульца</b> с многочленом <span class="nw">$p(\sigma)={}$<wbr><span class="nw">$\frac12(3\sigma-\sigma^3)$.</span></span></p>
+
+<div class="stmt"><span class="lbl">Теорема 93 (сходимость итерации Ньютона–Шульца)</span>
+Пусть $p(\sigma)={}$<wbr><span class="nw">$\frac12(3\sigma-\sigma^3)$,</span> <span class="nw">$\sigma_0\in(0,1]$</span> и <span class="nw"><span class="nw">$\sigma_{k+1}=p(\sigma_k)$.</span></span> Тогда последовательность $\sigma_k$ не убывает, лежит в $(0,1]$ и стремится к <span class="nw">$1$,</span> а ошибки $e_k=1-\sigma_k$ удовлетворяют
+<span class="math-wrap">$$e_{k+1}=\frac{3-e_k}2\,e_k^2\le\frac32\,e_k^2.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Разложить $1-p(\sigma)$ на множители: единица — двукратный корень, поэтому ошибка возводится в квадрат, как в методе Ньютона из §7.</div>
+<div class="step"><span class="sh">Шаг 1. Разложение.</span> Раскрывая скобки, проверяем
+<span class="math-wrap">$$1-p(\sigma)=\frac{(1-\sigma)^2(\sigma+2)}2,\qquad p(\sigma)-\sigma=\frac{\sigma(1-\sigma^2)}2.$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Монотонность.</span> Если <span class="nw">$\sigma_k\in(0,1]$,</span> то по шагу 1 <span class="nw">$\sigma_{k+1}\le1$</span> и <span class="nw">$\sigma_{k+1}\ge{}$<wbr>$\sigma_k\gt{}$<wbr><span class="nw">$0$.</span></span> По индукции вся последовательность лежит в $(0,1]$ и не убывает, а значит, имеет предел <span class="nw"><span class="nw">$\sigma\in(0,1]$.</span></span></div>
+<div class="step"><span class="sh">Шаг 3. Предел и скорость.</span> Многочлен непрерывен, поэтому <span class="nw"><span class="nw">$p(\sigma)=\sigma$,</span></span> и по шагу 1 <span class="nw"><span class="nw">$\sigma(1-\sigma^2)=0$,</span></span> то есть <span class="nw"><span class="nw">$\sigma=1$.</span></span> Подставляя $\sigma_k=1-e_k$ в первую формулу шага 1, получаем <span class="nw"><span class="nw">$e_{k+1}=e_k^2(3-e_k)/2$,</span></span> и <span class="nw">$3-e_k\le3$.</span></div>
+</div>
+<p>Вблизи единицы итерация сходится квадратично: число верных знаков удваивается на каждом шаге. Но маленькие сингулярные числа она разгоняет медленно: при малом $\sigma$ имеем <span class="nw">$p(\sigma)\approx{}$<wbr><span class="nw">$\frac32\sigma$,</span></span> и числу $10^{-3}$ нужно около двадцати шагов, чтобы добраться до единицы. А у градиентов маленьких сингулярных чисел много.</p>
+<p>Поэтому в Muon берут другой многочлен пятой степени,
+<span class="math-wrap">$$p(\sigma)=3{,}4445\,\sigma-4{,}7750\,\sigma^3+2{,}0315\,\sigma^5,$$</span>
+и делают всего пять итераций. Его наклон в нуле около <span class="nw"><span class="nw">$3{,}4$,</span></span> так что малые числа растут втрое с лишним за шаг. Платой за скорость стала точность: <span class="nw"><span class="nw">$p(1)\approx0{,}70$,</span></span> и итерации не сходятся к единице, а загоняют числа в полосу примерно от $0{,}7$ до <span class="nw"><span class="nw">$1{,}2$.</span></span> После пяти шагов все сингулярные числа от $0{,}003$ до $1$ оказываются в этой полосе. Получается не точно <span class="nw"><span class="nw">$UV^\top$,</span></span> а $U\tilde\Sigma V^\top$ с числами $\tilde\sigma_i$ около единицы — и на практике этого достаточно: шаг всё равно выравнивает направления, а точное равенство единице ничего не добавляет. Многочлен «неправильный», но быстрый.</p>
+
+<figure>
+  <div class="fig1"><canvas id="ns" width="760" height="380" aria-label="Итерации Ньютона–Шульца: график многочлена с лестницей итераций и сингулярные числа, сбегающиеся к единице"></canvas></div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Многочлен"><button type="button" data-k="c3" aria-pressed="true">кубический</button><button type="button" data-k="c5" aria-pressed="false">Muon, пятой степени</button></div>
+    <div class="btns"><button type="button" class="act" id="nsStep">итерация</button><button type="button" class="act" id="nsReset">заново</button></div>
+  </div>
+  <div id="nsFx" class="fx" aria-live="polite"></div>
+  <figcaption>Рис. 24. Итерации $\sigma\leftarrow p(\sigma)$ для восьми сингулярных чисел от $0{,}002$ до <span class="nw"><span class="nw">$1$.</span></span> Слева — график $p$ (сплошная линия) и диагональ <span class="nw"><span class="nw">$p(\sigma)=\sigma$;</span></span> лестница показывает путь одного числа, его начало можно перетаскивать. Справа — все восемь чисел после сделанных итераций в логарифмическом масштабе; штриховая линия — единица.
+<ul class="capl">
+<li><b>Кубический многочлен</b> Ньютона–Шульца приводит каждое число точно к единице, но маленькие числа ползут к ней долго;</li>
+<li><b>многочлен Muon</b> за пять итераций приводит все восемь чисел в полосу от $0{,}7$ до $1{,}2$ (закрашена) и дальше держит их в ней, не сходясь.</li>
+</ul></figcaption>
+</figure>
+
+<h3>Muon — это Shampoo без памяти</h3>
+<p>Теперь обещанная связь двух главных методов. В Shampoo матрицы $L_k$ и $R_k$ накапливают все прошлые градиенты. Что будет, если забыть прошлое и строить их только по текущему градиенту?</p>
+
+<div class="stmt"><span class="lbl">Теорема 94 (Shampoo без памяти — это Muon)</span>
+Пусть $G={}$<wbr>$\sum_i\sigma_iu_iv_i^\top$ — сингулярное разложение и <span class="nw"><span class="nw">$\varepsilon\gt0$.</span></span> Тогда
+<span class="math-wrap">$$(GG^\top+\varepsilon I)^{-1/4}\,G\,(G^\top G+\varepsilon I)^{-1/4}=\sum_i\frac{\sigma_i}{\sqrt{\sigma_i^2+\varepsilon}}\,u_iv_i^\top,$$</span>
+и при $\varepsilon\to0$ эта матрица стремится к <span class="nw"><span class="nw">$UV^\top$.</span></span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Обе степени действуют на сингулярные векторы как степени чисел <span class="nw"><span class="nw">$\sigma_i^2+\varepsilon$;</span></span> две четвёртые степени складываются в квадратный корень.</div>
+<div class="step"><span class="sh">Шаг 1. Левый множитель.</span> По лемме 84 с <span class="nw">$p=-1/4$</span>
+<span class="math-wrap">$$G'=(GG^\top+\varepsilon I)^{-1/4}G=\sum_i(\sigma_i^2+\varepsilon)^{-1/4}\sigma_i\,u_iv_i^\top.$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Правый множитель.</span> Как в доказательстве леммы 84, векторы $v_i$ — собственные векторы $G^\top G+\varepsilon I$ с числами <span class="nw"><span class="nw">$\sigma_i^2+\varepsilon$,</span></span> поэтому $(G^\top G+\varepsilon I)^{-1/4}v_i={}$<wbr><span class="nw">$(\sigma_i^2+\varepsilon)^{-1/4}v_i$.</span> Эта матрица симметрична, так что $v_i^\top(G^\top G+\varepsilon I)^{-1/4}={}$<wbr><span class="nw">$(\sigma_i^2+\varepsilon)^{-1/4}v_i^\top$.</span> Умножая $G'$ справа, получаем множитель <span class="nw">$(\sigma_i^2+\varepsilon)^{-1/2}\sigma_i$</span> у каждого слагаемого.</div>
+<div class="step"><span class="sh">Шаг 3. Предел.</span> При $\varepsilon\to0$ каждое $\sigma_i/\sqrt{\sigma_i^2+\varepsilon}$ стремится к <span class="nw"><span class="nw">$\sigma_i/\sigma_i=1$,</span></span> а слагаемых конечное число.</div>
+</div>
+<p>Итак, шаг Shampoo, у которого $L$ и $R$ построены по одному текущему градиенту, — это ортогонализованный градиент, то есть шаг Muon. Два метода пришли к одному ответу с разных сторон: Shampoo — как экономное приближение полноматричного AdaGrad, Muon — как самый крутой спуск в спектральной норме. Различаются они памятью. Shampoo помнит статистику всех прошлых градиентов и подстраивает форму шага под неё, но платит за это хранением $L$ и $R$ и вычислением их корней. Muon помнит только инерцию, ничего не обращает и стоит лишь нескольких матричных умножений.</p>
+
+<h3>Алгоритм целиком</h3>
+
+<div class="stmt"><span class="lbl">Определение 95 (Muon)</span>
+Пусть веса слоя — матрица $W$ размера <span class="nw"><span class="nw">$m\times n$,</span></span> $G_k$ — градиент по порции на шаге <span class="nw">$k$,</span> <span class="nw">$\eta\gt0$,</span> коэффициент инерции <span class="nw">$\beta\in[0,1)$</span> и коэффициент затухания <span class="nw"><span class="nw">$\lambda\ge0$.</span></span> Метод <b>Muon</b> с $M_0=0$ на шагах $k=0,1,2,\dots$ вычисляет
+<span class="math-wrap">$$\begin{gathered}M_{k+1}=\beta M_k+G_k,\qquad X_0=\frac{G_k+\beta M_{k+1}}{\|G_k+\beta M_{k+1}\|_F},\\X_{j+1}=p(X_j),\quad j=0,\dots,4,\\W_{k+1}=W_k-\eta\Bigl(\sqrt{\max(1,m/n)}\;X_5+\lambda W_k\Bigr),\end{gathered}$$</span>
+где $p$ — многочлен пятой степени из этого параграфа, применённый к матрице по лемме 92.</div>
+<p>Разберём части. Инерция $M_k$ — та же, что в методе тяжёлого шара из §9, а ортогонализуется не сама инерция, а <span class="nw"><span class="nw">$G_k+\beta M_{k+1}$:</span></span> это «заглядывание вперёд» в духе метода Нестерова. Нормировка делает все сингулярные числа не больше единицы, пять итераций дают <span class="nw">$X_5\approx UV^\top$,</span> множитель $\sqrt{\max(1,m/n)}$ выравнивает шаги слоёв разной формы, а затухание весов работает так же, как в AdamW из §11. Для больших моделей оно оказалось важным: без него веса со временем растут.</p>
+<p>Muon предназначен только для матриц скрытых слоёв: проекций внимания, слоёв полносвязных блоков, свёрток, развёрнутых в матрицы. Остальные параметры обучают AdamW.</p>
+<ul>
+<li><b>Векторы</b> — смещения и масштабы нормировок. Для матрицы $1\times n$ ортогонализация даёт <span class="nw"><span class="nw">$g/\|g\|$:</span></span> шаг одной и той же длины при любом градиенте. Никакой структуры, которую стоило бы выравнивать, у вектора нет.</li>
+<li><b>Эмбеддинги.</b> Вход слоя эмбеддингов — номер токена, то есть вектор из нулей и одной единицы. Градиент на шаге затрагивает только строки встретившихся токенов, и рассуждение о растяжении произвольного входа к такому слою не подходит.</li>
+<li><b>Выходной слой.</b> С ним на практике лучше справляется AdamW; соображения о масштабе здесь другие, потому что выход слоя — это логиты, а не вход следующего слоя.</li>
+</ul>
+</section>
+<section id="s15">
+<h2>§15. Итог: одна задача и все методы</h2>
+<p>Книга началась с вопроса, куда шагать, когда видна только окрестность текущей точки, и почти все методы в ней оказались ответами на один и тот же вопрос: какой шаг считать маленьким. В этом параграфе мы соберём ответы вместе, а потом проверим их на одной простой задаче, в которой каждый метод можно разобрать до конца.</p>
+
+<h3>Родословная</h3>
+<p>Таблица из §6 теперь заполнена целиком. В каждой строке слева — способ мерить шаг, справа — самый крутой шаг для него и метод, который из него вырос.</p>
+<table class="tbl">
+<tr><th>чем мерим шаг</th><th>самый крутой шаг</th><th>метод</th></tr>
+<tr><td>евклидова длина $\ell_2$</td><td>$-\eta g$</td><td>градиентный спуск, §5</td></tr>
+<tr><td>наибольшая координата $\ell_\infty$</td><td>$-\eta\operatorname{sign}g$</td><td>спуск по знаку, Adam, §6, §11</td></tr>
+<tr><td><span class="nw">$\|\cdot\|_H$,</span> $H$ — вторые производные</td><td>$-\eta H^{-1}g$</td><td>метод Ньютона, §7</td></tr>
+<tr><td>изменение распределения модели</td><td>$-\eta F^{-1}g$</td><td>натуральный градиент, K-FAC, §8, §13</td></tr>
+<tr><td>статистика прошлых градиентов</td><td>$-\eta S^{-1/2}g$</td><td>полноматричный AdaGrad, Shampoo, §11, §13</td></tr>
+<tr><td>растяжение матрицы весов</td><td>$-\eta\,UV^\top$</td><td>Muon, §14</td></tr>
+</table>
+<p>Сверху вниз таблица читается как родословная. Градиентный спуск — общий предок. Смена нормы на $\ell_\infty$ дала знак градиента, а сглаживание знака по времени — RMSProp и Adam. Норма, построенная по вторым производным, дала метод Ньютона, а норма, измеряющая изменение распределения, — натуральный градиент; оба требуют огромной матрицы. Ещё одна ветвь идёт от AdaGrad, который строит норму из истории градиентов и в полноматричном виде упирается в ту же огромную матрицу.</p>
+<p>Последний поворот случился, когда мы заметили, что веса — матрицы. Произведение Кронекера сделало огромные матрицы посильными: из натурального градиента получился K-FAC, из полноматричного AdaGrad — Shampoo. А спектральная норма, естественная для линейного слоя, дала Muon, и он же оказался Shampoo, забывшим прошлое.</p>
+<p>Две линии идут через всю таблицу сквозняком. Первая — <b>инерция</b>: она добавляется к любому методу и помогает и в оврагах, и против шума (§9, §10). Вторая — <b>расписание длины шага</b>: ни один метод из таблицы не обходится без убывающего шага, когда градиенты шумные.</p>
+
+<h3>Заключительный пример: матричный метод наименьших квадратов</h3>
+<p>Возьмём задачу, на которой видно всё сразу. Пусть $A$ — матрица <span class="nw">$m\times m$,</span> $B$ — матрица <span class="nw">$n\times n$,</span> $W_*$ — матрица <span class="nw">$m\times n$,</span> и
+<span class="math-wrap">$$f(W)=\frac12\,\bigl\|A\,(W-W_*)\,B\bigr\|_F^2.$$</span>
+Это простейший «линейный слой с двумя соседями»: веса $W$ стоят между двумя неподвижными линейными отображениями, и надо подогнать их к образцу <span class="nw"><span class="nw">$W_*$.</span></span> Минимум, очевидно, достигается при <span class="nw"><span class="nw">$W=W_*$.</span></span></p>
+
+<div class="stmt"><span class="lbl">Лемма 96 (градиент и гессиан матричной задачи)</span>
+Пусть <span class="nw">$E=W-W_*$.</span> Тогда
+<span class="math-wrap">$$\nabla f(W)=A^\top A\,E\,BB^\top,$$</span>
+и $f$ — квадратичная функция от вектора $\operatorname{vec}W$ с гессианом <span class="nw">$H={}$<wbr><span class="nw">$(BB^\top)\otimes(A^\top A)$.</span></span> Если $A$ и $B$ обратимы, то $H$ положительно определён, его собственные числа — все произведения <span class="nw">$\alpha_i\beta_j$</span> собственных чисел $\alpha_i$ матрицы $A^\top A$ и $\beta_j$ матрицы <span class="nw"><span class="nw">$BB^\top$,</span></span> и число обусловленности равно
+<span class="math-wrap">$$\kappa(H)=\kappa(A^\top A)\,\kappa(BB^\top).$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Вытянуть всё в векторы: $A E B$ превращается в произведение <span class="nw">$(B^\top\otimes A)\operatorname{vec}E$,</span> и задача становится обычной квадратичной функцией с матрицей-произведением Кронекера.</div>
+<div class="step"><span class="sh">Шаг 1. Вытягивание.</span> По лемме 86(а) $\operatorname{vec}(AEB)={}$<wbr><span class="nw">$(B^\top\otimes A)\operatorname{vec}E$,</span> поэтому, обозначив <span class="nw"><span class="nw">$e=\operatorname{vec}E$,</span></span> <span class="nw"><span class="nw">$K=B^\top\otimes A$,</span></span>
+<span class="math-wrap">$$f=\frac12\|Ke\|^2=\frac12\,e^\top K^\top Ke.$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Гессиан.</span> По лемме 86(б)<span class="math-wrap">$$K^\top K=(B\otimes A^\top)(B^\top\otimes A)=(BB^\top)\otimes(A^\top A)=H.$$</span> По лемме 31 градиент по $e$ равен <span class="nw"><span class="nw">$He$,</span></span> а по лемме 86(а) <span class="nw">$He={}$<wbr><span class="nw">$\operatorname{vec}(A^\top A\,E\,BB^\top)$.</span></span></div>
+<div class="step"><span class="sh">Шаг 3. Собственные числа.</span> Если $A$ и $B$ обратимы, то $A^\top A$ и $BB^\top$ положительно определены, и в доказательстве леммы 86(г) мы видели, что собственные числа их произведения Кронекера — все произведения <span class="nw"><span class="nw">$\alpha_i\beta_j$.</span></span> Наибольшее из них — произведение наибольших, наименьшее — произведение наименьших, откуда формула для <span class="nw"><span class="nw">$\kappa(H)$.</span></span></div>
+</div>
+<p>Пройдём по книге с этой задачей в руках.</p>
+<ul>
+<li><b>Градиентный спуск.</b> По §5 он сходится с множителем, зависящим от <span class="nw"><span class="nw">$\kappa(H)$,</span></span> а обусловленности двух соседей <i>перемножаются</i>. Если у $A$ и $B$ сингулярные числа различаются в $10$ раз, то $\kappa(A^\top A)={}$<wbr>$\kappa(BB^\top)={}$<wbr>$100$ и <span class="nw"><span class="nw">$\kappa(H)=10^4$.</span></span> Плохо обусловленные соседи делают задачу для слоя очень плохо обусловленной.</li>
+<li><b>Метод Ньютона.</b> Гессиан здесь — в точности произведение Кронекера, поэтому шаг Ньютона вычисляется двумя маленькими обращениями: $H^{-1}\operatorname{vec}G={}$<wbr><span class="nw">$\operatorname{vec}\bigl((A^\top A)^{-1}G\,(BB^\top)^{-1}\bigr)$.</span> Для квадратичной функции он приводит в минимум за один шаг (§7). Это та же формула, что у K-FAC, только множители точные: в этой задаче кронекеровское приближение не теряет ничего.</li>
+<li><b>Adam.</b> Если $A$ и $B$ диагональны, то $H$ тоже диагонален: каждый вес — отдельная одномерная задача, и покоординатный метод в своей стихии. Но стоит повернуть $A$ и <span class="nw">$B$,</span> взяв <span class="nw">$A=Q_A\,D_A\,Q_A^\top$</span> с ортогональной $Q_A$ (и так же <span class="nw"><span class="nw">$B$),</span></span> как гессиан перестаёт быть диагональным, и Adam теряет преимущество — тот же эффект, что в §11.</li>
+<li><b>Shampoo и Muon</b> поворотов не замечают. Это следующее утверждение, матричный аналог предложения 77.</li>
+</ul>
+
+<div class="stmt"><span class="lbl">Предложение 97 (Shampoo и Muon не замечают поворотов)</span>
+Пусть $Q_1$ и $Q_2$ — ортогональные матрицы размеров $m\times m$ и <span class="nw"><span class="nw">$n\times n$,</span></span> и <span class="nw"><span class="nw">$h(Z)=f(Q_1ZQ_2^\top)$.</span></span> Запустим Shampoo (или Muon) для $f$ из точки $W_0$ и для $h$ из точки <span class="nw">$Z_0=Q_1^\top W_0Q_2$</span> с одинаковыми параметрами. Тогда <span class="nw">$Z_k=Q_1^\top W_kQ_2$</span> при всех <span class="nw"><span class="nw">$k$.</span></span></div>
+<div class="proof tech"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Поворот $Z\mapsto Q_1ZQ_2^\top$ сохраняет скалярное произведение матриц, поэтому градиенты поворачиваются так же, как точки; а все операции обоих методов — умножения на $G$ и <span class="nw">$G^\top$,</span> степени симметричных матриц и нормировка — перестановочны с поворотом.</div>
+<div class="step"><span class="sh">Шаг 1. Поворот сохраняет скалярное произведение.</span> По лемме 86(а) $\operatorname{vec}(Q_1XQ_2^\top)={}$<wbr><span class="nw">$(Q_2\otimes Q_1)\operatorname{vec}X$,</span> и по пункту (б) <span class="nw">$(Q_2\otimes Q_1)^\top(Q_2\otimes Q_1)={}$<wbr><span class="nw">$I$.</span></span> Поэтому $\langle Q_1XQ_2^\top,Q_1YQ_2^\top\rangle={}$<wbr>$\langle X,Y\rangle$ и, в частности, норма Фробениуса не меняется.</div>
+<div class="step"><span class="sh">Шаг 2. Градиенты.</span> Пусть <span class="nw">$W=Q_1ZQ_2^\top$</span> и <span class="nw"><span class="nw">$G=\nabla f(W)$.</span></span> Тогда
+<span class="math-wrap">$$\begin{aligned}h(Z+\Delta)&=f(W+Q_1\Delta Q_2^\top)\\&=h(Z)+\langle G,Q_1\Delta Q_2^\top\rangle+o(\|\Delta\|_F),\end{aligned}$$</span>
+и по шагу 1 $\langle G,Q_1\Delta Q_2^\top\rangle={}$<wbr><span class="nw">$\langle Q_1^\top GQ_2,\Delta\rangle$.</span> Значит, <span class="nw">$\nabla h(Z)={}$<wbr><span class="nw">$Q_1^\top GQ_2$.</span></span></div>
+<div class="step"><span class="sh">Шаг 3. Shampoo.</span> Пусть утверждение верно до шага <span class="nw">$k$.</span> Тогда градиенты для $h$ равны <span class="nw"><span class="nw">$Q_1^\top G_jQ_2$,</span></span> и
+<span class="math-wrap">$$\begin{gathered}\tilde L_k=\varepsilon I+\sum_jQ_1^\top G_jQ_2Q_2^\top G_j^\top Q_1=Q_1^\top L_kQ_1,\\\tilde R_k=Q_2^\top R_kQ_2.\end{gathered}$$</span>
+Как в шаге 2 доказательства предложения 77, <span class="nw">$\tilde L_k^{-1/4}={}$<wbr>$Q_1^\top L_k^{-1/4}Q_1$</span> и так же для <span class="nw"><span class="nw">$\tilde R_k$,</span></span> поэтому шаг для $h$ равен <span class="nw"><span class="nw">$Q_1^\top\bigl(L_k^{-1/4}G_kR_k^{-1/4}\bigr)Q_2$.</span></span></div>
+<div class="step"><span class="sh">Шаг 4. Muon.</span> Инерция линейна по градиентам, поэтому <span class="nw">$\tilde M_k={}$<wbr><span class="nw">$Q_1^\top M_kQ_2$.</span></span> Нормировка не меняется по шагу 1. Для итерации Ньютона–Шульца: если <span class="nw"><span class="nw">$\tilde X=Q_1^\top XQ_2$,</span></span> то <span class="nw">$\tilde X^\top\tilde X={}$<wbr><span class="nw">$Q_2^\top X^\top XQ_2$,</span></span> и $\tilde X(\tilde X^\top\tilde X)^j={}$<wbr><span class="nw">$Q_1^\top X(X^\top X)^jQ_2$,</span> так что <span class="nw">$p(\tilde X)={}$<wbr><span class="nw">$Q_1^\top p(X)Q_2$.</span></span> Затухание весов линейно. Индукция по $k$ завершает доказательство для обоих методов.</div>
+</div>
+<p>Для нашей задачи повёрнутая постановка — это в точности $h$ с <span class="nw"><span class="nw">$Q_1=Q_A^\top$,</span></span> <span class="nw"><span class="nw">$Q_2=Q_B^\top$:</span></span> действительно, $\|Q_AD_AQ_A^\top E\,Q_BD_BQ_B^\top\|_F={}$<wbr>$\|D_A(Q_A^\top EQ_B)D_B\|_F$ по шагу 1. Значит, Shampoo и Muon проходят повёрнутую и неповёрнутую задачу одинаково. Градиентный спуск тоже не замечает поворотов, но страдает от обусловленности; Adam не страдает от обусловленности, пока оси на месте, но замечает повороты. Рисунок 25 показывает всё это сразу.</p>
+
+<figure>
+  <div class="fig1"><canvas id="final" width="760" height="400" aria-label="Кривые потерь градиентного спуска, Adam, Shampoo и Muon на матричной задаче наименьших квадратов"></canvas></div>
+  <div class="controls">
+    <label for="fnA">$\kappa(A)$ <input id="fnA" type="range" min="0" max="2" step="0.05" value="1"><output id="fnAOut">10</output></label>
+    <label for="fnB">$\kappa(B)$ <input id="fnB" type="range" min="0" max="2" step="0.05" value="1"><output id="fnBOut">10</output></label>
+    <div class="seg" role="group" aria-label="Оси"><button type="button" data-k="ax" aria-pressed="false">оси совпадают</button><button type="button" data-k="rot" aria-pressed="true">повёрнуты</button></div>
+    <div class="btns"><button type="button" class="act" id="fnRun">пуск</button></div>
+  </div>
+  <div id="fnFx" class="fx" aria-live="polite"></div>
+  <figcaption>Рис. 25. Задача $f(W)={}$<wbr>$\frac12\|A(W-W_*)B\|_F^2$ для матриц <span class="nw">$6\times6$;</span> сингулярные числа $A$ равномерно в логарифмическом масштабе заполняют отрезок от $1/\kappa(A)$ до <span class="nw">$1$,</span> так что $\kappa(A)$ — отношение наибольшего сингулярного числа к наименьшему; так же устроена <span class="nw"><span class="nw">$B$.</span></span> Кривые — $\lg\bigl(f(W_k)/f(W_0)\bigr)$ за $200$ шагов из <span class="nw"><span class="nw">$W_0=0$.</span></span> Параметры методов одни и те же при всех положениях ползунков, ничего не подстраивается.
+<ul class="capl">
+<li><b>Градиентный спуск</b> — с длиной шага <span class="nw">$1/L$,</span> где <span class="nw"><span class="nw">$L=1$;</span></span></li>
+<li><b>Adam</b> — со стандартными $\beta_1,\beta_2$ и шагом <span class="nw">$0{,}1$,</span> убывающим по косинусу;</li>
+<li><b>Shampoo</b> — с суммами, как в определении 87, и шагом <span class="nw">$0{,}5$,</span> убывающим по косинусу;</li>
+<li><b>Muon</b> — с инерцией <span class="nw">$\beta=0{,}9$,</span> пятью итерациями Ньютона–Шульца и шагом <span class="nw">$0{,}1$,</span> убывающим по косинусу.</li>
+</ul>
+Переключатель поворачивает обе матрицы, <span class="nw">$A=Q_AD_AQ_A^\top$,</span> <span class="nw"><span class="nw">$B=Q_BD_BQ_B^\top$,</span></span> и образец <span class="nw">$W_*$</span> вместе с ними. Кривые градиентного спуска и Shampoo от этого не меняются, кривая Muon меняется лишь в мелочах, а кривая Adam — сильно. Мелкие расхождения у Muon — ошибки округления: его шаги имеют постоянную спектральную длину, поэтому, пока длина шага не уменьшится, он скачет около дна, как спуск по знаку, и раздувает крошечные различия. Это игрушечная задача, а не соревнование: на ней хорошо видны свойства методов, но не их сравнительная сила на настоящих нейросетях.</figcaption>
+</figure>
+
+<h3>Что осталось за рамками</h3>
+<p>Книга короткая, и многое в неё не вошло. Назовём главное, чтобы было понятно, куда идти дальше.</p>
+<ul>
+<li><b>Квазиньютоновские методы</b> (BFGS, L-BFGS) и <b>сопряжённые градиенты.</b> Они строят приближение к гессиану по разностям градиентов и отлично работают на гладких детерминированных задачах, но плохо переносят шум мини-порций.</li>
+<li><b>Масштабирование гиперпараметров.</b> Как переносить длину шага с маленькой модели на большую, не подбирая её заново, — теория μP и родственные ей идеи. Множитель $\sqrt{\max(1,m/n)}$ в Muon — маленький кусочек этой истории: шаг нужно мерить в нормах, согласованных с размерами слоёв.</li>
+<li><b>Теория сходимости адаптивных методов.</b> Мы упомянули, что Adam может не сходиться даже на выпуклой задаче; пример — в упражнениях. Исправленные варианты и точные условия сходимости — отдельная большая тема.</li>
+<li><b>Распределённое обучение</b>: как делить состояние оптимизатора между тысячами видеокарт. Для Shampoo и Muon это отдельная инженерная задача, потому что их шаги не покоординатные.</li>
+</ul>
+<p>Но главную мысль книги можно унести с собой. Оптимизатор — это не набор формул, а выбор того, как мерить шаг. Как только выбор сделан, самый крутой шаг выводится, а все остальные приёмы — инерция, расписания, приближения больших матриц — лишь помогают сделать его дешёвым и устойчивым.</p>
+</section>
+<section id="s16">
+<h2>§16. Упражнения и вопросы</h2>
+<p>Упражнения идут в порядке параграфов, к которым относятся, и проверяют не память, а руки: почти в каждом нужно что-то посчитать. Вопросы короче и проверяют понимание. Решения и ответы свёрнуты.</p>
+
+<h3>Упражнения</h3>
+
+<div class="ex"><span class="lbl">Упражнение 1</span>
+<p><b>Контекст.</b> Отжиг из §3 на самом маленьком примере, где всё считается в уме. Множество состояний <span class="nw">$S=\{a,b\}$,</span> <span class="nw"><span class="nw">$f(a)=0$,</span></span> <span class="nw"><span class="nw">$f(b)=1$;</span></span> предложение — всегда перейти в другое состояние: <span class="nw"><span class="nw">$Q(a,b)=Q(b,a)=1$.</span></span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Выпишите переходные вероятности цепи Метрополиса при температуре <span class="nw"><span class="nw">$T$.</span></span></li>
+<li>Найдите её стационарное распределение прямо из уравнений стационарности и сравните с распределением Больцмана из определения 18.</li>
+<li>Найдите вероятность оказаться в минимуме $a$ в стационарном режиме при $T=1$ и при <span class="nw"><span class="nw">$T=0{,}1$.</span></span></li>
+<li>Сколько шагов в среднем цепь проводит в состоянии <span class="nw">$a$,</span> прежде чем уйти из него, при $T=1$ и при <span class="nw"><span class="nw">$T=0{,}1$?</span></span> Что это говорит о слишком быстром остывании?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Из $a$ предлагается <span class="nw">$b$,</span> и переход принимается с вероятностью <span class="nw"><span class="nw">$q=e^{-1/T}$;</span></span> из $b$ предлагается <span class="nw">$a$,</span> и переход вниз принимается всегда. Значит, <span class="nw"><span class="nw">$P(a,b)=q$,</span></span> <span class="nw"><span class="nw">$P(a,a)=1-q$,</span></span> <span class="nw"><span class="nw">$P(b,a)=1$,</span></span> <span class="nw"><span class="nw">$P(b,b)=0$.</span></span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Стационарность для состояния <span class="nw">$b$:</span> <span class="nw">$\pi(b)={}$<wbr><span class="nw">$\pi(a)\,q+\pi(b)\cdot0$,</span></span> то есть <span class="nw">$\pi(b)/\pi(a)={}$<wbr>$e^{-1/T}={}$<wbr><span class="nw">$e^{-(f(b)-f(a))/T}$.</span></span> Вместе с $\pi(a)+\pi(b)=1$ это даёт <span class="nw">$\pi(a)=1/(1+e^{-1/T})$</span> — ровно распределение Больцмана.</div>
+<div class="step"><span class="sh">Пункт (в).</span> При <span class="nw">$T=1$:</span> <span class="nw">$\pi(a)={}$<wbr>$1/(1+e^{-1})\approx{}$<wbr><span class="nw">$0{,}731$.</span></span> При <span class="nw">$T=0{,}1$:</span> <span class="nw">$\pi(a)={}$<wbr>$1/(1+e^{-10})\approx{}$<wbr><span class="nw">$0{,}99995$.</span></span></div>
+<div class="step"><span class="sh">Пункт (г).</span> На каждом шаге цепь уходит из $a$ с вероятностью $q$ независимо от прошлого, поэтому время до ухода распределено геометрически со средним <span class="nw"><span class="nw">$1/q=e^{1/T}$:</span></span> около $2{,}7$ шага при $T=1$ и около $22\,000$ шагов при <span class="nw"><span class="nw">$T=0{,}1$.</span></span> При низкой температуре цепь почти не выбирается из ямы, в которой оказалась. Если яма не та и остывание было слишком быстрым, выбраться из неё уже практически невозможно.</div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 2</span>
+<p><b>Контекст.</b> Градиентный спуск из §5 на квадратичной функции, руками. Пусть <span class="nw">$f(x)={}$<wbr>$\frac12(x_1^2+9x_2^2)$</span> и <span class="nw"><span class="nw">$x_0=(1,1)$.</span></span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Найдите <span class="nw">$L$,</span> $\mu$ и число обусловленности <span class="nw"><span class="nw">$\kappa$.</span></span></li>
+<li>Выпишите $x_k$ для спуска с длиной шага <span class="nw"><span class="nw">$\eta=1/L$.</span></span> Какая координата сходится мгновенно, а какая медленно?</li>
+<li>Найдите наилучшую постоянную длину шага $\eta_*$ из предложения 39 и выпишите $x_k$ для неё.</li>
+<li>Что происходит при <span class="nw"><span class="nw">$\eta=0{,}25$?</span></span></li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $f=\frac12x^\top Ax$ с $A={}$<wbr><span class="nw">$\operatorname{diag}(1,9)$,</span> поэтому <span class="nw"><span class="nw">$L=9$,</span></span> <span class="nw"><span class="nw">$\mu=1$,</span></span> <span class="nw"><span class="nw">$\kappa=9$.</span></span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Шаг умножает $i$-ю координату на <span class="nw"><span class="nw">$1-\eta\lambda_i$.</span></span> При $\eta=1/9$ множители равны $8/9$ и <span class="nw"><span class="nw">$0$:</span></span> <span class="nw">$x_k={}$<wbr>$\bigl((8/9)^k,0\bigr)$</span> при <span class="nw"><span class="nw">$k\ge1$.</span></span> Крутая координата обнуляется за один шаг, пологая уменьшается на одну девятую за шаг.</div>
+<div class="step"><span class="sh">Пункт (в).</span> <span class="nw">$\eta_*=2/(1+9)=0{,}2$,</span> множители <span class="nw">$1-0{,}2=0{,}8$</span> и <span class="nw"><span class="nw">$1-1{,}8=-0{,}8$,</span></span> так что <span class="nw">$x_k={}$<wbr><span class="nw">$\bigl(0{,}8^k,(-0{,}8)^k\bigr)$:</span></span> обе координаты убывают одинаково быстро, вторая — меняя знак, и <span class="nw">$\rho_*={}$<wbr>$0{,}8={}$<wbr><span class="nw">$(\kappa-1)/(\kappa+1)$.</span></span></div>
+<div class="step"><span class="sh">Пункт (г).</span> <span class="nw">$0{,}25\gt2/9$,</span> и множитель второй координаты равен <span class="nw"><span class="nw">$1-2{,}25=-1{,}25$:</span></span> она растёт по модулю в $1{,}25$ раза за шаг, меняя знак. Спуск расходится, хотя первая координата сходится.</div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 3</span>
+<p><b>Контекст.</b> В §6 мы нашли самые крутые шаги для норм <span class="nw">$\ell_2$,</span> $\ell_\infty$ и <span class="nw"><span class="nw">$\|\cdot\|_A$.</span></span> Осталась норма <span class="nw"><span class="nw">$\ell_1$.</span></span></p>
+<p><b>Задача.</b> Пусть $g\ne0$ и $i$ — номер координаты с наибольшим <span class="nw"><span class="nw">$|g_i|$.</span></span></p>
+<ol class="ax" type="a">
+<li>Докажите, что двойственная к $\ell_1$ норма — это <span class="nw"><span class="nw">$\|g\|_\infty$,</span></span> а верхняя грань в определении 40 достигается при <span class="nw">$u_*={}$<wbr><span class="nw">$\operatorname{sign}(g_i)\,e_i$.</span></span></li>
+<li>Найдите шаг из леммы 41. Что делает такой метод?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> При $\|u\|_1\le1$
+<span class="math-wrap">$$\langle g,u\rangle\le\sum_j|g_j|\,|u_j|\le\|g\|_\infty\sum_j|u_j|\le\|g\|_\infty,$$</span>
+а при $u={}$<wbr>$\operatorname{sign}(g_i)e_i$ получаем <span class="nw">$\langle g,u\rangle={}$<wbr>$|g_i|={}$<wbr><span class="nw">$\|g\|_\infty$.</span></span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Шаг равен $-\eta\|g\|_\infty\operatorname{sign}(g_i)e_i={}$<wbr><span class="nw">$-\eta g_ie_i$:</span> меняется только одна координата — та, по которой функция убывает быстрее всего, и на ней делается обычный градиентный шаг. Это жадный покоординатный спуск. Шар $\ell_1$ — ромб, и самая выгодная его точка — всегда вершина на одной из осей.</div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 4</span>
+<p><b>Контекст.</b> Инерция из §9 помогает в оврагах. Посмотрим, что она делает там, где помогать не нужно. Пусть <span class="nw"><span class="nw">$f(x)=\frac\lambda2x^2$,</span></span> <span class="nw"><span class="nw">$\lambda\gt0$,</span></span> длина шага <span class="nw"><span class="nw">$\eta=1/\lambda$,</span></span> <span class="nw"><span class="nw">$\beta\in(0,1)$.</span></span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Где окажется градиентный спуск после одного шага?</li>
+<li>Найдите $x_1,\dots,x_4$ для метода тяжёлого шара из точки <span class="nw"><span class="nw">$x_0$.</span></span></li>
+<li>Выпишите характеристическое уравнение рекуррентности и найдите модуль его корней. Как быстро сходится метод?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $x_1={}$<wbr>$x_0-\frac1\lambda\lambda x_0={}$<wbr>$0$ — сразу в минимум.</div>
+<div class="step"><span class="sh">Пункт (б).</span> Первый шаг такой же, <span class="nw"><span class="nw">$x_1=0$,</span></span> но скорость $v_1=-x_0$ уже набрана. Дальше $x_{k+1}={}$<wbr>$x_k-x_k+\beta(x_k-x_{k-1})={}$<wbr><span class="nw">$\beta(x_k-x_{k-1})$,</span> и
+<span class="math-wrap">$$x_2=-\beta x_0,\qquad x_3=-\beta^2x_0,\qquad x_4=\beta^2(1-\beta)\,x_0.$$</span>
+Шар проскакивает минимум и раскачивается около него.</div>
+<div class="step"><span class="sh">Пункт (в).</span> Уравнение <span class="nw"><span class="nw">$r^2-\beta r+\beta=0$;</span></span> здесь $\eta\lambda=1$ лежит между $(1-\sqrt\beta)^2$ и <span class="nw"><span class="nw">$(1+\sqrt\beta)^2$,</span></span> и по лемме 60 оба корня по модулю равны <span class="nw"><span class="nw">$\sqrt\beta$.</span></span> Метод сходится как <span class="nw">$\beta^{k/2}$</span> — геометрически, но не за один шаг. Инерция окупается, когда функция плохо обусловлена; на идеально круглой функции она только мешает.</div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 5</span>
+<p><b>Контекст.</b> Свойства шага Adam из §11, которые видны без всякой теории сходимости.</p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Пусть <span class="nw">$\varepsilon=0$.</span> Докажите, что если все градиенты умножить на одно число <span class="nw"><span class="nw">$c\gt0$,</span></span> то все шаги Adam останутся прежними.</li>
+<li>Найдите первый шаг Adam (при <span class="nw">$k=0$)</span> по каждой координате. На что он похож?</li>
+<li>Пусть по некоторой координате градиент на всех шагах равен одному и тому же числу <span class="nw"><span class="nw">$\delta\gt0$,</span></span> много меньшему <span class="nw"><span class="nw">$\varepsilon$.</span></span> Найдите шаг по этой координате.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Средние линейны: $m$ умножается на <span class="nw">$c$,</span> а <span class="nw">$v$,</span> составленное из квадратов, на <span class="nw"><span class="nw">$c^2$.</span></span> Поправки на смещение от градиентов не зависят. Поэтому $\hat m/\sqrt{\hat v}$ не меняется.</div>
+<div class="step"><span class="sh">Пункт (б).</span> <span class="nw">$m_1=(1-\beta_1)g_0$,</span> <span class="nw"><span class="nw">$\hat m=g_0$;</span></span> <span class="nw">$v_1=(1-\beta_2)g_0^2$,</span> <span class="nw"><span class="nw">$\hat v=g_0^2$.</span></span> Шаг по координате равен <span class="nw">$-\eta\,g_{0,i}/(|g_{0,i}|+\varepsilon)$</span> — почти <span class="nw">$-\eta\operatorname{sign}g_{0,i}$:</span> первый шаг Adam — это спуск по знаку.</div>
+<div class="step"><span class="sh">Пункт (в).</span> Тогда $\hat m=\delta$ и $\hat v=\delta^2$ на каждом шаге, и шаг равен <span class="nw">$-\eta\delta/(\delta+\varepsilon)\approx{}$<wbr><span class="nw">$-(\eta/\varepsilon)\,\delta$:</span></span> по такой координате Adam превращается в обычный градиентный спуск с длиной шага <span class="nw"><span class="nw">$\eta/\varepsilon$.</span></span> Поэтому $\varepsilon$ — не просто защита от деления на ноль: оно задаёт масштаб градиентов, ниже которого Adam перестаёт выравнивать координаты.</div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 6</span>
+<p><b>Контекст.</b> В §11 говорилось, что Adam может не сходиться даже на выпуклой задаче. Вот упрощённая версия известного примера С. Редди, С. Кале и С. Кумара (2018). Ищем минимум на отрезке <span class="nw">$[-1,1]$;</span> после каждого шага точку, вышедшую за отрезок, возвращаем на ближайший конец. Функции потерь приходят по очереди: на шагах с номерами <span class="nw">$k=0,3,6,\dots$</span> это <span class="nw">$f_k(x)=Cx$</span> с некоторым <span class="nw"><span class="nw">$C\gt2$,</span></span> на остальных шагах <span class="nw"><span class="nw">$f_k(x)=-x$.</span></span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Где минимум средней функции <span class="nw">$\frac13\bigl(Cx-x-x\bigr)$</span> на отрезке?</li>
+<li>Куда придёт обычный стохастический спуск с маленьким постоянным шагом $\eta$ из точки <span class="nw"><span class="nw">$x_0=0$?</span></span></li>
+<li>Adam с $\beta_1=\beta_2=0$ и $\varepsilon=0$ — это спуск по знаку градиента (упражнение 5). Куда он придёт из той же точки с шагом <span class="nw"><span class="nw">$\eta=0{,}1$?</span></span> Объясните, что пошло не так.</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> Средняя функция $\frac{C-2}3x$ возрастает, так как <span class="nw"><span class="nw">$C\gt2$,</span></span> и минимум — в точке <span class="nw"><span class="nw">$x=-1$.</span></span></div>
+<div class="step"><span class="sh">Пункт (б).</span> За три шага точка сдвигается на <span class="nw">$-\eta C+\eta+\eta={}$<wbr>$-\eta(C-2)\lt{}$<wbr><span class="nw">$0$,</span></span> и спуск доходит до <span class="nw"><span class="nw">$-1$,</span></span> где и остаётся (с колебаниями порядка <span class="nw"><span class="nw">$\eta C$).</span></span></div>
+<div class="step"><span class="sh">Пункт (в).</span> Знаки градиентов за три шага: <span class="nw"><span class="nw">$+,-,-$,</span></span> и точка сдвигается на <span class="nw">$-0{,}1+0{,}1+0{,}1={}$<wbr><span class="nw">$+0{,}1$.</span></span> Через десять таких троек она доходит до $+1$ и дальше колеблется между $0{,}9$ и <span class="nw">$1$</span> — в окрестности <i>наихудшей</i> точки. Знак забывает величину: редкий большой градиент, который должен перевешивать два маленьких, весит столько же, сколько каждый из них. Редди, Кале и Кумар построили похожие примеры и для настоящего Adam со стандартными <span class="nw">$\beta_1\lt\sqrt{\beta_2}$</span> и предложили исправление AMSGrad, в котором $\hat v$ не убывает.</div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 7</span>
+<p><b>Контекст.</b> Произведение Кронекера из §12 руками.</p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Пусть $P={}$<wbr>$\begin{pmatrix}0&1\\1&0\end{pmatrix}$ и <span class="nw">$X$</span> — матрица <span class="nw">$2\times2$.</span> Что делают с $X$ умножения $(P\otimes I)\operatorname{vec}X$ и <span class="nw"><span class="nw">$(I\otimes P)\operatorname{vec}X$?</span></span></li>
+<li>Докажите, что для обратимых $A$ и $B$ матрица $A\otimes B$ обратима и <span class="nw">$(A\otimes B)^{-1}={}$<wbr><span class="nw">$A^{-1}\otimes B^{-1}$.</span></span></li>
+<li>Найдите собственные числа $A\otimes B$ для <span class="nw">$A={}$<wbr><span class="nw">$\operatorname{diag}(1,2)$,</span></span> <span class="nw">$B={}$<wbr>$\operatorname{diag}(3,5)$</span> и проверьте, что $\operatorname{tr}(A\otimes B)={}$<wbr><span class="nw">$\operatorname{tr}A\cdot\operatorname{tr}B$.</span></li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> По лемме 86(а) $(P\otimes I)\operatorname{vec}X={}$<wbr>$\operatorname{vec}(XP^\top)$ — переставляет столбцы <span class="nw">$X$;</span> $(I\otimes P)\operatorname{vec}X={}$<wbr>$\operatorname{vec}(PX)$ — переставляет строки.</div>
+<div class="step"><span class="sh">Пункт (б).</span> По лемме 86(б) $(A\otimes B)(A^{-1}\otimes B^{-1})={}$<wbr>$(AA^{-1})\otimes(BB^{-1})={}$<wbr>$I\otimes I={}$<wbr><span class="nw">$I$.</span></div>
+<div class="step"><span class="sh">Пункт (в).</span> $A\otimes B={}$<wbr><span class="nw">$\operatorname{diag}(3,5,6,10)$,</span> собственные числа — все произведения <span class="nw">$\alpha_i\beta_j$;</span> след равен <span class="nw"><span class="nw">$24=3\cdot8$.</span></span></div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 8</span>
+<p><b>Контекст.</b> Во что превращается Shampoo из §13, если матрица весов — одна строка, то есть вектор <span class="nw"><span class="nw">$w\in\mathbb R^n$,</span></span> записанный как матрица <span class="nw"><span class="nw">$1\times n$?</span></span> Градиенты — строки <span class="nw"><span class="nw">$G_j=g_j^\top$.</span></span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Выпишите $L_k$ и $R_k$ и шаг Shampoo для вектора <span class="nw"><span class="nw">$w$.</span></span> Какой матрицей из §11 оказывается <span class="nw"><span class="nw">$R_k$?</span></span></li>
+<li>Пусть $\varepsilon\to0$ и все прошлые градиенты лежат на двух координатных осях, так что <span class="nw">$R_k={}$<wbr>$\operatorname{diag}(a,b,0,\dots)$</span> на этих осях. Во сколько раз полноматричный AdaGrad и Shampoo усиливают шаг вдоль оси с меньшей суммой по сравнению с осью с большей?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $L_k={}$<wbr>$\varepsilon+\sum_j\|g_j\|^2$ — число, а <span class="nw">$R_k={}$<wbr>$\varepsilon I+\sum_jg_jg_j^\top$</span> — в точности матрица $S_k$ полноматричного AdaGrad. Шаг: <span class="nw">$w_{k+1}={}$<wbr>$w_k-\eta\,L_k^{-1/4}\,S_k^{-1/4}g_k$</span> — тот же AdaGrad, только со степенью $-1/4$ вместо $-1/2$ и с общим множителем <span class="nw"><span class="nw">$L_k^{-1/4}$.</span></span></div>
+<div class="step"><span class="sh">Пункт (б).</span> Пусть <span class="nw">$a\gt b$.</span> AdaGrad делит компоненты на $\sqrt a$ и <span class="nw"><span class="nw">$\sqrt b$,</span></span> то есть усиливает редкую ось в $\sqrt{a/b}$ раз. Shampoo делит на $a^{1/4}$ и <span class="nw">$b^{1/4}$</span> — усиление <span class="nw"><span class="nw">$(a/b)^{1/4}$,</span></span> корень из усиления AdaGrad. Это и есть «выравнивание наполовину» из теоремы 90.</div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 9</span>
+<p><b>Контекст.</b> Итерация Ньютона–Шульца из §14 для матрицы <span class="nw">$1\times1$,</span> то есть для числа <span class="nw"><span class="nw">$x\ne0$.</span></span></p>
+<p><b>Задача.</b></p>
+<ol class="ax" type="a">
+<li>Что такое $UV^\top$ для матрицы <span class="nw">$1\times1$?</span></li>
+<li>Найдите $p(2)$ и $p(\sqrt3)$ для кубического многочлена <span class="nw">$p(\sigma)={}$<wbr><span class="nw">$\frac12(3\sigma-\sigma^3)$.</span></span> Куда сойдутся итерации из точки <span class="nw">$x_0=2$?</span> Зачем Muon перед итерациями делит матрицу на её норму?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $x={}$<wbr>$|x|\cdot(\operatorname{sign}x)\cdot1$ — сингулярное разложение с <span class="nw">$\sigma=|x|$,</span> <span class="nw"><span class="nw">$u=\operatorname{sign}x$,</span></span> <span class="nw"><span class="nw">$v=1$,</span></span> так что <span class="nw">$UV^\top={}$<wbr><span class="nw">$\operatorname{sign}x$.</span></span> Ортогонализация числа — его знак.</div>
+<div class="step"><span class="sh">Пункт (б).</span> $p(2)=\frac12(6-8)=-1$ и <span class="nw">$p(\sqrt3)={}$<wbr>$\frac12(3\sqrt3-3\sqrt3)={}$<wbr><span class="nw">$0$.</span></span> Из $x_0=2$ итерации сразу попадают в $-1$ и там остаются, потому что <span class="nw"><span class="nw">$p(-1)=-1$:</span></span> знак получился неправильный. Теорема 93 гарантирует сходимость только для чисел из <span class="nw"><span class="nw">$(0,1]$;</span></span> нормировка на $\|G\|_F$ загоняет туда все сингулярные числа.</div>
+</div>
+
+<div class="ex"><span class="lbl">Упражнение 10</span>
+<p><b>Контекст.</b> В §14 говорилось, что смещения и масштабы, то есть векторы, Muon не обучают. Проверим, во что он для них превращается.</p>
+<p><b>Задача.</b> Пусть градиент — ненулевая матрица $g^\top$ размера <span class="nw"><span class="nw">$1\times n$.</span></span></p>
+<ol class="ax" type="a">
+<li>Найдите её сингулярное разложение, спектральную норму и <span class="nw"><span class="nw">$UV^\top$.</span></span></li>
+<li>Проверьте, что итерация Ньютона–Шульца с кубическим многочленом не меняет <span class="nw"><span class="nw">$X_0=g^\top/\|g\|$.</span></span> Что за метод получается?</li>
+</ol></div>
+<div class="proof sol"><span class="lbl">Решение.</span>
+<div class="step"><span class="sh">Пункт (а).</span> $g^\top={}$<wbr><span class="nw">$\|g\|\cdot1\cdot(g/\|g\|)^\top$:</span> одно сингулярное число <span class="nw"><span class="nw">$\|g\|$,</span></span> так что спектральная норма совпадает с евклидовой длиной, и <span class="nw"><span class="nw">$UV^\top=g^\top/\|g\|$.</span></span></div>
+<div class="step"><span class="sh">Пункт (б).</span> <span class="nw">$X_0X_0^\top=1$,</span> поэтому <span class="nw">$p(X_0)={}$<wbr>$\frac12(3X_0-X_0X_0^\top X_0)={}$<wbr><span class="nw">$X_0$.</span></span> Шаг Muon для вектора — <span class="nw"><span class="nw">$-\eta\,g/\|g\|$:</span></span> градиентный спуск с постоянной длиной шага. Выравнивать у вектора нечего — у него одно сингулярное направление, — и Muon теряет весь смысл.</div>
+</div>
+
+<h3>Вопросы</h3>
+
+<div class="ex"><span class="lbl">Вопрос 1</span>
+<p>Каков наибольший возможный ранг градиента по весам линейного слоя $m\times n$ на порции из $b$ примеров?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p><span class="nw">$\min(b,m,n)$.</span> По лемме 79 градиент — сумма $b$ матриц ранга один, а ранг суммы не больше суммы рангов; к тому же ранг матрицы не больше её размеров. Поэтому при маленькой порции градиент большого слоя заведомо вырожден, и у $UV^\top$ в Muon столько же ненулевых сингулярных чисел.</p></div>
+
+<div class="ex"><span class="lbl">Вопрос 2</span>
+<p>Если функцию потерь умножить на <span class="nw">$10$,</span> шаг градиентного спуска вырастет в $10$ раз. У каких методов книги шаг при этом не изменится?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>У спуска по знаку, у Adam и AdaGrad (при <span class="nw">$\varepsilon\to0$,</span> упражнение 5), у Shampoo (по подсчёту степеней в §13), у Muon (нормировка на <span class="nw">$\|G\|_F$)</span> и у метода Ньютона: гессиан тоже умножается на <span class="nw">$10$,</span> и $H^{-1}g$ не меняется. А вот натуральный градиент изменится в $10$ раз: информация Фишера описывает модель, а не функцию потерь, и от множителя у потерь не зависит.</p></div>
+
+<div class="ex"><span class="lbl">Вопрос 3</span>
+<p>Почему точный натуральный градиент невозможно использовать для сети с $10^9$ параметров, а Adam — можно?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Информация Фишера — матрица <span class="nw">$10^9\times10^9$:</span> $10^{18}$ чисел, и её обращение требует порядка $10^{27}$ операций. Adam хранит два числа на параметр и делает несколько операций на параметр за шаг. Поэтому на практике натуральный градиент всегда приближают — диагональю или произведениями Кронекера, как в K-FAC.</p></div>
+
+<div class="ex"><span class="lbl">Вопрос 4</span>
+<p>Что нужно знать K-FAC о слое, чего не нужно знать Shampoo?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>K-FAC собирает отдельно статистику входов слоя $\mathbb E\,xx^\top$ и статистику градиентов по выходам <span class="nw"><span class="nw">$\mathbb E\,\delta\delta^\top$,</span></span> поэтому он должен заглядывать внутрь вычислений сети и знать, что параметр — линейный слой с такими входами. Shampoo видит только матрицу градиента по весам и строит свои $L$ и $R$ из неё; его можно применить к любому параметру-матрице.</p></div>
+
+<div class="ex"><span class="lbl">Вопрос 5</span>
+<p>Почему стохастический спуск с постоянным шагом перестаёт приближаться к минимуму, и что меняет убывающий шаг?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Шум оценки градиента не убывает у минимума, и каждый шаг длины $\eta$ сбивает точку на величину порядка <span class="nw"><span class="nw">$\eta$;</span></span> по теореме 67 ошибка спускается только до уровня, пропорционального $\eta$ и дисперсии. Убывающий шаг уменьшает и сбивание, и, если шаги убывают не слишком быстро, всё ещё позволяет дойти до минимума (теорема 68).</p></div>
+
+<div class="ex"><span class="lbl">Вопрос 6</span>
+<p>Слой эмбеддингов — тоже матрица. Почему его обычно обучают AdamW, а не Muon?</p></div>
+<div class="proof sol"><span class="lbl">Ответ.</span>
+<p>Вход этого слоя — вектор из нулей и одной единицы, номер токена. Градиент на порции затрагивает только строки встретившихся токенов, и смысл у строк разный: это отдельные векторы для отдельных слов. Довод в пользу спектральной нормы — ограничить изменение выхода для <i>любого</i> входа — здесь не работает, а ортогонализация перемешала бы шаги разных слов. Покоординатный AdamW подстраивает шаг под частоту каждого слова, что здесь и нужно.</p></div>
 </section>
 </article>
 <style>
@@ -3291,6 +3934,208 @@ figcaption ul.capl b{font-weight:650;color:var(--ink)}
   document.getElementById('krNew').addEventListener('click',()=>{const r=TB.rng(seed++),z=()=>{let v=0;while(v===0)v=Math.floor(r()*7)-3;return v;};
     A=A.map(row=>row.map(z));B=B.map(row=>row.map(z));A[0][2]=0;draw();});
   draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. shampoo: the Shampoo statistics R, L and their Kronecker product next to the full-matrix AdaGrad matrix S, accumulated example by example. */
+  const cv=document.getElementById('shampoo');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('shFx');
+  const Ax=[[1.4,0,0,0],[0.9,0.6,0,0],[0,0.3,0.5,0],[0.2,0,0.4,0.3]],Ad=[[1.0,0,0],[-0.7,0.5,0],[0.3,0.3,0.35]],M=[[1,-1,0,0.5],[0,1,1,0],[0.5,0,-1,1]];
+  const NMAX=300;let mode=TB.seg1(cv.closest('figure').querySelector('.seg'),k=>{mode=k;full();}),S,L,R,N=0,rnd;
+  const mv=(A,v)=>A.map(r=>r.reduce((s,a,j)=>s+a*v[j],0));
+  const zero=(a,b)=>Array.from({length:a},()=>new Float64Array(b));
+  function reset(){S=zero(12,12);L=zero(3,3);R=zero(4,4);N=0;rnd=TB.rng(mode==='ind'?11:12);}
+  function add(){const z4=[0,1,2,3].map(()=>TB.gauss(rnd)),x=mv(Ax,z4);
+    const d=mode==='ind'?mv(Ad,[0,1,2].map(()=>TB.gauss(rnd))):mv(M,x).map(v=>0.6*v+0.25*TB.gauss(rnd));
+    const g=[];for(let b=0;b<4;b++)for(let a=0;a<3;a++)g.push(d[a]*x[b]);
+    for(let i=0;i<12;i++)for(let j=0;j<12;j++)S[i][j]+=g[i]*g[j];
+    const xx=x.reduce((s,v)=>s+v*v,0),dd=d.reduce((s,v)=>s+v*v,0);
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++)L[i][j]+=xx*d[i]*d[j];
+    for(let i=0;i<4;i++)for(let j=0;j<4;j++)R[i][j]+=dd*x[i]*x[j];N++;}
+  const kron=()=>{const K=zero(12,12);for(let i=0;i<12;i++)for(let j=0;j<12;j++)K[i][j]=R[Math.floor(i/3)][Math.floor(j/3)]*L[i%3][j%3];return K;};
+  const fro=A=>Math.sqrt(A.reduce((s,r)=>s+r.reduce((t,v)=>t+v*v,0),0));
+  function draw(){
+    const F=TB.fit(cv,W=>W<560?Math.round(26+16*4+44+12*Math.min(13,Math.floor((W-44)/24))+12):34+12*16+16),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,c1=16,c2=sm?Math.min(13,Math.floor((W-44)/24)):16;
+    const KR=kron();
+    const heat=(A,x0,y0,cs,title)=>{const n=A.length;let mx=1e-12;A.forEach(r=>r.forEach(v=>mx=Math.max(mx,Math.abs(v))));
+      for(let i=0;i<n;i++)for(let j=0;j<n;j++){const v=A[i][j]/mx;c.fillStyle=TB.rgba(v>=0?K.warm:K.eth,0.06+0.8*Math.sqrt(Math.abs(v)));c.fillRect(x0+j*cs,y0+i*cs,cs-1,cs-1);}
+      c.strokeStyle=K.rule;c.lineWidth=1;c.strokeRect(x0-0.5,y0-0.5,n*cs,n*cs);
+      if(n===12){c.strokeStyle=TB.rgba(K.ink,0.5);for(let k=1;k<4;k++){c.beginPath();c.moveTo(x0+3*k*cs-0.5,y0);c.lineTo(x0+3*k*cs-0.5,y0+12*cs);c.moveTo(x0,y0+3*k*cs-0.5);c.lineTo(x0+12*cs,y0+3*k*cs-0.5);c.stroke();}}
+      TB.rich(c,title,x0+n*cs/2,y0-9,s+1,K.ink,'center');};
+    const sym=(t,x,y)=>{c.fillStyle=K.ink;c.font=(s+4)+'px '+TB.serif;c.textAlign='center';c.fillText(t,x,y);c.textAlign='start';};
+    if(!sm){const g=26,tw=4*c1+g+3*c1+g+12*c2+40+12*c2,x0=Math.round((W-tw)/2),yb=34,ym=yb+6*c2;
+      heat(R,x0,ym-2*c1,c1,[['R','i']]);sym('⊗',x0+4*c1+g/2,ym+5);heat(L,x0+4*c1+g,ym-1.5*c1,c1,[['L','i']]);sym('=',x0+7*c1+1.5*g,ym+5);
+      const xk=x0+7*c1+2*g;heat(KR,xk,yb,c2,[['R','i'],[' ⊗ ','r'],['L','i']]);heat(S,xk+12*c2+40,yb,c2,[['S','i'],[' (AdaGrad)','r']]);if(mode==='ind')sym('≈',xk+12*c2+20,ym+5);}
+    else{const g=24,tw=4*c1+g+3*c1,x0=Math.round((W-tw)/2),y1=26;heat(R,x0,y1,c1,[['R','i']]);sym('⊗',x0+4*c1+g/2,y1+2*c1+5);heat(L,x0+4*c1+g,y1+0.5*c1,c1,[['L','i']]);
+      const y2=y1+4*c1+44,xk=Math.round((W-24*c2-20)/2);heat(KR,xk,y2,c2,[['R','i'],[' ⊗ ','r'],['L','i']]);heat(S,xk+12*c2+20,y2,c2,[['S','i']]);}
+    const a=fro(S),b=fro(KR);let e=0;for(let i=0;i<12;i++)for(let j=0;j<12;j++)e+=(S[i][j]/a-KR[i][j]/b)**2;
+    fx.innerHTML=TB.rows([['примеров: '+N+',','расхождение <i>S</i> и <i>R</i> ⊗ <i>L</i>: '+(N?TB.fmt(Math.sqrt(e),3):'—')]]);
+  }
+  function full(){pl.stop();reset();while(N<NMAX)add();draw();}
+  const pl=TB.player(()=>{const k=N<30?1:N<100?2:5;for(let i=0;i<k&&N<NMAX;i++)add();draw();return N<NMAX;},60);
+  document.getElementById('shRun').addEventListener('click',()=>{reset();draw();pl.start();});
+  full();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Shared: eigen-decomposition of a symmetric matrix by Jacobi rotations; returns {w, V} with V's columns the eigenvectors. */
+  window.TB=window.TB||{};
+  TB.jacobi=function(A0){const n=A0.length,A=A0.map(r=>Float64Array.from(r)),V=Array.from({length:n},(_,i)=>{const r=new Float64Array(n);r[i]=1;return r;});
+    for(let sw=0;sw<60;sw++){let off=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)off+=A[i][j]*A[i][j];if(off<1e-22)break;
+      for(let p=0;p<n;p++)for(let q=p+1;q<n;q++){if(Math.abs(A[p][q])<1e-300)continue;
+        const th=(A[q][q]-A[p][p])/(2*A[p][q]),t=Math.sign(th||1)/(Math.abs(th)+Math.sqrt(th*th+1)),c=1/Math.sqrt(t*t+1),s=t*c;
+        for(let k=0;k<n;k++){const a=A[k][p],b=A[k][q];A[k][p]=c*a-s*b;A[k][q]=s*a+c*b;}
+        for(let k=0;k<n;k++){const a=A[p][k],b=A[q][k];A[p][k]=c*a-s*b;A[q][k]=s*a+c*b;}
+        for(let k=0;k<n;k++){const a=V[k][p],b=V[k][q];V[k][p]=c*a-s*b;V[k][q]=s*a+c*b;}}}
+    return {w:A.map((r,i)=>r[i]),V:V};};
+})();
+(function(){
+  /* Fig. ortho: the gradient of a 16×12 layer on a batch and its orthogonalization, as heat maps with their singular values. */
+  const cv=document.getElementById('ortho');if(!cv||!window.TB||!TB.fit)return;
+  const sb=document.getElementById('orB'),ob=document.getElementById('orBOut'),fx=document.getElementById('orFx');
+  const m=16,n=12;let seed=3,G,O,sv;
+  const mkA=(d,r)=>{const A=[];for(let i=0;i<d;i++){A.push([]);for(let j=0;j<d;j++)A[i].push(TB.gauss(r)*Math.pow(0.72,j));}return A;};
+  function make(){const b=+sb.value;ob.textContent=b;const r=TB.rng(seed),Ax=mkA(n,r),Ad=mkA(m,r);
+    G=Array.from({length:m},()=>new Float64Array(n));
+    for(let k=0;k<b;k++){const zx=[],zd=[];for(let j=0;j<n;j++)zx.push(TB.gauss(r));for(let j=0;j<m;j++)zd.push(TB.gauss(r));
+      const x=Ax.map(row=>row.reduce((s,a,j)=>s+a*zx[j],0)),d=Ad.map(row=>row.reduce((s,a,j)=>s+a*zd[j],0));
+      for(let i=0;i<m;i++)for(let j=0;j<n;j++)G[i][j]+=d[i]*x[j];}
+    const GtG=[];for(let i=0;i<n;i++){GtG.push([]);for(let j=0;j<n;j++){let s=0;for(let k=0;k<m;k++)s+=G[k][i]*G[k][j];GtG[i].push(s);}}
+    const E=TB.jacobi(GtG),idx=E.w.map((w,i)=>i).sort((a,b)=>E.w[b]-E.w[a]);
+    sv=idx.map(i=>Math.sqrt(Math.max(0,E.w[i])));const tol=sv[0]*1e-6;
+    /* U V^T = G V diag(1/σ) V^T over the nonzero singular values */
+    const P=Array.from({length:n},()=>new Float64Array(n));
+    idx.forEach((i,k)=>{if(sv[k]<=tol)return;for(let a=0;a<n;a++)for(let c=0;c<n;c++)P[a][c]+=E.V[a][i]*E.V[c][i]/sv[k];});
+    O=G.map(row=>{const o=new Float64Array(n);for(let c=0;c<n;c++){let s=0;for(let a=0;a<n;a++)s+=row[a]*P[a][c];o[c]=s;}return o;});
+    sv=sv.map(v=>v>tol?v:0);}
+  function draw(){
+    const csOf=W=>W<560?Math.min(12,Math.floor((W-74)/24)):14;
+    const F=TB.fit(cv,W=>30+m*csOf(W)+26+100+20),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,cs=csOf(W),gap=sm?30:80,pw=n*cs,x0=Math.max(36,Math.round((W-2*pw-gap)/2)),y0=30;
+    const heat=(A,xa,title)=>{let mx=1e-12;A.forEach(r=>r.forEach(v=>mx=Math.max(mx,Math.abs(v))));
+      for(let i=0;i<m;i++)for(let j=0;j<n;j++){const v=A[i][j]/mx;c.fillStyle=TB.rgba(v>=0?K.warm:K.eth,0.05+0.85*Math.sqrt(Math.abs(v)));c.fillRect(xa+j*cs,y0+i*cs,cs-1,cs-1);}
+      c.strokeStyle=K.rule;c.lineWidth=1;c.strokeRect(xa-0.5,y0-0.5,pw,m*cs);TB.rich(c,title,xa+pw/2,y0-9,s+1,K.ink,'center');};
+    heat(G,x0,[['G','i']]);heat(O,x0+pw+gap,[['U','i'],['V','i'],['ᵀ','r']]);
+    c.fillStyle=K.ink;c.font=(s+6)+'px '+TB.serif;c.textAlign='center';c.fillText('→',x0+pw+gap/2,y0+m*cs/2+5);c.textAlign='start';
+    /* singular values, log scale from 1e-3 to 1 relative to the largest */
+    const yb=y0+m*cs+26,hb=86,Ylog=v=>yb+hb*(1-(Math.log10(v)+3)/3);
+    const bars=(vals,xa,col)=>{c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(xa,yb);c.lineTo(xa,yb+hb);c.lineTo(xa+pw,yb+hb);c.stroke();
+      [1,0.1,0.01,0.001].forEach((v,i)=>{c.strokeStyle=TB.rgba(K.rule,0.6);c.setLineDash([2,3]);c.beginPath();c.moveTo(xa,Ylog(v));c.lineTo(xa+pw,Ylog(v));c.stroke();c.setLineDash([]);
+        if(xa===x0){c.fillStyle=K.muted;c.font=(s-2)+'px '+TB.ui;c.textAlign='right';c.fillText(['1','0,1','0,01','0,001'][i],xa-4,Ylog(v)+4);c.textAlign='start';}});
+      const bw=pw/n;vals.forEach((v,k)=>{if(v<=0){c.fillStyle=K.muted;c.font=(s-3)+'px '+TB.ui;c.textAlign='center';c.fillText('0',xa+(k+0.5)*bw,yb+hb-3);c.textAlign='start';return;}
+        const y=Ylog(Math.max(v,1e-3));c.fillStyle=TB.rgba(col,0.75);c.fillRect(xa+k*bw+1.5,y,bw-3,yb+hb-y);});};
+    bars(sv.map(v=>v/sv[0]),x0,K.warm);bars(sv.map(v=>v>0?1:0),x0+pw+gap,K.eth);
+    TB.rich(c,[['σ','i'],['i','s'],[' / ','r'],['σ','i'],['1','s']],x0+pw/2,yb+hb+18,s,K.muted,'center');
+    TB.rich(c,[['сингулярные числа','r']],x0+pw+gap+pw/2,yb+hb+18,s,K.muted,'center');
+    const r=sv.filter(v=>v>0).length,last=sv[r-1];
+    fx.innerHTML=TB.rows([['ранг '+r+';','<i>σ</i><sub>1</sub> / <i>σ</i><sub>'+r+'</sub> = '+(r>1?TB.fmt(sv[0]/last,sv[0]/last<100?1:0):'1')+' у <i>G</i>,','1 у <i>UV</i><sup>⊤</sup>']]);
+  }
+  sb.addEventListener('input',()=>{make();draw();});
+  document.getElementById('orNew').addEventListener('click',()=>{seed++;make();draw();});
+  make();draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+(function(){
+  /* Fig. ns: Newton–Schulz iterations: the polynomial with a cobweb, and eight singular values driven towards one. */
+  const cv=document.getElementById('ns');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('nsFx'),KMAX=20;
+  const P={c3:s=>(3*s-s*s*s)/2,c5:s=>3.4445*s-4.7750*s**3+2.0315*s**5};
+  const S0=[0.002,0.005,0.012,0.03,0.08,0.2,0.45,1];
+  let mode=TB.seg1(cv.closest('figure').querySelector('.seg'),k=>{mode=k;draw();}),k=3,s0=0.1,geo=null;
+  function draw(){
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.55):360),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,p=P[mode];
+    let A1,A2;
+    if(!sm){A1={L:40,T:16,R:Math.round(W*0.42),B:H-30};A2={L:Math.round(W*0.42)+60,T:16,R:W-12,B:H-30};}
+    else{const h=Math.round((H-60)/2);A1={L:40,T:12,R:W-14,B:12+h};A2={L:40,T:h+52,R:W-14,B:H-30};}
+    /* left: the polynomial and the cobweb */
+    const ax=TB.axes(c,{L:A1.L,T:A1.T,R:A1.R,B:A1.B,x0:0,x1:1.3,y0:0,y1:1.3,xt:[0,0.5,1],yt:[0,0.5,1],s:s,xl:[['σ','i']],yl:[['p','i'],['(','r'],['σ','i'],[')','r']]},K);geo=ax;
+    c.save();c.beginPath();c.rect(A1.L,A1.T,A1.R-A1.L,A1.B-A1.T);c.clip();
+    if(mode==='c5'){c.fillStyle=TB.rgba(K.sage,0.14);c.fillRect(A1.L,ax.Y(1.2),A1.R-A1.L,ax.Y(0.7)-ax.Y(1.2));}
+    c.strokeStyle=TB.rgba(K.muted,0.8);c.lineWidth=1.2;c.setLineDash([5,4]);c.beginPath();c.moveTo(ax.X(0),ax.Y(0));c.lineTo(ax.X(1.3),ax.Y(1.3));c.stroke();c.setLineDash([]);
+    c.strokeStyle=K.eth;c.lineWidth=2.4;c.beginPath();for(let i=0;i<=300;i++){const x=1.3*i/300;i?c.lineTo(ax.X(x),ax.Y(p(x))):c.moveTo(ax.X(x),ax.Y(p(x)));}c.stroke();
+    c.strokeStyle=K.warm;c.lineWidth=1.5;c.beginPath();let x=s0;c.moveTo(ax.X(x),ax.Y(0));
+    for(let i=0;i<k;i++){const y=p(x);c.lineTo(ax.X(x),ax.Y(y));c.lineTo(ax.X(y),ax.Y(y));x=y;}c.stroke();
+    c.restore();
+    TB.dot(c,ax.X(s0),ax.Y(0),K.warm,K,5.5);TB.tag(c,[['σ','i'],['0','s']],ax.X(s0)+8,ax.Y(0)-8,s,K.warm,K);
+    /* right: eight values across the iterations, log scale */
+    const Y0=-3,Y1=Math.log10(2);
+    const ay=TB.axes(c,{L:A2.L,T:A2.T,R:A2.R,B:A2.B,x0:0,x1:KMAX,y0:Y0,y1:Y1,xt:[0,5,10,15,20],s:s,xl:[['итерация','r']]},K);
+    c.fillStyle=K.muted;c.font=(s-1)+'px '+TB.ui;c.textAlign='right';[[0,'1'],[-1,'0,1'],[-2,'0,01'],[-3,'0,001']].forEach(([v,t])=>{c.fillText(t,A2.L-6,ay.Y(v)+4);});c.textAlign='start';
+    if(mode==='c5'){c.fillStyle=TB.rgba(K.sage,0.14);c.fillRect(A2.L,ay.Y(Math.log10(1.2)),A2.R-A2.L,ay.Y(Math.log10(0.7))-ay.Y(Math.log10(1.2)));}
+    c.strokeStyle=TB.rgba(K.ink,0.6);c.setLineDash([5,4]);c.lineWidth=1.2;c.beginPath();c.moveTo(A2.L,ay.Y(0));c.lineTo(A2.R,ay.Y(0));c.stroke();c.setLineDash([]);
+    const cur=[];
+    S0.forEach((v0,j)=>{let v=v0;c.strokeStyle=TB.rgba(K.eth,0.75);c.lineWidth=1.6;c.beginPath();c.moveTo(ay.X(0),ay.Y(Math.log10(v)));
+      for(let i=1;i<=k;i++){v=p(v);c.lineTo(ay.X(i),ay.Y(Math.log10(Math.max(v,1e-3))));}c.stroke();cur.push(v);
+      TB.dot(c,ay.X(k),ay.Y(Math.log10(Math.max(v,1e-3))),K.eth,K,3.5);});
+    const lo=Math.min(...cur),hi=Math.max(...cur);
+    fx.innerHTML=TB.rows([['итераций: '+k+';','восемь чисел лежат от '+TB.fmt(lo,lo<0.01?4:3)+' до '+TB.fmt(hi,3)]]);
+    document.getElementById('nsStep').disabled=k>=KMAX;
+  }
+  document.getElementById('nsStep').addEventListener('click',()=>{if(k<KMAX)k++;draw();});
+  document.getElementById('nsReset').addEventListener('click',()=>{k=0;draw();});
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(s0),py-geo.Y(0))<(t?24:13)?1:null;},
+    move:(h,px)=>{s0=Math.max(0.005,Math.min(1.2,(px-geo.X(0))/(geo.X(1)-geo.X(0))));redraw();}});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
+  /* Fig. final: gradient descent, Adam, Shampoo and Muon on the matrix least-squares problem, with the axes aligned or rotated. */
+  const cv=document.getElementById('final');if(!cv||!window.TB||!TB.fit||!TB.jacobi)return;
+  const sA=document.getElementById('fnA'),sB=document.getElementById('fnB'),oA=document.getElementById('fnAOut'),oB=document.getElementById('fnBOut'),fx=document.getElementById('fnFx');
+  const n=6,NS=200,Y0=-12;let mode=TB.seg1(cv.closest('figure').querySelector('.seg'),k=>{mode=k;compute();draw();}),res=null,shown=NS;
+  const Z=()=>Array.from({length:n},()=>new Float64Array(n)),I=()=>{const A=Z();for(let i=0;i<n;i++)A[i][i]=1;return A;};
+  const mul=(A,B)=>{const C=Z();for(let i=0;i<n;i++)for(let l=0;l<n;l++){const a=A[i][l];if(a)for(let j=0;j<n;j++)C[i][j]+=a*B[l][j];}return C;};
+  const T=A=>{const C=Z();for(let i=0;i<n;i++)for(let j=0;j<n;j++)C[i][j]=A[j][i];return C;};
+  const add=(A,B,s)=>{const C=Z();for(let i=0;i<n;i++)for(let j=0;j<n;j++)C[i][j]=A[i][j]+s*B[i][j];return C;};
+  const sc=(A,s)=>add(Z(),A,s),fro=A=>{let s=0;for(const r of A)for(const v of r)s+=v*v;return Math.sqrt(s);};
+  const pw=(S,p)=>{const E=TB.jacobi(S),R=Z();for(let k=0;k<n;k++){const l=Math.pow(Math.max(E.w[k],1e-300),p);for(let i=0;i<n;i++)for(let j=0;j<n;j++)R[i][j]+=E.V[i][k]*l*E.V[j][k];}return R;};
+  const rot=r=>{const Q=I();for(let t=0;t<16;t++){const i=Math.floor(r()*n),j=(i+1+Math.floor(r()*(n-1)))%n,a=r()*6.283,c=Math.cos(a),s=Math.sin(a);for(let k=0;k<n;k++){const x=Q[k][i],y=Q[k][j];Q[k][i]=c*x-s*y;Q[k][j]=s*x+c*y;}}return Q;};
+  function ns5(G){let X=sc(G,1/(fro(G)+1e-300));for(let i=0;i<5;i++){const A=mul(X,T(X)),B=add(sc(A,-4.7750),mul(A,A),2.0315);X=add(sc(X,3.4445),mul(B,X),1);}return X;}
+  function compute(){
+    const ka=Math.pow(10,+sA.value),kb=Math.pow(10,+sB.value);oA.textContent=TB.fmt(ka,ka<10?1:0);oB.textContent=TB.fmt(kb,kb<10?1:0);
+    const r=TB.rng(5),D=k=>{const A=Z();for(let i=0;i<n;i++)A[i][i]=Math.pow(k,-i/(n-1));return A;};
+    const Qa=rot(r),Qb=rot(r),Wd=Z();for(let i=0;i<n;i++)for(let j=0;j<n;j++)Wd[i][j]=2*r()-1;
+    let A=D(ka),B=D(kb),Ws=Wd;if(mode==='rot'){A=mul(mul(Qa,A),T(Qa));B=mul(mul(Qb,B),T(Qb));Ws=mul(mul(Qa,Wd),T(Qb));}
+    const AtA=mul(T(A),A),BBt=mul(B,T(B));
+    const loss=W=>{const E=mul(mul(A,add(W,Ws,-1)),B);return 0.5*fro(E)**2;},grad=W=>mul(mul(AtA,add(W,Ws,-1)),BBt);
+    const f0=loss(Z()),out={gd:[0],adam:[0],sham:[0],muon:[0]};
+    const lg=W=>Math.max(Y0,Math.log10(Math.max(loss(W)/f0,1e-300)));
+    let W=Z();for(let t=0;t<NS;t++){W=add(W,grad(W),-1);out.gd.push(lg(W));}
+    W=Z();let m=Z(),v=Z();for(let t=0;t<NS;t++){const G=grad(W),cs=0.5*(1+Math.cos(Math.PI*t/NS));
+      for(let i=0;i<n;i++)for(let j=0;j<n;j++){m[i][j]=0.9*m[i][j]+0.1*G[i][j];v[i][j]=0.999*v[i][j]+0.001*G[i][j]**2;
+        W[i][j]-=0.1*cs*(m[i][j]/(1-0.9**(t+1)))/(Math.sqrt(v[i][j]/(1-0.999**(t+1)))+1e-15);}out.adam.push(lg(W));}
+    W=Z();let L=sc(I(),1e-12),R=sc(I(),1e-12);for(let t=0;t<NS;t++){const G=grad(W),cs=0.5*(1+Math.cos(Math.PI*t/NS));
+      L=add(L,mul(G,T(G)),1);R=add(R,mul(T(G),G),1);W=add(W,mul(mul(pw(L,-0.25),G),pw(R,-0.25)),-0.5*cs);out.sham.push(lg(W));}
+    W=Z();let M=Z();for(let t=0;t<NS;t++){const G=grad(W),cs=0.5*(1+Math.cos(Math.PI*t/NS));M=add(sc(M,0.9),G,1);W=add(W,ns5(add(G,M,0.9)),-0.1*cs);out.muon.push(lg(W));}
+    res={out:out,kH:ka*ka*kb*kb};}
+  function draw(){
+    const F=TB.fit(cv,W=>W<560?Math.round(W*0.95):400),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,L=sm?40:48;
+    const items=[{k:'line',col:K.ink,t:[['градиентный спуск','r']],m:'gd'},{k:'line',col:K.warm,t:[['Adam','r']],m:'adam'},{k:'line',col:K.sage,t:[['Shampoo','r']],m:'sham'},{k:'line',col:K.eth,t:[['Muon','r']],m:'muon'}];
+    const lgB=TB.legend(c,items,L,W-10,4,s-1);
+    const A=TB.axes(c,{L:L,T:lgB+14,R:W-12,B:H-28,x0:0,x1:NS,y0:Y0,y1:0.5,xt:[0,50,100,150,200],yt:[-12,-8,-4,0],s:s,xl:[['шаг ','r'],['k','i']],yl:[['lg(','r'],['f','i'],['/','r'],['f','i'],['0','s'],[')','r']]},K);
+    c.save();c.beginPath();c.rect(L,lgB+10,W-12-L,H-28-lgB-10);c.clip();
+    items.forEach(it=>{const o=res.out[it.m];c.strokeStyle=it.col;c.lineWidth=2.2;c.beginPath();for(let t=0;t<=shown;t++){const y=A.Y(o[t]);t?c.lineTo(A.X(t),y):c.moveTo(A.X(t),y);}c.stroke();});
+    c.restore();
+    const sci=v=>{const p=Math.pow(10,v);if(v<=Y0+1e-9)return '&lt; 10'+TB.sup(Y0);if(p>=0.01)return TB.fmt(p,3);const e=Math.floor(v),mm=Math.pow(10,v-e);return TB.fmt(mm,1)+'·10'+TB.sup(e);};
+    const fin=m=>sci(res.out[m][shown]);
+    fx.innerHTML=TB.rows([['κ(<i>H</i>) = '+(res.kH<1e4?TB.fmt(res.kH,0):TB.fmt(res.kH/Math.pow(10,Math.floor(Math.log10(res.kH))),1)+'·10'+TB.sup(Math.floor(Math.log10(res.kH))))+';','<i>f</i>/<i>f</i><sub>0</sub> после '+shown+' шагов:'],
+      ['спуск '+fin('gd')+',','Adam '+fin('adam')+','],['Shampoo '+fin('sham')+',','Muon '+fin('muon')]]);
+  }
+  const pl=TB.player(()=>{shown=Math.min(NS,shown+4);draw();return shown<NS;},30);
+  const full=()=>{pl.stop();compute();shown=NS;draw();};
+  sA.addEventListener('input',full);sB.addEventListener('input',full);
+  document.getElementById('fnRun').addEventListener('click',()=>{shown=0;draw();pl.start();});
+  full();TB.onTheme(draw);TB.onResize(cv,draw);
 })();
 </script>
 <script>

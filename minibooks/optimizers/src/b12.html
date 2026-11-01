@@ -1,0 +1,142 @@
+<section id="s12">
+<h2>§12. Матрицы как веса: сингулярное разложение и матричные нормы</h2>
+<p>До сих пор веса нейросети были для нас одним длинным вектором. Но устроены они не так. Основная часть весов — это матрицы линейных слоёв: слой получает на вход вектор $x$ и выдаёт вектор <span class="nw">$y=Wx$.</span> Градиент функции потерь по такой матрице — тоже матрица того же размера, и у неё есть структура, которую вектор не видит: строки, столбцы, ранг, сингулярные числа. Последние методы книги, Shampoo и Muon, построены именно на этой структуре.</p>
+<p>В этом параграфе мы соберём нужный для них язык. Главное в нём — сингулярное разложение: любая матрица действует как поворот, растяжение вдоль осей и ещё один поворот. Через растяжения, то есть сингулярные числа, выражаются все нужные нам матричные нормы, и окажется, что они устроены в точности как нормы $\ell_2$, $\ell_\infty$ и $\ell_1$ из §2, только применённые к сингулярным числам. В конце параграфа появится произведение Кронекера — способ собрать большую матрицу из двух маленьких.</p>
+
+<h3>Градиент по матрице</h3>
+<p>Матрицу $m\times n$ можно считать вектором из $mn$ чисел, и тогда всё, что мы знаем о градиентах, переносится на неё без изменений. Скалярное произведение векторов из $mn$ координат в матричной записи выглядит так.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:frob}} (скалярное произведение и норма Фробениуса)</span>
+Для матриц $A,B$ размера $m\times n$
+<span class="math-wrap">$$\langle A,B\rangle=\sum_{i=1}^m\sum_{j=1}^nA_{ij}B_{ij},\qquad\|A\|_F=\sqrt{\langle A,A\rangle}.$$</span>
+Норма $\|A\|_F$ называется <b>нормой Фробениуса</b>.</div>
+<p>Это обычное евклидово скалярное произведение и обычная евклидова длина, только числа записаны в прямоугольную таблицу. Поэтому для функции $f(W)$ от матрицы определение {{#diff}} дословно даёт градиент <span class="nw">$\nabla f(W)$</span> — матрицу того же размера, что и $W$, с элементами $\partial f/\partial W_{ij}$, и
+<span class="math-wrap">$$f(W+\Delta)=f(W)+\langle\nabla f(W),\Delta\rangle+o(\|\Delta\|_F).$$</span>
+Градиентный спуск по матрице — это градиентный спуск по вектору её элементов, то есть самый крутой спуск в норме Фробениуса. Вопрос этого и следующих параграфов в том, нет ли для матриц более естественного способа мерить шаг.</p>
+<p>Одна формула будет встречаться постоянно. Если $a\in\mathbb R^m$ и $b\in\mathbb R^n$ — столбцы, то $ab^\top$ — матрица $m\times n$ с элементами <span class="nw">$a_ib_j$,</span> и для любой матрицы $\Delta$ того же размера
+<span class="math-wrap">$$\langle ab^\top,\Delta\rangle=\sum_{i,j}a_ib_j\Delta_{ij}=a^\top\Delta\,b.\tag{$\ast$}$$</span>
+Матрицы вида $ab^\top$ называют матрицами ранга один: все их строки пропорциональны вектору <span class="nw">$b^\top$,</span> а все столбцы — вектору <span class="nw">$a$.</span> Следующая лемма объясняет, почему они так важны для нейросетей.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:layergrad}} (градиент по весам линейного слоя)</span>
+Пусть $x\in\mathbb R^n$ — вход слоя, $W$ — матрица $m\times n$, а потери на этом примере равны <span class="nw">$\ell(Wx)$,</span> где $\ell$ дифференцируема в точке <span class="nw">$y=Wx$.</span> Обозначим <span class="nw">$\delta=\nabla\ell(y)\in\mathbb R^m$.</span> Тогда
+<span class="math-wrap">$$\nabla_W\,\ell(Wx)=\delta\,x^\top.$$</span>
+Для порции из $b$ примеров с потерями <span class="nw">$\frac1b\sum_k\ell_k(Wx_k)$</span> градиент равен <span class="nw">$\frac1b\sum_k\delta_kx_k^\top$.</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Сдвиг весов на $\Delta$ сдвигает выход слоя на <span class="nw">$\Delta x$;</span> подставить это в определение градиента $\ell$ и переписать скалярное произведение по формуле <span class="nw">$(\ast)$.</span></div>
+<div class="step"><span class="sh">Шаг 1. Главная часть.</span> По определению {{#diff}} для $\ell$ в точке $y$ и по формуле $(\ast)$
+<span class="math-wrap">$$\begin{aligned}\ell\bigl((W+\Delta)x\bigr)&=\ell(y+\Delta x)=\ell(y)+\delta^\top\Delta x+r(\Delta x)\\&=\ell(y)+\langle\delta x^\top,\Delta\rangle+r(\Delta x).\end{aligned}$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Остаток мал.</span> $i$-я координата $\Delta x$ — скалярное произведение $i$-й строки $\Delta$ с <span class="nw">$x$;</span> по неравенству Коши–Буняковского она по модулю не больше длины строки, умноженной на <span class="nw">$\|x\|$.</span> Складывая квадраты, получаем <span class="nw">$\|\Delta x\|\le\|\Delta\|_F\|x\|$,</span> и, как в шаге 2 доказательства леммы {{#linch}}, <span class="nw">$r(\Delta x)=o(\|\Delta\|_F)$.</span></div>
+<div class="step"><span class="sh">Шаг 3. Порция.</span> Градиент среднего — среднее градиентов.</div>
+</div>
+<p>Итак, градиент по весам слоя на одном примере — матрица ранга один: «внешнее произведение» того, что пришло на вход слоя, и того, как потери чувствуют его выход. Градиент по порции — сумма $b$ таких матриц. Это не мелкая техническая подробность: у градиента-матрицы есть богатая внутренняя геометрия, и ниже мы научимся её видеть.</p>
+
+<h3>Сингулярное разложение</h3>
+<p>Симметричную матрицу спектральная теорема (теорема {{#spectral}}) превращает в растяжения вдоль перпендикулярных осей. У прямоугольной матрицы нет собственных векторов в обычном смысле: она переводит векторы из $\mathbb R^n$ в $\mathbb R^m$, в другое пространство. Но и у неё есть перпендикулярные оси — свои во входном пространстве и свои в выходном.</p>
+
+<div class="stmt"><span class="lbl">{{Теорема:svd}} (сингулярное разложение)</span>
+Пусть $A$ — ненулевая матрица $m\times n$. Тогда найдутся число <span class="nw">$r\ge1$,</span> числа <span class="nw">$\sigma_1\ge\sigma_2\ge\dots\ge\sigma_r\gt0$,</span> ортонормированные векторы $u_1,\dots,u_r\in\mathbb R^m$ и ортонормированные векторы <span class="nw">$v_1,\dots,v_r\in\mathbb R^n$</span> такие, что
+<span class="math-wrap">$$A=\sum_{i=1}^r\sigma_i\,u_iv_i^\top=U\Sigma V^\top,$$</span>
+где $U$ — матрица $m\times r$ со столбцами $u_i$, $V$ — матрица $n\times r$ со столбцами $v_i$, $\Sigma=\operatorname{diag}(\sigma_1,\dots,\sigma_r)$. При этом $Av_i=\sigma_iu_i$, а числа $\sigma_i^2$ — это в точности ненулевые собственные числа матрицы <span class="nw">$A^\top A$.</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Оси во входном пространстве — собственные векторы симметричной матрицы <span class="nw">$A^\top A$;</span> матрица $A$ переводит их в перпендикулярные векторы, которые после нормировки и дают оси в выходном пространстве.</div>
+<div class="step"><span class="sh">Шаг 1. Матрица $A^\top A$.</span> Она симметрична, и по теореме {{#spectral}} у неё есть ортонормированный базис из собственных векторов <span class="nw">$q_1,\dots,q_n$</span> с числами <span class="nw">$\lambda_j$.</span> Все они неотрицательны: <span class="nw">$\lambda_j=q_j^\top A^\top Aq_j=\|Aq_j\|^2\ge0$.</span> Упорядочим их по убыванию; пусть положительны первые $r$ из них. Хотя бы одно положительно: иначе $Aq_j=0$ для всех векторов базиса, и <span class="nw">$A=0$.</span></div>
+<div class="step"><span class="sh">Шаг 2. Оси.</span> Положим <span class="nw">$v_i=q_i$,</span> <span class="nw">$\sigma_i=\sqrt{\lambda_i}$</span> и <span class="nw">$u_i=Av_i/\sigma_i$</span> при <span class="nw">$i\le r$.</span> Векторы $u_i$ ортонормированы:
+<span class="math-wrap">$$\langle u_i,u_j\rangle=\frac{v_i^\top A^\top Av_j}{\sigma_i\sigma_j}=\frac{\lambda_j\langle v_i,v_j\rangle}{\sigma_i\sigma_j},$$</span>
+а это $1$ при $i=j$ и $0$ при <span class="nw">$i\ne j$.</span></div>
+<div class="step"><span class="sh">Шаг 3. Разложение.</span> Сравним $A$ и $B=\sum_i\sigma_iu_iv_i^\top$ на базисе <span class="nw">$q_1,\dots,q_n$.</span> При $j\le r$ имеем <span class="nw">$Bq_j=\sigma_ju_j=Aq_j$.</span> При $j\gt r$ число $\lambda_j=0$, поэтому <span class="nw">$\|Aq_j\|^2=\lambda_j=0$,</span> а $Bq_j=0$, потому что $q_j$ перпендикулярен всем <span class="nw">$v_i$.</span> Линейные отображения, совпадающие на базисе, равны.</div>
+<div class="step"><span class="sh">Шаг 4. Собственные числа.</span> По построению <span class="nw">$Av_i=\sigma_iu_i$,</span> а ненулевые собственные числа $A^\top A$ — это <span class="nw">$\lambda_i=\sigma_i^2$.</span></div>
+</div>
+<p>Числа $\sigma_i$ называются <b>сингулярными числами</b> матрицы, векторы $v_i$ и $u_i$ — правыми и левыми <b>сингулярными векторами</b>. Сами векторы определены не однозначно (например, можно одновременно сменить знак у $u_i$ и <span class="nw">$v_i$),</span> но сингулярные числа однозначны: это корни из ненулевых собственных чисел <span class="nw">$A^\top A$.</span></p>
+<p>Геометрический смысл разложения такой. Возьмём вектор $x$ и разложим его по осям <span class="nw">$v_i$:</span> координаты — это <span class="nw">$c_i=\langle v_i,x\rangle$,</span> и умножение на $V^\top$ просто вычисляет эти координаты. Умножение на $\Sigma$ растягивает $i$-ю координату в $\sigma_i$ раз, а умножение на $U$ откладывает получившиеся числа вдоль осей $u_i$ выходного пространства. В итоге единичная окружность (единичная сфера) переходит в эллипс (эллипсоид) с полуосями $\sigma_iu_i$: <b>матрица — это поворот, растяжение вдоль осей и ещё один поворот</b>. Направления, перпендикулярные всем $v_i$, матрица просто обнуляет.</p>
+
+<figure>
+  <div class="fig1"><canvas id="svd" width="760" height="320" aria-label="Сингулярное разложение матрицы 2 на 2: единичная окружность, растяжение вдоль осей и эллипс-образ"></canvas></div>
+  <div id="svdFx" class="fx" aria-live="polite"></div>
+  <figcaption>{{Рис:fsvd}}. Матрица $2\times2$ как поворот, растяжение и поворот. Флажок внутри окружности показывает, как поворачивается и растягивается плоскость; серые точки — базисные векторы $e_1,e_2$ и их образы.
+<ul class="capl">
+<li><b>Слева</b> — единичная окружность и правые сингулярные векторы $v_1$ (тёплый) и $v_2$ (зелёный);</li>
+<li><b>в середине</b> — та же картинка после умножения на $V^\top$ и <span class="nw">$\Sigma$:</span> оси $v_i$ легли на оси координат и растянулись в $\sigma_i$ раз;</li>
+<li><b>справа</b> — образ окружности под действием <span class="nw">$A=U\Sigma V^\top$:</span> эллипс с полуосями <span class="nw">$\sigma_1u_1$</span> и <span class="nw">$\sigma_2u_2$.</span></li>
+</ul>
+Справа тёмными точками отмечены столбцы матрицы, то есть образы $Ae_1$ и <span class="nw">$Ae_2$;</span> их можно перетаскивать, меняя матрицу. Если определитель $A$ отрицателен, второй «поворот» $U$ включает зеркальное отражение, и флажок справа отражён. Под рисунком — сингулярные числа и три нормы матрицы из этого параграфа.</figcaption>
+</figure>
+
+<h3>Три матричные нормы</h3>
+<p>Норма Фробениуса считает все элементы матрицы равноправными, как будто это просто набор чисел. Но матрица — это отображение, и естественно мерить её тем, насколько сильно она может растянуть вектор.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:opnorm}} (спектральная и ядерная нормы)</span>
+Для матрицы $A$ размера $m\times n$ <b>спектральная норма</b> (операторная норма) — это
+<span class="math-wrap">$$\|A\|_{\mathrm{op}}=\sup_{\|x\|\le1}\|Ax\|,$$</span>
+а <b>ядерная норма</b> — сумма сингулярных чисел: <span class="nw">$\|A\|_{\mathrm{nuc}}=\sigma_1+\dots+\sigma_r$</span> (для нулевой матрицы обе нормы равны нулю).</div>
+<p>Из определения сразу видно главное свойство спектральной нормы: <span class="nw">$\|Ax\|\le\|A\|_{\mathrm{op}}\|x\|$</span> для любого <span class="nw">$x$.</span> Это действительно норма: например, $\|(A+B)x\|\le\|Ax\|+\|Bx\|\le\|A\|_{\mathrm{op}}+\|B\|_{\mathrm{op}}$ при <span class="nw">$\|x\|\le1$.</span> Что ядерная норма — тоже норма, мы увидим чуть позже, из теоремы {{#nucdual}}. Все три нормы выражаются через сингулярные числа.</p>
+
+<div class="stmt"><span class="lbl">{{Предложение:mnorms}} (нормы через сингулярные числа)</span>
+Пусть $A=\sum_i\sigma_iu_iv_i^\top$ — сингулярное разложение. Тогда
+<span class="math-wrap">$$\begin{gathered}\|A\|_F=\sqrt{\sigma_1^2+\dots+\sigma_r^2},\\\|A\|_{\mathrm{op}}=\sigma_1,\qquad\|A\|_{\mathrm{nuc}}=\sigma_1+\dots+\sigma_r,\end{gathered}$$</span>
+и верхняя грань в определении спектральной нормы достигается при <span class="nw">$x=v_1$.</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Матрицы $u_iv_i^\top$ взаимно перпендикулярны и единичны в смысле скалярного произведения Фробениуса; а вектор $x$ под действием $A$ раскладывается на перпендикулярные слагаемые, каждое из которых растягивается в $\sigma_i$ раз.</div>
+<div class="step"><span class="sh">Шаг 1. Фробениус.</span> По формуле $(\ast)$ $\langle u_iv_i^\top,u_jv_j^\top\rangle=u_i^\top u_j\,v_j^\top v_i$, что равно $1$ при $i=j$ и $0$ иначе. Поэтому $\langle A,A\rangle=\sum_{i,j}\sigma_i\sigma_j\langle u_iv_i^\top,u_jv_j^\top\rangle=\sum_i\sigma_i^2$.</div>
+<div class="step"><span class="sh">Шаг 2. Спектральная норма сверху.</span> Пусть <span class="nw">$c_i=\langle v_i,x\rangle$.</span> Тогда <span class="nw">$Ax=\sum_i\sigma_ic_iu_i$,</span> и, так как $u_i$ ортонормированы, $\|Ax\|^2=\sum_i\sigma_i^2c_i^2\le\sigma_1^2\sum_ic_i^2$. Вектор $x-\sum_ic_iv_i$ перпендикулярен всем <span class="nw">$v_i$,</span> поэтому по теореме Пифагора <span class="nw">$\sum_ic_i^2\le\|x\|^2$.</span> Значит, <span class="nw">$\|Ax\|\le\sigma_1\|x\|$.</span></div>
+<div class="step"><span class="sh">Шаг 3. Достижение.</span> $\|Av_1\|=\|\sigma_1u_1\|=\sigma_1$ и <span class="nw">$\|v_1\|=1$.</span> Ядерная норма определена как сумма сингулярных чисел, доказывать здесь нечего.</div>
+</div>
+<p>Посмотрите, что получилось. Если собрать сингулярные числа в вектор <span class="nw">$\sigma=(\sigma_1,\dots,\sigma_r)$,</span> то норма Фробениуса — его длина <span class="nw">$\ell_2$,</span> спектральная норма — его наибольшая координата, то есть <span class="nw">$\ell_\infty$,</span> а ядерная — сумма координат, то есть <span class="nw">$\ell_1$.</span> Три матричные нормы — это три нормы из §2, применённые к сингулярным числам. В §6 нормы $\ell_\infty$ и $\ell_1$ оказались двойственными друг другу. Следующая теорема — то же самое для матриц, и она станет сердцем метода Muon.</p>
+
+<div class="stmt"><span class="lbl">{{Теорема:nucdual}} (двойственность спектральной и ядерной норм)</span>
+Пусть $G=\sum_i\sigma_iu_iv_i^\top=U\Sigma V^\top$ — ненулевая матрица со своим сингулярным разложением. Тогда
+<span class="math-wrap">$$\sup_{\|\Delta\|_{\mathrm{op}}\le1}\langle G,\Delta\rangle=\|G\|_{\mathrm{nuc}},$$</span>
+и верхняя грань достигается при <span class="nw">$\Delta=UV^\top=\sum_iu_iv_i^\top$,</span> причём <span class="nw">$\|UV^\top\|_{\mathrm{op}}=1$.</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Скалярное произведение с $G$ раскладывается на слагаемые <span class="nw">$\sigma_iu_i^\top\Delta v_i$;</span> каждое не больше <span class="nw">$\sigma_i$,</span> потому что $\Delta$ не растягивает векторы больше чем в $1$ раз. Матрица $UV^\top$ переводит каждое $v_i$ ровно в <span class="nw">$u_i$,</span> и все оценки становятся равенствами.</div>
+<div class="step"><span class="sh">Шаг 1. Оценка сверху.</span> Пусть <span class="nw">$\|\Delta\|_{\mathrm{op}}\le1$.</span> По формуле $(\ast)$ и неравенству Коши–Буняковского
+<span class="math-wrap">$$\langle G,\Delta\rangle=\sum_i\sigma_i\,u_i^\top\Delta v_i\le\sum_i\sigma_i\,\|u_i\|\,\|\Delta v_i\|\le\sum_i\sigma_i.$$</span></div>
+<div class="step"><span class="sh">Шаг 2. Достижение.</span> Матрица $UV^\top=\sum_ju_jv_j^\top$ — это сингулярное разложение, в котором все сингулярные числа равны единице, поэтому по предложению {{#mnorms}} её спектральная норма равна <span class="nw">$1$.</span> Так как $v_j^\top v_i$ равно $1$ при $j=i$ и $0$ иначе, <span class="nw">$UV^\top v_i=u_i$,</span> и $\langle G,UV^\top\rangle=\sum_i\sigma_iu_i^\top u_i=\sum_i\sigma_i$.</div>
+</div>
+<p>Из теоремы следует, что ядерная норма — действительно норма: верхняя грань линейных по $G$ выражений удовлетворяет неравенству треугольника, как в §6. А матрица $UV^\top$ заслуживает отдельного взгляда. Она получается из $G$ заменой всех сингулярных чисел единицами: те же оси, тот же поворот, но никаких растяжений. Эллипс-образ окружности превращается обратно в окружность. Если $G$ квадратная и все $\sigma_i\gt0$, то $UV^\top$ — ортогональная матрица; поэтому переход от $G$ к $UV^\top$ называют <b>ортогонализацией</b>. Для диагональной матрицы с ненулевой диагональю $UV^\top$ — это диагональная матрица из знаков её элементов: ортогонализация — матричный аналог знака числа.</p>
+
+<h3>Степени и сингулярное разложение</h3>
+<p>Методу Shampoo понадобятся отрицательные степени матриц <span class="nw">$GG^\top$</span> и <span class="nw">$G^\top G$.</span> Обе симметричны, но могут иметь нулевые собственные числа, и тогда отрицательная степень не определена. Поэтому к ним добавляют маленькое <span class="nw">$\varepsilon I$,</span> делая их положительно определёнными. Следующая лемма показывает, что получается, когда такая степень умножается на сам <span class="nw">$G$:</span> всё снова сводится к сингулярным числам.</p>
+
+<div class="stmt"><span class="lbl">{{Лемма:epspow}} (степени $GG^\top$ и $G^\top G$)</span>
+Пусть $G=\sum_{i=1}^r\sigma_iu_iv_i^\top$ — сингулярное разложение, $\varepsilon\gt0$ и $p$ — действительное число. Тогда
+<span class="math-wrap">$$(GG^\top+\varepsilon I)^p\,G=G\,(G^\top G+\varepsilon I)^p=\sum_{i=1}^r(\sigma_i^2+\varepsilon)^p\,\sigma_i\,u_iv_i^\top.$$</span></div>
+<div class="proof"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Векторы $u_i$ — собственные векторы $GG^\top$ с числами <span class="nw">$\sigma_i^2$,</span> а на всех перпендикулярных к ним направлениях $GG^\top$ равна нулю. Степень матрицы действует на собственные векторы как степень собственного числа, а $G$ выдаёт векторы только из линейной оболочки <span class="nw">$u_i$.</span></div>
+<div class="step"><span class="sh">Шаг 1. Собственный базис.</span> Дополним ортонормированные векторы <span class="nw">$u_1,\dots,u_r$</span> до ортонормированного базиса <span class="nw">$u_1,\dots,u_m$</span> пространства $\mathbb R^m$ (это всегда можно сделать, например процессом Грама–Шмидта). Так как <span class="nw">$G^\top u_k=\sum_i\sigma_iv_i\,u_i^\top u_k$,</span> имеем <span class="nw">$GG^\top u_k=\sigma_k^2u_k$</span> при $k\le r$ и <span class="nw">$G^\top u_k=0$</span> при <span class="nw">$k\gt r$.</span> Значит, $u_1,\dots,u_m$ — ортонормированный базис из собственных векторов матрицы $GG^\top+\varepsilon I$ с положительными числами $\sigma_k^2+\varepsilon$ при $k\le r$ и $\varepsilon$ при <span class="nw">$k\gt r$.</span></div>
+<div class="step"><span class="sh">Шаг 2. Степень.</span> По определению {{#mpow}} и лемме {{#mpowp}} степень можно вычислять по этому базису: $(GG^\top+\varepsilon I)^p=\sum_k\mu_k^pu_ku_k^\top$, где $\mu_k$ — собственные числа из шага 1. Умножая на <span class="nw">$G=\sum_i\sigma_iu_iv_i^\top$</span> и пользуясь <span class="nw">$u_k^\top u_i=0$</span> при <span class="nw">$k\ne i$,</span> получаем <span class="nw">$\sum_i(\sigma_i^2+\varepsilon)^p\sigma_iu_iv_i^\top$.</span></div>
+<div class="step"><span class="sh">Шаг 3. Правая сторона.</span> Те же рассуждения для $G^\top G$ с базисом, дополняющим <span class="nw">$v_1,\dots,v_r$,</span> дают то же выражение.</div>
+</div>
+
+<h3>Произведение Кронекера</h3>
+<p>Последний инструмент понадобится, чтобы сравнить методы для матриц с методами для векторов. Матрицу весов $W$ размера $m\times n$ можно вытянуть в вектор длины <span class="nw">$mn$,</span> и тогда предобусловливатель для неё — матрица $mn\times mn$. Для слоя $4096\times4096$ это матрица из почти $3\cdot10^{14}$ чисел: хранить её нельзя. Но некоторые огромные матрицы собираются из двух маленьких, и как раз их можно хранить и обращать.</p>
+
+<div class="stmt"><span class="lbl">{{Определение:kron}} (произведение Кронекера и вытягивание матрицы)</span>
+<b>Произведение Кронекера</b> матрицы $A$ размера $p\times q$ и матрицы $B$ размера $s\times t$ — блочная матрица размера $ps\times qt$
+<span class="math-wrap">$$A\otimes B=\begin{pmatrix}a_{11}B&\cdots&a_{1q}B\\\vdots&&\vdots\\a_{p1}B&\cdots&a_{pq}B\end{pmatrix}.$$</span>
+<b>Вытягивание</b> матрицы $X$ размера $m\times n$ — вектор $\operatorname{vec}X\in\mathbb R^{mn}$, составленный из столбцов $X$, поставленных друг под другом.</div>
+<p>Каждый элемент $A$ порождает целый блок: копию матрицы $B$, умноженную на этот элемент. Поэтому элемент произведения Кронекера — это всегда произведение одного элемента $A$ на один элемент <span class="nw">$B$:</span> номер блока говорит, какой элемент $A$ взять, а место внутри блока — какой элемент <span class="nw">$B$.</span></p>
+
+<figure>
+  <div class="fig1"><canvas id="kron" width="760" height="260" aria-label="Произведение Кронекера матрицы 2 на 3 и матрицы 3 на 2 как блочная матрица 6 на 6"></canvas></div>
+  <div class="controls"><div class="btns"><button type="button" class="act" id="krNew">другие матрицы</button></div></div>
+  <div id="krFx" class="fx" aria-live="polite"></div>
+  <figcaption>{{Рис:fkron}}. Произведение Кронекера матрицы $A$ размера $2\times3$ и матрицы $B$ размера <span class="nw">$3\times2$</span> — матрица $6\times6$ из шести блоков <span class="nw">$a_{ij}B$.</span> Наведите указатель (или нажмите) на элемент любой из трёх матриц: в $A\otimes B$ выделится блок, порождённый элементом <span class="nw">$a_{ij}$,</span> а в $A$ и $B$ — два числа, произведение которых стоит в выделенной клетке. Тёплые клетки положительны, фиолетовые отрицательны, бледные — нули; нулевой элемент $A$ даёт целый нулевой блок.</figcaption>
+</figure>
+
+<div class="stmt"><span class="lbl">{{Лемма:kronp}} (свойства произведения Кронекера)</span>
+Для матриц подходящих размеров и столбцов $a\in\mathbb R^m$, <span class="nw">$b\in\mathbb R^n$:</span>
+<ol class="ax" type="a">
+<li>$(A\otimes B)\operatorname{vec}X=\operatorname{vec}(BXA^\top)$;</li>
+<li>$(A\otimes B)(C\otimes D)=(AC)\otimes(BD)$ и <span class="nw">$(A\otimes B)^\top=A^\top\otimes B^\top$;</span></li>
+<li>$\operatorname{vec}(ab^\top)=b\otimes a$ и, следовательно, $\operatorname{vec}(ab^\top)\operatorname{vec}(ab^\top)^\top=(bb^\top)\otimes(aa^\top)$;</li>
+<li>если $A$ и $B$ положительно определены, то и $A\otimes B$ положительно определена, и <span class="nw">$(A\otimes B)^p=A^p\otimes B^p$</span> для любого действительного <span class="nw">$p$.</span></li>
+</ol></div>
+<div class="proof tech"><span class="lbl">Доказательство.</span>
+<div class="plain"><span class="pl">Идея</span>Все пункты — блочное умножение матриц; в пункте (г) произведение Кронекера собственных разложений $A$ и $B$ оказывается собственным разложением <span class="nw">$A\otimes B$.</span></div>
+<div class="step"><span class="sh">Шаг 1. Пункт (а).</span> Пусть $x_l$ — $l$-й столбец <span class="nw">$X$.</span> $j$-й блок вектора $(A\otimes B)\operatorname{vec}X$ равен <span class="nw">$\sum_la_{jl}Bx_l=B\sum_lx_la_{jl}$.</span> Но $\sum_lx_la_{jl}$ — это $j$-й столбец матрицы <span class="nw">$XA^\top$,</span> так что $j$-й блок — $j$-й столбец <span class="nw">$BXA^\top$.</span></div>
+<div class="step"><span class="sh">Шаг 2. Пункт (б).</span> Блок $(i,j)$ произведения равен <span class="nw">$\sum_la_{il}B\,c_{lj}D=(AC)_{ij}\,BD$.</span> Блок $(i,j)$ транспонированной матрицы — транспонированный блок $(j,i)$, то есть <span class="nw">$a_{ji}B^\top$.</span></div>
+<div class="step"><span class="sh">Шаг 3. Пункт (в).</span> $j$-й столбец $ab^\top$ равен <span class="nw">$b_ja$,</span> и вектор из блоков $b_1a,\dots,b_na$ — это <span class="nw">$b\otimes a$.</span> Столбцы $a$ и $b$ — это матрицы размеров $m\times1$ и <span class="nw">$n\times1$,</span> поэтому по пункту (б) $(b\otimes a)(b\otimes a)^\top=(b\otimes a)(b^\top\otimes a^\top)=(bb^\top)\otimes(aa^\top)$.</div>
+<div class="step"><span class="sh">Шаг 4. Пункт (г).</span> Пусть $A=Q_A\Lambda_AQ_A^\top$ и $B=Q_B\Lambda_BQ_B^\top$ — разложения из теоремы {{#spectral}}. По пункту (б)<span class="math-wrap">$$\begin{gathered}A\otimes B=(Q_A\otimes Q_B)(\Lambda_A\otimes\Lambda_B)(Q_A\otimes Q_B)^\top,\\(Q_A\otimes Q_B)^\top(Q_A\otimes Q_B)=I\otimes I=I.\end{gathered}$$</span> Матрица $\Lambda_A\otimes\Lambda_B$ диагональна, на её диагонали стоят положительные произведения <span class="nw">$\lambda_i\mu_j$.</span> Это разложение вида из определения {{#mpow}}, поэтому $A\otimes B$ положительно определена (лемма {{#rayleigh}}), и по лемме {{#mpowp}}(а) её степень можно считать по нему: на диагонали встанут числа <span class="nw">$(\lambda_i\mu_j)^p=\lambda_i^p\mu_j^p$,</span> то есть<span class="math-wrap">$$(A\otimes B)^p=(Q_A\otimes Q_B)(\Lambda_A^p\otimes\Lambda_B^p)(Q_A\otimes Q_B)^\top=A^p\otimes B^p.$$</span></div>
+</div>
+<p>Пункт (а) — главный. Он говорит, что умножение вытянутой матрицы на огромную матрицу $A\otimes B$ размера $mn\times mn$ — это просто умножение самой матрицы $X$ на маленькую $B$ слева и на $A^\top$ справа. Хранить нужно $m^2+n^2$ чисел вместо $m^2n^2$, а умножать — две небольшие матрицы. А пункт (в) вместе с леммой {{#layergrad}} показывает, что произведения Кронекера в нейросетях возникают сами собой: для градиента на одном примере $\operatorname{vec}(\delta x^\top)\operatorname{vec}(\delta x^\top)^\top=(xx^\top)\otimes(\delta\delta^\top)$. Матрица, которую накапливает полноматричный AdaGrad из §11, на одном примере — в точности произведение Кронекера «статистики входов» и «статистики градиентов по выходам». Это наблюдение — отправная точка Shampoo.</p>
+</section>

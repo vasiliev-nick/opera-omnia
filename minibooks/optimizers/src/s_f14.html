@@ -1,0 +1,105 @@
+<script>
+(function(){
+  /* Shared: eigen-decomposition of a symmetric matrix by Jacobi rotations; returns {w, V} with V's columns the eigenvectors. */
+  window.TB=window.TB||{};
+  TB.jacobi=function(A0){const n=A0.length,A=A0.map(r=>Float64Array.from(r)),V=Array.from({length:n},(_,i)=>{const r=new Float64Array(n);r[i]=1;return r;});
+    for(let sw=0;sw<60;sw++){let off=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)off+=A[i][j]*A[i][j];if(off<1e-22)break;
+      for(let p=0;p<n;p++)for(let q=p+1;q<n;q++){if(Math.abs(A[p][q])<1e-300)continue;
+        const th=(A[q][q]-A[p][p])/(2*A[p][q]),t=Math.sign(th||1)/(Math.abs(th)+Math.sqrt(th*th+1)),c=1/Math.sqrt(t*t+1),s=t*c;
+        for(let k=0;k<n;k++){const a=A[k][p],b=A[k][q];A[k][p]=c*a-s*b;A[k][q]=s*a+c*b;}
+        for(let k=0;k<n;k++){const a=A[p][k],b=A[q][k];A[p][k]=c*a-s*b;A[q][k]=s*a+c*b;}
+        for(let k=0;k<n;k++){const a=V[k][p],b=V[k][q];V[k][p]=c*a-s*b;V[k][q]=s*a+c*b;}}}
+    return {w:A.map((r,i)=>r[i]),V:V};};
+})();
+(function(){
+  /* Fig. ortho: the gradient of a 16×12 layer on a batch and its orthogonalization, as heat maps with their singular values. */
+  const cv=document.getElementById('ortho');if(!cv||!window.TB||!TB.fit)return;
+  const sb=document.getElementById('orB'),ob=document.getElementById('orBOut'),fx=document.getElementById('orFx');
+  const m=16,n=12;let seed=3,G,O,sv;
+  const mkA=(d,r)=>{const A=[];for(let i=0;i<d;i++){A.push([]);for(let j=0;j<d;j++)A[i].push(TB.gauss(r)*Math.pow(0.72,j));}return A;};
+  function make(){const b=+sb.value;ob.textContent=b;const r=TB.rng(seed),Ax=mkA(n,r),Ad=mkA(m,r);
+    G=Array.from({length:m},()=>new Float64Array(n));
+    for(let k=0;k<b;k++){const zx=[],zd=[];for(let j=0;j<n;j++)zx.push(TB.gauss(r));for(let j=0;j<m;j++)zd.push(TB.gauss(r));
+      const x=Ax.map(row=>row.reduce((s,a,j)=>s+a*zx[j],0)),d=Ad.map(row=>row.reduce((s,a,j)=>s+a*zd[j],0));
+      for(let i=0;i<m;i++)for(let j=0;j<n;j++)G[i][j]+=d[i]*x[j];}
+    const GtG=[];for(let i=0;i<n;i++){GtG.push([]);for(let j=0;j<n;j++){let s=0;for(let k=0;k<m;k++)s+=G[k][i]*G[k][j];GtG[i].push(s);}}
+    const E=TB.jacobi(GtG),idx=E.w.map((w,i)=>i).sort((a,b)=>E.w[b]-E.w[a]);
+    sv=idx.map(i=>Math.sqrt(Math.max(0,E.w[i])));const tol=sv[0]*1e-6;
+    /* U V^T = G V diag(1/σ) V^T over the nonzero singular values */
+    const P=Array.from({length:n},()=>new Float64Array(n));
+    idx.forEach((i,k)=>{if(sv[k]<=tol)return;for(let a=0;a<n;a++)for(let c=0;c<n;c++)P[a][c]+=E.V[a][i]*E.V[c][i]/sv[k];});
+    O=G.map(row=>{const o=new Float64Array(n);for(let c=0;c<n;c++){let s=0;for(let a=0;a<n;a++)s+=row[a]*P[a][c];o[c]=s;}return o;});
+    sv=sv.map(v=>v>tol?v:0);}
+  function draw(){
+    const csOf=W=>W<560?Math.min(12,Math.floor((W-74)/24)):14;
+    const F=TB.fit(cv,W=>30+m*csOf(W)+26+100+20),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,cs=csOf(W),gap=sm?30:80,pw=n*cs,x0=Math.max(36,Math.round((W-2*pw-gap)/2)),y0=30;
+    const heat=(A,xa,title)=>{let mx=1e-12;A.forEach(r=>r.forEach(v=>mx=Math.max(mx,Math.abs(v))));
+      for(let i=0;i<m;i++)for(let j=0;j<n;j++){const v=A[i][j]/mx;c.fillStyle=TB.rgba(v>=0?K.warm:K.eth,0.05+0.85*Math.sqrt(Math.abs(v)));c.fillRect(xa+j*cs,y0+i*cs,cs-1,cs-1);}
+      c.strokeStyle=K.rule;c.lineWidth=1;c.strokeRect(xa-0.5,y0-0.5,pw,m*cs);TB.rich(c,title,xa+pw/2,y0-9,s+1,K.ink,'center');};
+    heat(G,x0,[['G','i']]);heat(O,x0+pw+gap,[['U','i'],['V','i'],['ᵀ','r']]);
+    c.fillStyle=K.ink;c.font=(s+6)+'px '+TB.serif;c.textAlign='center';c.fillText('→',x0+pw+gap/2,y0+m*cs/2+5);c.textAlign='start';
+    /* singular values, log scale from 1e-3 to 1 relative to the largest */
+    const yb=y0+m*cs+26,hb=86,Ylog=v=>yb+hb*(1-(Math.log10(v)+3)/3);
+    const bars=(vals,xa,col)=>{c.strokeStyle=K.rule;c.lineWidth=1;c.beginPath();c.moveTo(xa,yb);c.lineTo(xa,yb+hb);c.lineTo(xa+pw,yb+hb);c.stroke();
+      [1,0.1,0.01,0.001].forEach((v,i)=>{c.strokeStyle=TB.rgba(K.rule,0.6);c.setLineDash([2,3]);c.beginPath();c.moveTo(xa,Ylog(v));c.lineTo(xa+pw,Ylog(v));c.stroke();c.setLineDash([]);
+        if(xa===x0){c.fillStyle=K.muted;c.font=(s-2)+'px '+TB.ui;c.textAlign='right';c.fillText(['1','0,1','0,01','0,001'][i],xa-4,Ylog(v)+4);c.textAlign='start';}});
+      const bw=pw/n;vals.forEach((v,k)=>{if(v<=0){c.fillStyle=K.muted;c.font=(s-3)+'px '+TB.ui;c.textAlign='center';c.fillText('0',xa+(k+0.5)*bw,yb+hb-3);c.textAlign='start';return;}
+        const y=Ylog(Math.max(v,1e-3));c.fillStyle=TB.rgba(col,0.75);c.fillRect(xa+k*bw+1.5,y,bw-3,yb+hb-y);});};
+    bars(sv.map(v=>v/sv[0]),x0,K.warm);bars(sv.map(v=>v>0?1:0),x0+pw+gap,K.eth);
+    TB.rich(c,[['σ','i'],['i','s'],[' / ','r'],['σ','i'],['1','s']],x0+pw/2,yb+hb+18,s,K.muted,'center');
+    TB.rich(c,[['сингулярные числа','r']],x0+pw+gap+pw/2,yb+hb+18,s,K.muted,'center');
+    const r=sv.filter(v=>v>0).length,last=sv[r-1];
+    fx.innerHTML=TB.rows([['ранг '+r+';','<i>σ</i><sub>1</sub> / <i>σ</i><sub>'+r+'</sub> = '+(r>1?TB.fmt(sv[0]/last,sv[0]/last<100?1:0):'1')+' у <i>G</i>,','1 у <i>UV</i><sup>⊤</sup>']]);
+  }
+  sb.addEventListener('input',()=>{make();draw();});
+  document.getElementById('orNew').addEventListener('click',()=>{seed++;make();draw();});
+  make();draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+(function(){
+  /* Fig. ns: Newton–Schulz iterations: the polynomial with a cobweb, and eight singular values driven towards one. */
+  const cv=document.getElementById('ns');if(!cv||!window.TB||!TB.fit)return;
+  const fx=document.getElementById('nsFx'),KMAX=20;
+  const P={c3:s=>(3*s-s*s*s)/2,c5:s=>3.4445*s-4.7750*s**3+2.0315*s**5};
+  const S0=[0.002,0.005,0.012,0.03,0.08,0.2,0.45,1];
+  let mode=TB.seg1(cv.closest('figure').querySelector('.seg'),k=>{mode=k;draw();}),k=3,s0=0.1,geo=null;
+  function draw(){
+    const F=TB.fit(cv,W=>W<560?Math.round(W*1.55):360),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,p=P[mode];
+    let A1,A2;
+    if(!sm){A1={L:40,T:16,R:Math.round(W*0.42),B:H-30};A2={L:Math.round(W*0.42)+60,T:16,R:W-12,B:H-30};}
+    else{const h=Math.round((H-60)/2);A1={L:40,T:12,R:W-14,B:12+h};A2={L:40,T:h+52,R:W-14,B:H-30};}
+    /* left: the polynomial and the cobweb */
+    const ax=TB.axes(c,{L:A1.L,T:A1.T,R:A1.R,B:A1.B,x0:0,x1:1.3,y0:0,y1:1.3,xt:[0,0.5,1],yt:[0,0.5,1],s:s,xl:[['σ','i']],yl:[['p','i'],['(','r'],['σ','i'],[')','r']]},K);geo=ax;
+    c.save();c.beginPath();c.rect(A1.L,A1.T,A1.R-A1.L,A1.B-A1.T);c.clip();
+    if(mode==='c5'){c.fillStyle=TB.rgba(K.sage,0.14);c.fillRect(A1.L,ax.Y(1.2),A1.R-A1.L,ax.Y(0.7)-ax.Y(1.2));}
+    c.strokeStyle=TB.rgba(K.muted,0.8);c.lineWidth=1.2;c.setLineDash([5,4]);c.beginPath();c.moveTo(ax.X(0),ax.Y(0));c.lineTo(ax.X(1.3),ax.Y(1.3));c.stroke();c.setLineDash([]);
+    c.strokeStyle=K.eth;c.lineWidth=2.4;c.beginPath();for(let i=0;i<=300;i++){const x=1.3*i/300;i?c.lineTo(ax.X(x),ax.Y(p(x))):c.moveTo(ax.X(x),ax.Y(p(x)));}c.stroke();
+    c.strokeStyle=K.warm;c.lineWidth=1.5;c.beginPath();let x=s0;c.moveTo(ax.X(x),ax.Y(0));
+    for(let i=0;i<k;i++){const y=p(x);c.lineTo(ax.X(x),ax.Y(y));c.lineTo(ax.X(y),ax.Y(y));x=y;}c.stroke();
+    c.restore();
+    TB.dot(c,ax.X(s0),ax.Y(0),K.warm,K,5.5);TB.tag(c,[['σ','i'],['0','s']],ax.X(s0)+8,ax.Y(0)-8,s,K.warm,K);
+    /* right: eight values across the iterations, log scale */
+    const Y0=-3,Y1=Math.log10(2);
+    const ay=TB.axes(c,{L:A2.L,T:A2.T,R:A2.R,B:A2.B,x0:0,x1:KMAX,y0:Y0,y1:Y1,xt:[0,5,10,15,20],s:s,xl:[['итерация','r']]},K);
+    c.fillStyle=K.muted;c.font=(s-1)+'px '+TB.ui;c.textAlign='right';[[0,'1'],[-1,'0,1'],[-2,'0,01'],[-3,'0,001']].forEach(([v,t])=>{c.fillText(t,A2.L-6,ay.Y(v)+4);});c.textAlign='start';
+    if(mode==='c5'){c.fillStyle=TB.rgba(K.sage,0.14);c.fillRect(A2.L,ay.Y(Math.log10(1.2)),A2.R-A2.L,ay.Y(Math.log10(0.7))-ay.Y(Math.log10(1.2)));}
+    c.strokeStyle=TB.rgba(K.ink,0.6);c.setLineDash([5,4]);c.lineWidth=1.2;c.beginPath();c.moveTo(A2.L,ay.Y(0));c.lineTo(A2.R,ay.Y(0));c.stroke();c.setLineDash([]);
+    const cur=[];
+    S0.forEach((v0,j)=>{let v=v0;c.strokeStyle=TB.rgba(K.eth,0.75);c.lineWidth=1.6;c.beginPath();c.moveTo(ay.X(0),ay.Y(Math.log10(v)));
+      for(let i=1;i<=k;i++){v=p(v);c.lineTo(ay.X(i),ay.Y(Math.log10(Math.max(v,1e-3))));}c.stroke();cur.push(v);
+      TB.dot(c,ay.X(k),ay.Y(Math.log10(Math.max(v,1e-3))),K.eth,K,3.5);});
+    const lo=Math.min(...cur),hi=Math.max(...cur);
+    fx.innerHTML=TB.rows([['итераций: '+k+';','восемь чисел лежат от '+TB.fmt(lo,lo<0.01?4:3)+' до '+TB.fmt(hi,3)]]);
+    document.getElementById('nsStep').disabled=k>=KMAX;
+  }
+  document.getElementById('nsStep').addEventListener('click',()=>{if(k<KMAX)k++;draw();});
+  document.getElementById('nsReset').addEventListener('click',()=>{k=0;draw();});
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(s0),py-geo.Y(0))<(t?24:13)?1:null;},
+    move:(h,px)=>{s0=Math.max(0.005,Math.min(1.2,(px-geo.X(0))/(geo.X(1)-geo.X(0))));redraw();}});
+  draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>

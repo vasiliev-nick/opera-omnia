@@ -20,7 +20,11 @@ const SHOTS={
   saddle:['saddle',[]],saddleRun:['saddle',[['c','sdRun'],['w',1500]]],saddle0:['saddle',[['v','sdN',0]]],
   bias:['bias',[]],biasHi:['bias',[['v','bsB',0.98]]],biasRun:['bias',[['c','bsRun'],['w',1500]]],
   adam:['adam',[]],adamRot:['adam',[['v','adA',45]]],adamRun:['adam',[['c','adRun'],['w',1000]]],
-  svd:['svd',[]],kron:['kron',[]],kronNew:['kron',[['c','krNew']]]
+  svd:['svd',[]],kron:['kron',[]],kronNew:['kron',[['c','krNew']]],
+  shampoo:['shampoo',[]],shampooDep:['shampoo',[['k','shampoo','dep']]],shampooRun:['shampoo',[['c','shRun'],['w',900]]],
+  ortho:['ortho',[]],ortho1:['ortho',[['v','orB',1]]],orthoBig:['ortho',[['v','orB',24]]],
+  final:['final',[]],finalAx:['final',[['k','final','ax']]],finalHi:['final',[['v','fnA',2],['v','fnB',2]]],
+  ns:['ns',[]],nsQ:['ns',[['k','ns','c5']]],nsQ8:['ns',[['k','ns','c5'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep']]],ns20:['ns',[['k','ns','c3'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep'],['c','nsStep']]]
 };
 (async()=>{const b=await chromium.launch();
   const p=await b.newPage({viewport:{width,height:1000},colorScheme:theme,deviceScaleFactor:width<500?2:1});

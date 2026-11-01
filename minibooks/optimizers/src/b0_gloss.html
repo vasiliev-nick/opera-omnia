@@ -37,17 +37,27 @@
 <li><span class="gs">$b,\ g_k$</span><span class="gd">Размер порции и стохастический градиент по порции. <a class="gref" href="#" data-t="{{@minibatch}}">{{~minibatch}}</a></span></li>
 <li><span class="gs">$\delta_k$</span><span class="gd">Ошибка по значению $f(x_k)-f(x_*)$. <a class="gref" href="#" data-t="{{@sgdconst}}">{{~sgdconst}}</a></span></li>
 <li><span class="gs">$g^2,\ \sqrt v,\ g/v$</span><span class="gd">Покоординатные операции с векторами. <a class="gref" href="#" data-t="#s11">§11</a></span></li>
-<li><span class="gs">$G_k$</span><span class="gd">Сумма квадратов градиентов в AdaGrad. <a class="gref" href="#" data-t="{{@adagrad}}">{{~adagrad}}</a></span></li>
+<li><span class="gs">$G_k$ (в §11)</span><span class="gd">Сумма квадратов градиентов в AdaGrad; начиная с §12 та же буква обозначает градиент-матрицу. <a class="gref" href="#" data-t="{{@adagrad}}">{{~adagrad}}</a></span></li>
 <li><span class="gs">$e_k,\ \hat e_k$</span><span class="gd">Экспоненциальное скользящее среднее и оно же с поправкой на смещение. <a class="gref" href="#" data-t="{{@ema}}">{{~ema}}</a></span></li>
 <li><span class="gs">$m_k,\ v_k,\ \beta_1,\ \beta_2$</span><span class="gd">Скользящие средние градиентов и их квадратов в Adam и их параметры. <a class="gref" href="#" data-t="{{@adam}}">{{~adam}}</a></span></li>
 <li><span class="gs">$S_k$</span><span class="gd">Сумма матриц $g_jg_j^\top$ в полноматричном AdaGrad. <a class="gref" href="#" data-t="{{@fullada}}">{{~fullada}}</a></span></li>
+<li><span class="gs">$\langle A,B\rangle,\ \|A\|_F$</span><span class="gd">Скалярное произведение матриц (сумма произведений элементов) и норма Фробениуса. <a class="gref" href="#" data-t="{{@frob}}">{{~frob}}</a></span></li>
+<li><span class="gs">$W,\ G$</span><span class="gd">Матрица весов линейного слоя и градиент по ней. <a class="gref" href="#" data-t="{{@layergrad}}">{{~layergrad}}</a></span></li>
+<li><span class="gs">$x,\ \delta$</span><span class="gd">Вход слоя и градиент потерь по его выходу; на одном примере $G=\delta x^\top$. <a class="gref" href="#" data-t="{{@layergrad}}">{{~layergrad}}</a></span></li>
+<li><span class="gs">$\sigma_i,\ u_i,\ v_i$</span><span class="gd">Сингулярные числа и левые и правые сингулярные векторы. <a class="gref" href="#" data-t="{{@svd}}">{{~svd}}</a></span></li>
+<li><span class="gs">$U,\ \Sigma,\ V$</span><span class="gd">Матрицы сингулярного разложения $A=U\Sigma V^\top$. <a class="gref" href="#" data-t="{{@svd}}">{{~svd}}</a></span></li>
+<li><span class="gs">$\|A\|_{\mathrm{op}},\ \|A\|_{\mathrm{nuc}}$</span><span class="gd">Спектральная норма (наибольшее растяжение, $\sigma_1$) и ядерная норма (сумма сингулярных чисел). <a class="gref" href="#" data-t="{{@opnorm}}">{{~opnorm}}</a></span></li>
+<li><span class="gs">$UV^\top$</span><span class="gd">Ортогонализация: матрица с теми же сингулярными векторами и единичными сингулярными числами. <a class="gref" href="#" data-t="{{@nucdual}}">{{~nucdual}}</a></span></li>
+<li><span class="gs">$A\otimes B,\ \operatorname{vec}X$</span><span class="gd">Произведение Кронекера и вытягивание матрицы в вектор по столбцам. <a class="gref" href="#" data-t="{{@kron}}">{{~kron}}</a></span></li>
+<li><span class="gs">$L_k,\ R_k$</span><span class="gd">Левая и правая статистики Shampoo: суммы $G_jG_j^\top$ и $G_j^\top G_j$. <a class="gref" href="#" data-t="{{@shampoo}}">{{~shampoo}}</a></span></li>
+<li><span class="gs">$p(X)$</span><span class="gd">Нечётный многочлен от прямоугольной матрицы; действует на каждое сингулярное число. <a class="gref" href="#" data-t="{{@oddpoly}}">{{~oddpoly}}</a></span></li>
+<li><span class="gs">$M_k$</span><span class="gd">Инерция в Muon. <a class="gref" href="#" data-t="{{@muon}}">{{~muon}}</a></span></li>
 </ol></div></nav>
 <article class="book">
 <header class="ch">
   <div class="eyebrow">Мини-учебник</div>
   <h1>Оптимизаторы: от случайного перебора до Muon и Shampoo</h1>
   <p class="lead">Обучение нейросети — это спуск по рельефу функции потерь в густом тумане: видно только, куда склон уходит под ногами. Здесь мы честно разберём, куда и как далеко шагать, и увидим, что «самое крутое направление» зависит от того, как мерить длину шага. Из этой одной мысли вырастают градиентный спуск, знак градиента и Adam, метод Ньютона, натуральный градиент, а в конце — Shampoo и Muon, которые обращаются с градиентом как с матрицей. Нужны анализ функций многих переменных, линейная алгебра и начала теории вероятностей.</p>
-  <p class="lead">Сейчас готовы §1–§11: главная идея книги и все методы для векторов, от метода Ньютона до Adam. Матричные методы, Shampoo и Muon, появятся в следующей части.</p>
   <ul class="toc">
     <li><a href="#s1">§1. Откуда вопрос</a></li>
     <li><a href="#s2">§2. Напоминание и обозначения</a></li>
@@ -60,5 +70,10 @@
     <li><a href="#s9">§9. Инерция: тяжёлый шар и метод Нестерова</a></li>
     <li><a href="#s10">§10. Стохастический градиент</a></li>
     <li><a href="#s11">§11. Адаптивные шаги: AdaGrad, RMSProp, Adam, AdamW</a></li>
+    <li><a href="#s12">§12. Матрицы как веса: сингулярное разложение и матричные нормы</a></li>
+    <li><a href="#s13">§13. Shampoo: полноматричный AdaGrad по частям</a></li>
+    <li><a href="#s14">§14. Muon: самый крутой шаг для матриц</a></li>
+    <li><a href="#s15">§15. Итог: одна задача и все методы</a></li>
+    <li><a href="#s16">§16. Упражнения и вопросы</a></li>
   </ul>
 </header>

@@ -1,0 +1,53 @@
+<script>
+(function(){
+  /* Fig. final: gradient descent, Adam, Shampoo and Muon on the matrix least-squares problem, with the axes aligned or rotated. */
+  const cv=document.getElementById('final');if(!cv||!window.TB||!TB.fit||!TB.jacobi)return;
+  const sA=document.getElementById('fnA'),sB=document.getElementById('fnB'),oA=document.getElementById('fnAOut'),oB=document.getElementById('fnBOut'),fx=document.getElementById('fnFx');
+  const n=6,NS=200,Y0=-12;let mode=TB.seg1(cv.closest('figure').querySelector('.seg'),k=>{mode=k;compute();draw();}),res=null,shown=NS;
+  const Z=()=>Array.from({length:n},()=>new Float64Array(n)),I=()=>{const A=Z();for(let i=0;i<n;i++)A[i][i]=1;return A;};
+  const mul=(A,B)=>{const C=Z();for(let i=0;i<n;i++)for(let l=0;l<n;l++){const a=A[i][l];if(a)for(let j=0;j<n;j++)C[i][j]+=a*B[l][j];}return C;};
+  const T=A=>{const C=Z();for(let i=0;i<n;i++)for(let j=0;j<n;j++)C[i][j]=A[j][i];return C;};
+  const add=(A,B,s)=>{const C=Z();for(let i=0;i<n;i++)for(let j=0;j<n;j++)C[i][j]=A[i][j]+s*B[i][j];return C;};
+  const sc=(A,s)=>add(Z(),A,s),fro=A=>{let s=0;for(const r of A)for(const v of r)s+=v*v;return Math.sqrt(s);};
+  const pw=(S,p)=>{const E=TB.jacobi(S),R=Z();for(let k=0;k<n;k++){const l=Math.pow(Math.max(E.w[k],1e-300),p);for(let i=0;i<n;i++)for(let j=0;j<n;j++)R[i][j]+=E.V[i][k]*l*E.V[j][k];}return R;};
+  const rot=r=>{const Q=I();for(let t=0;t<16;t++){const i=Math.floor(r()*n),j=(i+1+Math.floor(r()*(n-1)))%n,a=r()*6.283,c=Math.cos(a),s=Math.sin(a);for(let k=0;k<n;k++){const x=Q[k][i],y=Q[k][j];Q[k][i]=c*x-s*y;Q[k][j]=s*x+c*y;}}return Q;};
+  function ns5(G){let X=sc(G,1/(fro(G)+1e-300));for(let i=0;i<5;i++){const A=mul(X,T(X)),B=add(sc(A,-4.7750),mul(A,A),2.0315);X=add(sc(X,3.4445),mul(B,X),1);}return X;}
+  function compute(){
+    const ka=Math.pow(10,+sA.value),kb=Math.pow(10,+sB.value);oA.textContent=TB.fmt(ka,ka<10?1:0);oB.textContent=TB.fmt(kb,kb<10?1:0);
+    const r=TB.rng(5),D=k=>{const A=Z();for(let i=0;i<n;i++)A[i][i]=Math.pow(k,-i/(n-1));return A;};
+    const Qa=rot(r),Qb=rot(r),Wd=Z();for(let i=0;i<n;i++)for(let j=0;j<n;j++)Wd[i][j]=2*r()-1;
+    let A=D(ka),B=D(kb),Ws=Wd;if(mode==='rot'){A=mul(mul(Qa,A),T(Qa));B=mul(mul(Qb,B),T(Qb));Ws=mul(mul(Qa,Wd),T(Qb));}
+    const AtA=mul(T(A),A),BBt=mul(B,T(B));
+    const loss=W=>{const E=mul(mul(A,add(W,Ws,-1)),B);return 0.5*fro(E)**2;},grad=W=>mul(mul(AtA,add(W,Ws,-1)),BBt);
+    const f0=loss(Z()),out={gd:[0],adam:[0],sham:[0],muon:[0]};
+    const lg=W=>Math.max(Y0,Math.log10(Math.max(loss(W)/f0,1e-300)));
+    let W=Z();for(let t=0;t<NS;t++){W=add(W,grad(W),-1);out.gd.push(lg(W));}
+    W=Z();let m=Z(),v=Z();for(let t=0;t<NS;t++){const G=grad(W),cs=0.5*(1+Math.cos(Math.PI*t/NS));
+      for(let i=0;i<n;i++)for(let j=0;j<n;j++){m[i][j]=0.9*m[i][j]+0.1*G[i][j];v[i][j]=0.999*v[i][j]+0.001*G[i][j]**2;
+        W[i][j]-=0.1*cs*(m[i][j]/(1-0.9**(t+1)))/(Math.sqrt(v[i][j]/(1-0.999**(t+1)))+1e-15);}out.adam.push(lg(W));}
+    W=Z();let L=sc(I(),1e-12),R=sc(I(),1e-12);for(let t=0;t<NS;t++){const G=grad(W),cs=0.5*(1+Math.cos(Math.PI*t/NS));
+      L=add(L,mul(G,T(G)),1);R=add(R,mul(T(G),G),1);W=add(W,mul(mul(pw(L,-0.25),G),pw(R,-0.25)),-0.5*cs);out.sham.push(lg(W));}
+    W=Z();let M=Z();for(let t=0;t<NS;t++){const G=grad(W),cs=0.5*(1+Math.cos(Math.PI*t/NS));M=add(sc(M,0.9),G,1);W=add(W,ns5(add(G,M,0.9)),-0.1*cs);out.muon.push(lg(W));}
+    res={out:out,kH:ka*ka*kb*kb};}
+  function draw(){
+    const F=TB.fit(cv,W=>W<560?Math.round(W*0.95):400),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<560,s=sm?12:13,L=sm?40:48;
+    const items=[{k:'line',col:K.ink,t:[['градиентный спуск','r']],m:'gd'},{k:'line',col:K.warm,t:[['Adam','r']],m:'adam'},{k:'line',col:K.sage,t:[['Shampoo','r']],m:'sham'},{k:'line',col:K.eth,t:[['Muon','r']],m:'muon'}];
+    const lgB=TB.legend(c,items,L,W-10,4,s-1);
+    const A=TB.axes(c,{L:L,T:lgB+14,R:W-12,B:H-28,x0:0,x1:NS,y0:Y0,y1:0.5,xt:[0,50,100,150,200],yt:[-12,-8,-4,0],s:s,xl:[['шаг ','r'],['k','i']],yl:[['lg(','r'],['f','i'],['/','r'],['f','i'],['0','s'],[')','r']]},K);
+    c.save();c.beginPath();c.rect(L,lgB+10,W-12-L,H-28-lgB-10);c.clip();
+    items.forEach(it=>{const o=res.out[it.m];c.strokeStyle=it.col;c.lineWidth=2.2;c.beginPath();for(let t=0;t<=shown;t++){const y=A.Y(o[t]);t?c.lineTo(A.X(t),y):c.moveTo(A.X(t),y);}c.stroke();});
+    c.restore();
+    const sci=v=>{const p=Math.pow(10,v);if(v<=Y0+1e-9)return '&lt; 10'+TB.sup(Y0);if(p>=0.01)return TB.fmt(p,3);const e=Math.floor(v),mm=Math.pow(10,v-e);return TB.fmt(mm,1)+'·10'+TB.sup(e);};
+    const fin=m=>sci(res.out[m][shown]);
+    fx.innerHTML=TB.rows([['κ(<i>H</i>) = '+(res.kH<1e4?TB.fmt(res.kH,0):TB.fmt(res.kH/Math.pow(10,Math.floor(Math.log10(res.kH))),1)+'·10'+TB.sup(Math.floor(Math.log10(res.kH))))+';','<i>f</i>/<i>f</i><sub>0</sub> после '+shown+' шагов:'],
+      ['спуск '+fin('gd')+',','Adam '+fin('adam')+','],['Shampoo '+fin('sham')+',','Muon '+fin('muon')]]);
+  }
+  const pl=TB.player(()=>{shown=Math.min(NS,shown+4);draw();return shown<NS;},30);
+  const full=()=>{pl.stop();compute();shown=NS;draw();};
+  sA.addEventListener('input',full);sB.addEventListener('input',full);
+  document.getElementById('fnRun').addEventListener('click',()=>{shown=0;draw();pl.start();});
+  full();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
