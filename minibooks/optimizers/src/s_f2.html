@@ -38,6 +38,44 @@
 </script>
 <script>
 (function(){
+  /* Fig. lp: the unit ball of l_p for a chosen p, with the l1, l2 and l-infinity balls for comparison, and the l_p norm of a draggable vector. */
+  const cv=document.getElementById('lp');if(!cv||!window.TB||!TB.fit)return;
+  const sp=document.getElementById('lpP'),op=document.getElementById('lpPOut'),fx=document.getElementById('lpFx');
+  let x=[1.1,0.75],geo=null;
+  const np=(v,p)=>p===Infinity?Math.max(Math.abs(v[0]),Math.abs(v[1])):Math.pow(Math.pow(Math.abs(v[0]),p)+Math.pow(Math.abs(v[1]),p),1/p);
+  const pf=p=>p<10?TB.fmt(p,p<1?2:(Math.abs(p-Math.round(p))<0.02?0:1)):TB.fmt(p,0);
+  function draw(){
+    let p=Math.pow(2,+sp.value);if(Math.abs(p-Math.round(p))<0.03)p=Math.round(p);op.textContent=pf(p);
+    const F=TB.fit(cv,W=>Math.max(300,Math.min(420,Math.round(W*0.58)))),c=F.c,W=F.W,H=F.H,K=TB.cols();
+    c.fillStyle=K.paper;c.fillRect(0,0,W,H);
+    const sm=W<520,s=sm?12:14,R=1.7,sc=(H-16)/(2*R),ox=W/2,oy=H/2,X=v=>ox+v*sc,Y=v=>oy-v*sc;
+    geo={X:X,Y:Y,ux:q=>(q-ox)/sc,uy:q=>(oy-q)/sc};
+    c.strokeStyle=K.muted;c.lineWidth=1;c.beginPath();c.moveTo(X(-R)-60,Y(0));c.lineTo(X(R)+60,Y(0));c.moveTo(X(0),Y(-R));c.lineTo(X(0),Y(R));c.stroke();
+    const ball=(q,col,w,dash,fill)=>{c.beginPath();for(let i=0;i<=720;i++){const a=i/720*2*Math.PI,u=[Math.cos(a),Math.sin(a)],n=np(u,q);i?c.lineTo(X(u[0]/n),Y(u[1]/n)):c.moveTo(X(u[0]/n),Y(u[1]/n));}
+      c.closePath();if(fill){c.fillStyle=TB.rgba(col,0.13);c.fill();}c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash);c.stroke();c.setLineDash([]);};
+    ball(1,TB.rgba(K.sage,0.55),1.2,[4,4]);ball(2,TB.rgba(K.muted,0.55),1.2,[4,4]);ball(Infinity,TB.rgba(K.warm,0.55),1.2,[4,4]);
+    const col=p<1?K.warm:K.eth;ball(p,col,2.6,[],true);
+    TB.tag(c,[['1','r']],X(1)+10,Y(0)+s+4,s-1,K.muted,K,'center');TB.tag(c,[['1','r']],X(0)-10,Y(1)-6,s-1,K.muted,K,'center');
+    TB.tag(c,[['ℓ','i'],['1','s']],X(-0.3),Y(-0.3)+s*0.4,s-1,K.sage,K,'center');
+    TB.tag(c,[['ℓ','i'],['∞','s']],X(-1)-16,Y(1)+4,s-1,K.warm,K,'center');
+    const n=np(x,p),m=np(x,Infinity);
+    /* the vector and the stretched ball through it */
+    if(p>=1){c.save();c.beginPath();c.rect(X(-R),Y(R),2*R*sc,2*R*sc);c.clip();c.globalAlpha=0.6;c.beginPath();for(let i=0;i<=720;i++){const a=i/720*2*Math.PI,u=[Math.cos(a),Math.sin(a)],k=n/np(u,p);i?c.lineTo(X(u[0]*k),Y(u[1]*k)):c.moveTo(X(u[0]*k),Y(u[1]*k));}
+    c.closePath();c.strokeStyle=col;c.lineWidth=1.2;c.setLineDash([2,4]);c.stroke();c.setLineDash([]);c.restore();}
+    TB.arrow(c,X(0),Y(0),X(x[0]),Y(x[1]),K.ink,2);TB.dot(c,X(x[0]),Y(x[1]),K.ink,K,5.5);TB.tag(c,[['x','i']],X(x[0])+10,Y(x[1])-8,s+1,K.ink,K);
+    {const a=2.0,u=[Math.cos(a),Math.sin(a)],k=1/np(u,p)+0.14;TB.tag(c,[['ℓ','i'],[pf(p),'s']],X(u[0]*k),Y(u[1]*k)+s*0.4,s,col,K,'center');}
+    const mk=v=>TB.fmt(v,2);
+    fx.innerHTML=p<1?TB.rows([['<i>p</i> = '+pf(p)+' &lt; 1: шар невыпуклый, неравенство треугольника нарушается']]):
+      TB.rows([['‖<i>x</i>‖<sub>∞</sub> = '+mk(m),'≤','‖<i>x</i>‖<sub><i>p</i></sub> = '+mk(n),'≤','2<sup>1/<i>p</i></sup>‖<i>x</i>‖<sub>∞</sub> = '+mk(Math.pow(2,1/p)*m)]]);
+  }
+  const redraw=TB.raf(draw);
+  TB.drag(cv,{hit:(px,py,t)=>{if(!geo)return null;return Math.hypot(px-geo.X(x[0]),py-geo.Y(x[1]))<(t?26:14)?1:null;},
+    move:(h,px,py)=>{x=[Math.max(-1.6,Math.min(1.6,geo.ux(px))),Math.max(-1.6,Math.min(1.6,geo.uy(py)))];if(Math.hypot(x[0],x[1])<0.05)x=[0.05,0];redraw();}});
+  sp.addEventListener('input',draw);draw();TB.onTheme(draw);TB.onResize(cv,draw);
+})();
+</script>
+<script>
+(function(){
   /* Fig. quad: level lines of x^T A x for A = Q diag(l1, l2) Q^T, with the eigenvectors drawn to the semi-axes of the level-1 ellipse. */
   const cv=document.getElementById('quad');if(!cv||!window.TB||!TB.fit)return;
   const s1=document.getElementById('qdL1'),s2=document.getElementById('qdL2'),sa=document.getElementById('qdA'),fx=document.getElementById('qdFx');

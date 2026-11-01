@@ -4,7 +4,7 @@ const fs=require('fs');const [page,mj,out,theme,wid,only]=process.argv.slice(2);
 /* name: [canvas id, actions]; ['v',input,value], ['k',canvas,data-k] or ['c',button id]. */
 const SHOTS={
   fog:['fog',[]],fogStep:['fog',[['c','fogStep'],['c','fogStep'],['c','fogStep'],['c','fogStep']]],fogMap:['fog',[['k','fog','map'],['c','fogStep'],['c','fogStep'],['c','fogStep']]],
-  balls:['balls',[]],quad:['quad',[]],quadRound:['quad',[['v','qdL1',1],['v','qdL2',1]]],
+  balls:['balls',[]],lp:['lp',[]],lpHalf:['lp',[['v','lpP',-1]]],lpBig:['lp',[['v','lpP',4]]],quad:['quad',[]],quadRound:['quad',[['v','qdL1',1],['v','qdL2',1]]],
   dirs:['dirs',[]],dirsRun:['dirs',[['c','drRun']]],dirs1e4:['dirs',[['v','drD',4],['c','drRun']]],
   anneal:['anneal',[]],annealRun:['anneal',[['c','anRun']]],annealConst:['anneal',[['k','anneal','const'],['c','anRun']]],
   steep:['steep',[]],
@@ -19,7 +19,8 @@ const SHOTS={
   sgd:['sgd',[]],sgdBig:['sgd',[['v','sgB',5]]],sgdRun:['sgd',[['c','sgRun'],['w',1200]]],sgdDecay:['sgd',[['c','sgSch']]],
   saddle:['saddle',[]],saddleRun:['saddle',[['c','sdRun'],['w',1500]]],saddle0:['saddle',[['v','sdN',0]]],
   bias:['bias',[]],biasHi:['bias',[['v','bsB',0.98]]],biasRun:['bias',[['c','bsRun'],['w',1500]]],
-  adam:['adam',[]],adamRot:['adam',[['v','adA',45]]],adamRun:['adam',[['c','adRun'],['w',1000]]]
+  adam:['adam',[]],adamRot:['adam',[['v','adA',45]]],adamRun:['adam',[['c','adRun'],['w',1000]]],
+  svd:['svd',[]],kron:['kron',[]],kronNew:['kron',[['c','krNew']]]
 };
 (async()=>{const b=await chromium.launch();
   const p=await b.newPage({viewport:{width,height:1000},colorScheme:theme,deviceScaleFactor:width<500?2:1});
