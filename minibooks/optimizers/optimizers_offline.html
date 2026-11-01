@@ -480,7 +480,7 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 <li><span class="gs">$\lambda_{\min},\ \lambda_{\max}$</span><span class="gd">Наименьшее и наибольшее собственные числа. <a class="gref" href="#" data-t="Определение 11">Опр. 11</a></span></li>
 <li><span class="gs">$u$</span><span class="gd">Случайное направление: случайный вектор единичной длины. <a class="gref" href="#" data-t="Определение 13">Опр. 13</a></span></li>
 <li><span class="gs">$P(x,y),\ \pi$</span><span class="gd">Переходная матрица цепи Маркова и её стационарное распределение. <a class="gref" href="#" data-t="Определение 16">Опр. 16</a></span></li>
-<li><span class="gs">$T,\ \pi_T,\ Z_T$</span><span class="gd">Температура, распределение Больцмана и его нормировка. <a class="gref" href="#" data-t="Определение 18">Опр. 18</a></span></li>
+<li><span class="gs">$T,\ \pi_T$</span><span class="gd">Температура и распределение Больцмана. <a class="gref" href="#" data-t="Определение 18">Опр. 18</a></span></li>
 <li><span class="gs">$\partial_uf(x)$</span><span class="gd">Производная по направлению <span class="nw">$u$.</span> <a class="gref" href="#" data-t="Определение 21">Опр. 21</a></span></li>
 <li><span class="gs">$\eta$</span><span class="gd">Длина шага (скорость обучения). <a class="gref" href="#" data-t="Лемма 28">Лемма 28</a></span></li>
 <li><span class="gs">$x_k$</span><span class="gd">Точка после $k$ шагов метода. <a class="gref" href="#" data-t="Определение 29">Опр. 29</a></span></li>
@@ -712,11 +712,11 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 <div class="stmt"><span class="lbl">Определение 11 (положительно определённая матрица)</span>
 Симметричная матрица $A$ <b>положительно определена</b>, если $x^\top Ax\gt0$ для всех <span class="nw"><span class="nw">$x\ne0$.</span></span> Её наименьшее и наибольшее собственные числа обозначаются $\lambda_{\min}$ и <span class="nw"><span class="nw">$\lambda_{\max}$.</span></span></div>
 
+<p>Следующая лемма понадобится в §5: она переводит свойства квадратичной функции — насколько круто она может расти и насколько полого — на язык собственных чисел.</p>
 <div class="stmt"><span class="lbl">Лемма 12 (границы квадратичной формы)</span>
 Пусть $A$ — симметричная матрица. Тогда для всех $x\in\mathbb R^d$
 <span class="math-wrap">$$\begin{gathered}\lambda_{\min}\|x\|^2\le x^\top Ax\le\lambda_{\max}\|x\|^2,\\\|Ax\|\le\max_i|\lambda_i|\,\|x\|.\end{gathered}$$</span>
 В частности, $A$ положительно определена тогда и только тогда, когда все её собственные числа положительны.</div>
-<p>Эта лемма понадобится в §5: она переводит свойства квадратичной функции — насколько круто она может расти и насколько полого — на язык собственных чисел.</p>
 <div class="proof"><span class="lbl">Доказательство.</span>
 <div class="plain"><span class="pl">Идея</span>В базисе из собственных векторов квадратичная форма становится взвешенной суммой квадратов координат с весами <span class="nw"><span class="nw">$\lambda_i$.</span></span></div>
 <div class="step"><span class="sh">Шаг 1. Координаты в собственном базисе.</span> Пусть <span class="nw">$c=Q^\top x$,</span> то есть <span class="nw"><span class="nw">$c_i=\langle q_i,x\rangle$.</span></span> Так как <span class="nw"><span class="nw">$Q^\top Q=I$,</span></span> длина не меняется: <span class="nw"><span class="nw">$\|c\|^2=x^\top QQ^\top x$,</span></span> а <span class="nw">$QQ^\top=I$,</span> потому что квадратная матрица $Q$ с $Q^\top Q=I$ обратима и её обратная — <span class="nw"><span class="nw">$Q^\top$.</span></span> Итак, <span class="nw"><span class="nw">$\|c\|=\|x\|$.</span></span></div>
@@ -860,19 +860,20 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 
 <div class="stmt"><span class="lbl">Определение 18 (распределение Больцмана и правило Метрополиса)</span>
 Пусть $T\gt0$ — <b>температура</b>. <b>Распределение Больцмана</b> функции $f$ на $S$ — это
-<span class="math-wrap">$$\pi_T(x)=\frac{e^{-f(x)/T}}{Z_T},\qquad Z_T=\sum_{y\in S}e^{-f(y)/T}.$$</span>
+<span class="math-wrap">$$\pi_T(x)=\frac{e^{-f(x)/T}}{\sum_{y\in S}e^{-f(y)/T}}.$$</span>
+Знаменатель — сумма тех же чисел по всем положениям: он нужен только для того, чтобы вероятности в сумме давали единицу.
 Пусть $Q$ — переходная матрица <b>предложений</b>, симметричная: <span class="nw"><span class="nw">$Q(x,y)=Q(y,x)$.</span></span> <b>Правило Метрополиса</b>: находясь в <span class="nw"><span class="nw">$x$,</span></span> предложить $y$ с вероятностью $Q(x,y)$ и перейти в $y$ с вероятностью <span class="nw"><span class="nw">$\min\bigl(1,e^{-(f(y)-f(x))/T}\bigr)$,</span></span> а иначе остаться в <span class="nw"><span class="nw">$x$.</span></span> Переходы вниз принимаются всегда, переходы вверх на высоту $\Delta$ — с вероятностью <span class="nw"><span class="nw">$e^{-\Delta/T}$.</span></span></div>
 
 <div class="stmt"><span class="lbl">Предложение 19 (отжиг при постоянной температуре)</span>
 Цепь Маркова, порождённая правилом Метрополиса при температуре <span class="nw"><span class="nw">$T$,</span></span> имеет стационарное распределение <span class="nw"><span class="nw">$\pi_T$.</span></span></div>
-<p>Это объясняет, что делает отжиг при постоянной температуре: в долгом блуждании он проводит в каждом положении долю времени, пропорциональную <span class="nw"><span class="nw">$e^{-f(x)/T}$.</span></span> Низкие места посещаются чаще, но и высокие не запрещены.</p>
 <div class="proof"><span class="lbl">Доказательство.</span>
-<div class="plain"><span class="pl">Идея</span>Проверить детальный баланс: поток из $x$ в $y$ равен <span class="nw">$Q(x,y)/Z_T$,</span> умноженному на меньшее из чисел $e^{-f(x)/T}$ и <span class="nw"><span class="nw">$e^{-f(y)/T}$,</span></span> а это выражение симметрично.</div>
+<div class="plain"><span class="pl">Идея</span>Проверить детальный баланс: поток из $x$ в $y$ равен <span class="nw"><span class="nw">$Q(x,y)$,</span></span> умноженному на меньшее из чисел $e^{-f(x)/T}$ и <span class="nw">$e^{-f(y)/T}$</span> и делённому на знаменатель из определения 18, а это выражение симметрично.</div>
 <div class="step"><span class="sh">Шаг 1. Переходы цепи.</span> При $y\ne x$ переход происходит, если предложено $y$ и предложение принято: <span class="nw">$P(x,y)={}$<wbr><span class="nw">$Q(x,y)\min\bigl(1,e^{-(f(y)-f(x))/T}\bigr)$.</span></span> Оставшаяся вероятность приходится на <span class="nw">$P(x,x)$,</span> так что строки в сумме дают <span class="nw"><span class="nw">$1$.</span></span></div>
 <div class="step"><span class="sh">Шаг 2. Детальный баланс.</span> При $y\ne x$
-<span class="math-wrap">$$\pi_T(x)P(x,y)=\frac{Q(x,y)}{Z_T}\min\bigl(e^{-f(x)/T},\,e^{-f(y)/T}\bigr).$$</span>
+<span class="math-wrap">$$\pi_T(x)P(x,y)=\frac{Q(x,y)\min\bigl(e^{-f(x)/T},\,e^{-f(y)/T}\bigr)}{\sum_{z\in S}e^{-f(z)/T}}.$$</span>
 Правая часть не меняется при перестановке $x$ и <span class="nw"><span class="nw">$y$,</span></span> потому что $Q$ симметрична. При $y=x$ равенство из леммы 17 очевидно. По лемме 17 распределение $\pi_T$ стационарно.</div>
 </div>
+<p>Это объясняет, что делает отжиг при постоянной температуре: в долгом блуждании он проводит в каждом положении долю времени, пропорциональную <span class="nw"><span class="nw">$e^{-f(x)/T}$.</span></span> Низкие места посещаются чаще, но и высокие не запрещены.</p>
 <p>Стационарность — ещё не сходимость: она говорит, что распределение $\pi_T$ не портится шагами цепи, но не что цепь к нему придёт. Сходимость доказывается в теории цепей Маркова, и мы приведём её без доказательства. Если из любого положения можно за несколько шагов попасть в любое другое и цепь не ходит строго по циклу, то распределение положения после $n$ шагов при $n\to\infty$ стремится к стационарному, с какого бы места цепь ни началась. Для отжига на сетке с предложениями «сдвиг на несколько узлов влево или вправо» оба условия выполнены.</p>
 <p>Остаётся понять, зачем понижать температуру. При высокой температуре распределение Больцмана почти равномерно, и блуждание легко переходит из ямы в яму. При низкой оно сосредоточено около самых глубоких мест.</p>
 
@@ -940,7 +941,6 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 <li>$|\langle x,y\rangle|\le{}$<wbr><span class="nw">$\|x\|\,\|y\|$;</span></li>
 <li>если <span class="nw"><span class="nw">$y\ne0$,</span></span> то равенство $\langle x,y\rangle={}$<wbr>$\|x\|\,\|y\|$ выполнено тогда и только тогда, когда $x=cy$ с числом <span class="nw"><span class="nw">$c\ge0$.</span></span></li>
 </ol></div>
-<p>Пункт (б) — про равенство без модуля — здесь главный: он говорит не только, что скалярное произведение ограничено, но и где именно граница достигается. Именно он выделит градиент среди всех направлений.</p>
 <div class="proof"><span class="lbl">Доказательство.</span>
 <div class="plain"><span class="pl">Идея</span>Длина вектора $x-ty$ неотрицательна при любом <span class="nw"><span class="nw">$t$;</span></span> квадрат этой длины — квадратный трёхчлен от <span class="nw"><span class="nw">$t$,</span></span> и его значение в вершине даёт неравенство.</div>
 <div class="step"><span class="sh">Шаг 1. Случай <span class="nw">$y=0$.</span></span> Обе части пункта (а) равны нулю: $\langle x,0\rangle={}$<wbr>$\langle x,0\cdot0\rangle={}$<wbr>$0\cdot\langle x,0\rangle={}$<wbr>$0$ по линейности. Дальше считаем <span class="nw"><span class="nw">$y\ne0$,</span></span> так что <span class="nw"><span class="nw">$\|y\|\gt0$.</span></span></div>
@@ -951,6 +951,7 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 Отсюда $\langle x,y\rangle^2\le{}$<wbr><span class="nw">$\|x\|^2\|y\|^2$,</span> и извлечение корня даёт (а).</div>
 <div class="step"><span class="sh">Шаг 4. Когда равенство.</span> Если <span class="nw">$\langle x,y\rangle={}$<wbr><span class="nw">$\|x\|\,\|y\|$,</span></span> то в шаге 3 правая часть равна нулю, поэтому <span class="nw"><span class="nw">$\|x-t_0y\|=0$,</span></span> и по положительности скалярного произведения <span class="nw"><span class="nw">$x=t_0y$.</span></span> При этом <span class="nw">$t_0={}$<wbr>$\|x\|\,\|y\|/\|y\|^2\ge{}$<wbr><span class="nw">$0$.</span></span> Обратно, если $x=cy$ с <span class="nw"><span class="nw">$c\ge0$,</span></span> то $\langle x,y\rangle={}$<wbr>$c\|y\|^2$ и $\|x\|\,\|y\|=c\|y\|^2$ — равенство выполнено.</div>
 </div>
+<p>Пункт (б) — про равенство без модуля — здесь главный: он говорит не только, что скалярное произведение ограничено, но и где именно граница достигается. Именно он выделит градиент среди всех направлений.</p>
 <p>Неравенство позволяет определить угол между ненулевыми векторами: число $\frac{\langle x,y\rangle}{\|x\|\,\|y\|}$ лежит на отрезке <span class="nw"><span class="nw">$[-1,1]$,</span></span> и его называют косинусом угла между $x$ и <span class="nw"><span class="nw">$y$.</span></span> Им мы уже пользовались в §3. Заодно закроем долг из §2: длина, порождённая скалярным произведением, — норма.</p>
 
 <div class="stmt"><span class="lbl">Следствие 24 (неравенство треугольника для длины)</span>
