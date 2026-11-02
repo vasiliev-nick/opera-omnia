@@ -34,8 +34,9 @@
       TB.ring(c,Q[0],Q[1],K.warm,K,4.5);TB.dot(c,Q[0],A.Y(Math.max(-1.5,Math.min(5.5,real))),K.warm,K,4.5);}
     TB.dot(c,P[0],P[1],K.ink,K,6);
     TB.tag(c,[['x','i']],P[0],A.Y(-1.5)-6,s+1,K.ink,K,'center');
-    const ok=real<=bound+1e-12,lrange=t=>Math.abs(0.5-1.445*Math.sin(1.7*t+0.4));
-    fx.innerHTML=TB.rows([['<i>f</i>(<i>x</i>) = '+TB.fmt(fx0,3)+',','шаг −<i>f</i>′(<i>x</i>)/<i>L</i> = '+TB.fmt(-g/L,3)],
+    const ok=real<=bound+1e-12,LT=1.945,good=L>=LT;
+    fx.innerHTML=TB.rows([['<i>f</i>(<i>x</i>) = '+TB.fmt(fx0,3)+',','<i>η</i> = 1/<i>L</i> = '+TB.fmt(1/L,3)+',','шаг −<i>η</i><i>f</i>′(<i>x</i>) = '+TB.fmt(-g/L,3)],
+      ['настоящая кривизна max |<i>f</i>″| ≈ 1,95,',good?'<i>L</i> не меньше: условие леммы выполнено':'<i>L</i> меньше: условие леммы нарушено'],
       ['гарантия: <i>f</i>(<i>x</i>) − <i>f</i>′(<i>x</i>)²/(2<i>L</i>) = '+TB.fmt(bound,3)+',','на деле: '+TB.fmt(real,3)+(ok?' — гарантия выполнена':' — гарантия нарушена')]]);
   }
   const redraw=TB.raf(draw);

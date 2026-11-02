@@ -135,6 +135,11 @@ figcaption{font-family:var(--font-ui);font-size:.85rem;color:var(--muted);margin
 .controls select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:.15rem .3rem}
 .controls output{font-variant-numeric:tabular-nums;min-width:3.2em}
 input[type=range]{accent-color:var(--ether)}
+.rtick{position:relative;display:inline-block;vertical-align:middle;line-height:0}
+.rtick input{vertical-align:middle;margin:0}
+.rtick i{position:absolute;top:calc(100% + 1px);width:2px;height:7px;margin-left:-1px;background:var(--warm);border-radius:1px;pointer-events:none}
+.rtick i::after{content:attr(data-l);position:absolute;top:9px;left:50%;transform:translateX(-50%);font:600 .72rem/1 var(--font-ui);color:var(--warm);white-space:nowrap}
+.controls label:has(.rtick){padding-bottom:1.1rem}
 input:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
 /* Figure readouts: a formula on the left, a read-only gauge, and the value in small print. */
 .ro{margin:.9rem 0 0;display:grid;gap:.1rem}
@@ -927,10 +932,14 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 <figure>
   <div class="fig1"><canvas id="upper" width="760" height="420" aria-label="График функции одной переменной, касательная, две параболы вокруг неё и шаг в минимум верхней параболы"></canvas></div>
   <div class="controls">
-    <label for="upL">$L$ <input id="upL" type="range" min="0.4" max="4" step="0.05" value="2.5"><output id="upLOut">2,50</output></label>
+    <label for="upL">предполагаемое $L$ <span class="rtick"><input id="upL" type="range" min="0.4" max="4" step="0.05" value="2.5"><i style="left:42.9%" data-l="1,95" aria-hidden="true"></i></span><output id="upLOut">2,50</output></label>
   </div>
   <div id="upFx" class="fx" aria-live="polite"></div>
-  <figcaption>Рис. 13. Функция между двумя параболами. Тёмная кривая — функция одной переменной, у которой наибольший модуль второй производной примерно равен <span class="nw"><span class="nw">$1{,}95$.</span></span> В точке $x$ (её можно перетаскивать) проведена касательная и две параболы, отходящие от неё на <span class="nw"><span class="nw">$\pm\frac L2(t-x)^2$;</span></span> ползунок задаёт <span class="nw"><span class="nw">$L$.</span></span> Стрелка ведёт из $x$ в минимум верхней параболы, то есть делает шаг градиентного спуска с длиной <span class="nw"><span class="nw">$1/L$.</span></span> Пока $L$ не меньше настоящей кривизны, график целиком лежит между параболами, и шаг гарантированно уменьшает функцию. Если сделать $L$ меньше, найдутся места, где график вылезает за параболы (они подсвечены), и оценка перестаёт быть гарантией: при больших шагах функция может даже вырасти.</figcaption>
+  <figcaption>Рис. 13. Функция между двумя параболами. Тёмная кривая — функция одной переменной. Её настоящая кривизна, наибольший модуль второй производной, примерно равна <span class="nw"><span class="nw">$1{,}95$,</span></span> поэтому функция $L$-гладкая при любом <span class="nw"><span class="nw">$L\ge1{,}95$.</span></span> В точке $x$ (её можно перетаскивать) проведена касательная и две параболы, отходящие от неё на <span class="nw"><span class="nw">$\pm\frac L2(t-x)^2$.</span></span> Ползунок задаёт $L$ — не свойство функции, а наше предположение о её кривизне, по которому выбирается длина шага <span class="nw"><span class="nw">$\eta=1/L$;</span></span> чёрточка под ползунком отмечает настоящую кривизну. Стрелка ведёт из $x$ в минимум верхней параболы, то есть делает шаг градиентного спуска длины <span class="nw"><span class="nw">$1/L$.</span></span>
+<ul class="capl">
+<li><b>$L$ правее чёрточки.</b> Условие леммы 34 выполнено: график целиком лежит между параболами, и шаг гарантированно уменьшает функцию;</li>
+<li><b>$L$ левее чёрточки.</b> Кривизна недооценена, и условие леммы нарушено. Найдутся места, где график вылезает за параболы (они подсвечены), и оценка перестаёт быть гарантией: шаг получается слишком длинным, и функция может даже вырасти.</li>
+</ul></figcaption>
 </figure>
 
 <div class="stmt"><span class="lbl">Теорема 35 (убывание за один шаг)</span>
@@ -3688,8 +3697,9 @@ function step(){const y=pos+(rnd()<0.5?-1:1)*(1+Math.floor(rnd()*10));
       TB.ring(c,Q[0],Q[1],K.warm,K,4.5);TB.dot(c,Q[0],A.Y(Math.max(-1.5,Math.min(5.5,real))),K.warm,K,4.5);}
     TB.dot(c,P[0],P[1],K.ink,K,6);
     TB.tag(c,[['x','i']],P[0],A.Y(-1.5)-6,s+1,K.ink,K,'center');
-    const ok=real<=bound+1e-12,lrange=t=>Math.abs(0.5-1.445*Math.sin(1.7*t+0.4));
-    fx.innerHTML=TB.rows([['<i>f</i>(<i>x</i>) = '+TB.fmt(fx0,3)+',','шаг −<i>f</i>′(<i>x</i>)/<i>L</i> = '+TB.fmt(-g/L,3)],
+    const ok=real<=bound+1e-12,LT=1.945,good=L>=LT;
+    fx.innerHTML=TB.rows([['<i>f</i>(<i>x</i>) = '+TB.fmt(fx0,3)+',','<i>η</i> = 1/<i>L</i> = '+TB.fmt(1/L,3)+',','шаг −<i>η</i><i>f</i>′(<i>x</i>) = '+TB.fmt(-g/L,3)],
+      ['настоящая кривизна max |<i>f</i>″| ≈ 1,95,',good?'<i>L</i> не меньше: условие леммы выполнено':'<i>L</i> меньше: условие леммы нарушено'],
       ['гарантия: <i>f</i>(<i>x</i>) − <i>f</i>′(<i>x</i>)²/(2<i>L</i>) = '+TB.fmt(bound,3)+',','на деле: '+TB.fmt(real,3)+(ok?' — гарантия выполнена':' — гарантия нарушена')]]);
   }
   const redraw=TB.raf(draw);

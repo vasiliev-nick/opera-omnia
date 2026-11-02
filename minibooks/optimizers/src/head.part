@@ -132,6 +132,11 @@ figcaption{font-family:var(--font-ui);font-size:.85rem;color:var(--muted);margin
 .controls select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:.15rem .3rem}
 .controls output{font-variant-numeric:tabular-nums;min-width:3.2em}
 input[type=range]{accent-color:var(--ether)}
+.rtick{position:relative;display:inline-block;vertical-align:middle;line-height:0}
+.rtick input{vertical-align:middle;margin:0}
+.rtick i{position:absolute;top:calc(100% + 1px);width:2px;height:7px;margin-left:-1px;background:var(--warm);border-radius:1px;pointer-events:none}
+.rtick i::after{content:attr(data-l);position:absolute;top:9px;left:50%;transform:translateX(-50%);font:600 .72rem/1 var(--font-ui);color:var(--warm);white-space:nowrap}
+.controls label:has(.rtick){padding-bottom:1.1rem}
 input:focus-visible{outline:2px solid var(--ether);outline-offset:2px}
 /* Figure readouts: a formula on the left, a read-only gauge, and the value in small print. */
 .ro{margin:.9rem 0 0;display:grid;gap:.1rem}
