@@ -1092,10 +1092,18 @@ window.MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],tags:'none
 <span class="math-wrap">$$m(h)=\langle g,h\rangle+\frac1{2\eta}\|h\|^2$$</span>
 принимает наименьшее значение в единственной точке <span class="nw"><span class="nw">$h=-\eta g$,</span></span> и это значение равно <span class="nw"><span class="nw">$-\frac\eta2\|g\|^2$.</span></span></div>
 <div class="proof"><span class="lbl">Доказательство.</span>
-<div class="plain"><span class="pl">Идея</span>Выделить полный квадрат, как для квадратного трёхчлена.</div>
-<div class="step"><span class="sh">Шаг 1.</span> Раскрывая квадрат длины, получаем
-<span class="math-wrap">$$\frac1{2\eta}\|h+\eta g\|^2=\frac1{2\eta}\|h\|^2+\langle g,h\rangle+\frac\eta2\|g\|^2,$$</span>то есть<span class=\"math-wrap\">$$m(h)=\frac1{2\eta}\|h+\eta g\|^2-\frac\eta2\|g\|^2.$$</span></div>
-<div class="step"><span class="sh">Шаг 2.</span> Первое слагаемое неотрицательно и равно нулю только при <span class="nw"><span class="nw">$h=-\eta g$.</span></span></div>
+<div class="plain"><span class="pl">Идея</span>Так же, как у квадратного трёхчлена ищут вершину параболы: выделить полный квадрат. Тогда $m$ запишется как «квадрат длины плюс константа», а квадрат длины меньше всего, когда он равен нулю.</div>
+<div class="step"><span class="sh">Шаг 1. Одномерный случай.</span> При $d=1$ векторы $g$ и $h$ — просто числа, и $m(h)={}$<wbr>$gh+\frac{h^2}{2\eta}$ — квадратный трёхчлен от <span class="nw"><span class="nw">$h$.</span></span> Вынесем $\frac1{2\eta}$ и дополним до полного квадрата:
+<span class="math-wrap">$$\begin{aligned}m(h)&=\frac1{2\eta}\bigl(h^2+2\eta gh\bigr)\\&=\frac1{2\eta}\bigl((h+\eta g)^2-\eta^2g^2\bigr)\\&=\frac{(h+\eta g)^2}{2\eta}-\frac\eta2g^2.\end{aligned}$$</span>
+Это парабола с вершиной в точке <span class="nw"><span class="nw">$h=-\eta g$:</span></span> первое слагаемое неотрицательно и обращается в ноль только там, а второе от $h$ не зависит. В общем случае рассуждение то же, только вместо квадрата числа будет квадрат длины вектора.</div>
+<div class="step"><span class="sh">Шаг 2. Полный квадрат в <span class="nw">$\mathbb R^d$.</span></span> Квадрат длины суммы раскрывается так же, как квадрат суммы чисел, потому что скалярное произведение линейно по каждому аргументу и симметрично:
+<span class="math-wrap">$$\begin{aligned}\|h+\eta g\|^2&=\langle h+\eta g,\,h+\eta g\rangle\\&=\|h\|^2+2\eta\langle g,h\rangle+\eta^2\|g\|^2.\end{aligned}$$</span>
+Разделим на <span class="nw"><span class="nw">$2\eta$:</span></span>
+<span class="math-wrap">$$\frac1{2\eta}\|h+\eta g\|^2=\underbrace{\frac1{2\eta}\|h\|^2+\langle g,h\rangle}_{m(h)}+\frac\eta2\|g\|^2.$$</span>
+Первые два слагаемых справа — это в точности <span class="nw"><span class="nw">$m(h)$.</span></span> Перенеся последнее слагаемое влево, получаем
+<span class="math-wrap">$$m(h)=\frac1{2\eta}\|h+\eta g\|^2-\frac\eta2\|g\|^2.$$</span></div>
+<div class="step"><span class="sh">Шаг 3. Где минимум.</span> Второе слагаемое — постоянная, от $h$ оно не зависит. Первое неотрицательно, потому что неотрицательна длина, и равно нулю только тогда, когда <span class="nw"><span class="nw">$h+\eta g=0$,</span></span> то есть при <span class="nw"><span class="nw">$h=-\eta g$.</span></span> Значит, $m(h)\ge{}$<wbr>$-\frac\eta2\|g\|^2$ при всех <span class="nw"><span class="nw">$h$,</span></span> и равенство достигается только в точке <span class="nw"><span class="nw">$h=-\eta g$.</span></span> Это и означает, что наименьшее значение равно <span class="nw">$-\frac\eta2\|g\|^2$</span> и принимается в единственной точке <span class="nw"><span class="nw">$-\eta g$.</span></span></div>
+<div class="plain"><span class="pl">Наглядно</span>Формула шага 2 показывает, что $m$ зависит только от расстояния от $h$ до точки <span class="nw"><span class="nw">$-\eta g$.</span></span> График $m$ — круглая чаша с дном в этой точке, а линии уровня — окружности (в $\mathbb R^d$ — сферы) с центром в ней.</div>
 </div>
 <p>Число $\eta$ здесь отвечает за то, насколько далеко мы доверяем модели: чем оно больше, тем слабее штраф и тем длиннее шаг. Его называют <b>длиной шага</b> или, в машинном обучении, <b>скоростью обучения</b> (learning rate). Заметим, что штраф мы взяли в евклидовой норме, не задумываясь. В §6 мы поставим вместо неё другую норму, и тот же рецепт даст совсем другие методы.</p>
 
